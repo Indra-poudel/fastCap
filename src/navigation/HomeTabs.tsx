@@ -1,8 +1,13 @@
 import React from 'react';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {
+  BottomTabBarProps,
+  createBottomTabNavigator,
+} from '@react-navigation/bottom-tabs';
 import HomeScreen from '@screens/Home/HomeScreen';
 import ProfileScreen from '@screens/Profile/ProfileScreen';
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import BottomTab from 'components/BottomTab';
+import FloatingActionButton from 'components/FloatingActionButton';
 
 export enum TABS {
   HOME = 'home',
@@ -13,32 +18,39 @@ const Tab = createBottomTabNavigator();
 
 function HomeTabs() {
   return (
-    <Tab.Navigator
-      screenOptions={() => ({
-        tabBarActiveTintColor: '#FFD700',
-        tabBarInactiveTintColor: 'gray',
-        tabBarStyle: {backgroundColor: '#1C1C1E', borderTopColor: '#2C2C2E'},
-        headerShown: false,
-      })}>
-      <Tab.Screen
-        name={TABS.HOME}
-        component={HomeScreen}
-        options={{
-          tabBarIcon: homeScreenTabBarIcon,
-        }}
-      />
-      <Tab.Screen
-        name={TABS.PROFILE}
-        component={ProfileScreen}
-        options={{
-          tabBarIcon: profileScreenTabBarIcon,
-        }}
-      />
-    </Tab.Navigator>
+    <>
+      <Tab.Navigator
+        tabBar={BottomTabRenderer}
+        screenOptions={() => ({
+          headerShown: false,
+        })}>
+        <Tab.Screen
+          name={TABS.HOME}
+          component={HomeScreen}
+          options={{
+            tabBarIcon: homeScreenTabBarIcon,
+            title: 'Home',
+          }}
+        />
+        <Tab.Screen
+          name={TABS.PROFILE}
+          component={ProfileScreen}
+          options={{
+            tabBarIcon: profileScreenTabBarIcon,
+            title: 'Profile',
+          }}
+        />
+      </Tab.Navigator>
+      <FloatingActionButton />
+    </>
   );
 }
 
 export default HomeTabs;
+
+const BottomTabRenderer = (props: BottomTabBarProps) => {
+  return <BottomTab {...props} />;
+};
 
 const homeScreenTabBarIcon = ({
   focused,
@@ -51,7 +63,7 @@ const homeScreenTabBarIcon = ({
 }) => {
   return (
     <Icon
-      name={focused ? 'view-dashboard' : 'view-dashboard-outline'}
+      name={focused ? 'folder' : 'folder-outline'}
       size={size}
       color={color}
     />
@@ -69,7 +81,7 @@ const profileScreenTabBarIcon = ({
 }) => {
   return (
     <Icon
-      name={focused ? 'view-dashboard' : 'view-dashboard-outline'}
+      name={focused ? 'account' : 'account-outline'}
       size={size}
       color={color}
     />

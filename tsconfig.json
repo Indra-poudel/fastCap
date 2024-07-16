@@ -8,7 +8,8 @@
       "@components/*": ["src/components/*"],
       "@screens/*": ["src/screens/*"],
       "@navigation/*": ["src/navigation/*"],
-      "@styles/*": ["src/styles/*"]
+      "@styles/*": ["src/styles/*"],
+      "@theme/*": ["src/theme/*"]
     }
   },
   "include": ["src", "src/types", "App.tsx"]

@@ -1,12 +1,17 @@
+// By some reason this show error on import @navigation
+
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
-import AppNavigator from './src/navigation/AppNavigator'; // By some reason this show error on import @navigation
+import {ThemeProvider} from './src/theme/ThemeContext';
+import AppNavigator from './src/navigation/AppNavigator';
 
 const App = () => {
   return (
-    <NavigationContainer>
-      <AppNavigator />
-    </NavigationContainer>
+    <ThemeProvider>
+      <NavigationContainer>
+        <AppNavigator />
+      </NavigationContainer>
+    </ThemeProvider>
   );
 };
 
