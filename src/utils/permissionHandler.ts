@@ -60,16 +60,34 @@ const requestPermission = async (permission: Permission): Promise<boolean> => {
   return handlePermissionResult(result, permission);
 };
 
+const getAndroidPermissions = () => {
+  if (Platform.OS === 'android') {
+    if (Platform.Version >= 33) {
+      return [
+        PERMISSIONS.ANDROID.CAMERA,
+        PERMISSIONS.ANDROID.RECORD_AUDIO,
+        PERMISSIONS.ANDROID.READ_MEDIA_IMAGES,
+        PERMISSIONS.ANDROID.READ_MEDIA_VIDEO,
+      ];
+    } else {
+      return [
+        PERMISSIONS.ANDROID.CAMERA,
+        PERMISSIONS.ANDROID.RECORD_AUDIO,
+        PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
+        PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
+      ];
+    }
+  }
+  return [];
+};
+
 export const requestAllPermissions = async (): Promise<{
   allGranted: boolean;
   deniedPermissions: string[];
 }> => {
-  const androidPermissions = [
-    PERMISSIONS.ANDROID.CAMERA,
-    PERMISSIONS.ANDROID.RECORD_AUDIO,
-    PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
-    PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
-  ];
+  const androidPermissions: Array<
+    (typeof PERMISSIONS.ANDROID)[keyof typeof PERMISSIONS.ANDROID]
+  > = getAndroidPermissions();
   const iosPermissions = [
     PERMISSIONS.IOS.CAMERA,
     PERMISSIONS.IOS.MICROPHONE,
@@ -81,6 +99,7 @@ export const requestAllPermissions = async (): Promise<{
     const results = await requestMultiple(androidPermissions);
 
     console.log(results);
+
     const deniedPermissions = androidPermissions.filter(
       permission => results[permission] !== 'granted',
     );
@@ -101,12 +120,7 @@ export const requestAllPermissions = async (): Promise<{
 export const checkAllPermissions = async (): Promise<boolean> => {
   const androidPermissions: Array<
     (typeof PERMISSIONS.ANDROID)[keyof typeof PERMISSIONS.ANDROID]
-  > = [
-    PERMISSIONS.ANDROID.CAMERA,
-    PERMISSIONS.ANDROID.RECORD_AUDIO,
-    PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE,
-    PERMISSIONS.ANDROID.WRITE_EXTERNAL_STORAGE,
-  ];
+  > = getAndroidPermissions();
 
   const iosPermissions: Array<
     (typeof PERMISSIONS.IOS)[keyof typeof PERMISSIONS.IOS]

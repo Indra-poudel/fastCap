@@ -57,13 +57,10 @@ const FloatingActionButton = () => {
     launchImageLibrary({
       mediaType: 'video',
       videoQuality: 'high',
+      selectionLimit: 1,
     })
       .then(response => {
         console.log('Response', response);
-
-        navigation.navigate('edit', {
-          videoURL: '',
-        });
 
         response.assets &&
           response?.assets[0].uri &&
@@ -80,9 +77,16 @@ const FloatingActionButton = () => {
     launchCamera({
       mediaType: 'video',
       videoQuality: 'high',
+      saveToPhotos: true,
     })
       .then(response => {
         console.log('Response', response);
+
+        response.assets &&
+          response?.assets[0].uri &&
+          navigation.navigate('edit', {
+            videoURL: response.assets[0].uri,
+          });
       })
       .catch(error => {
         console.log('error', error);
