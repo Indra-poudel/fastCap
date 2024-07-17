@@ -7,11 +7,11 @@ import HomeScreen from '@screens/Home/HomeScreen';
 import ProfileScreen from '@screens/Profile/ProfileScreen';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomTab from 'components/BottomTab';
-import FloatingActionButton from 'components/FloatingActionButton';
+import FloatingActionButton from 'containers/FloatingActionButtonContainer';
 
 export enum TABS {
-  HOME = 'home',
-  PROFILE = 'profile',
+  HOME = 'home_tab',
+  PROFILE = 'profile_tab',
 }
 
 const Tab = createBottomTabNavigator();

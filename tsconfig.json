@@ -9,7 +9,9 @@
       "@screens/*": ["src/screens/*"],
       "@navigation/*": ["src/navigation/*"],
       "@styles/*": ["src/styles/*"],
-      "@theme/*": ["src/theme/*"]
+      "@theme/*": ["src/theme/*"],
+      "@utils/*": ["src/utils/*"],
+      "@containers/*": ["src/containers/*"]
     }
   },
   "include": ["src", "src/types", "App.tsx"]

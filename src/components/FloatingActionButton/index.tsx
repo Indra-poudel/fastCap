@@ -10,12 +10,19 @@ import Animated, {
 } from 'react-native-reanimated';
 import {useTheme} from '@theme/ThemeContext';
 import Button from 'components/Button/Button';
+import {FLOATING_ACTION} from 'containers/FloatingActionButtonContainer';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 const ButtonBottom = 180;
 
-const FloatingActionButton = () => {
+type FloatingActionButtonViewProps = {
+  onAction: (action: FLOATING_ACTION) => void;
+};
+
+const FloatingActionButtonView = ({
+  onAction,
+}: FloatingActionButtonViewProps) => {
   const {theme} = useTheme();
   const {width, height} = useWindowDimensions();
   const [open, setOpen] = useState(false);
@@ -45,6 +52,14 @@ const FloatingActionButton = () => {
     setOpen(!open);
   };
 
+  const handlePressChooseVideo = () => {
+    onAction(FLOATING_ACTION.GALLERY);
+  };
+
+  const handlePressRecord = () => {
+    onAction(FLOATING_ACTION.RECORD);
+  };
+
   return (
     <>
       {open && (
@@ -60,7 +75,7 @@ const FloatingActionButton = () => {
             },
           ]}>
           <Button
-            onPress={() => {}}
+            onPress={handlePressChooseVideo}
             label={'Choose a video'}
             rightSlot={undefined}
             icon={
@@ -80,7 +95,7 @@ const FloatingActionButton = () => {
             ]}
           />
           <Button
-            onPress={() => {}}
+            onPress={handlePressRecord}
             label={'Record'}
             rightSlot={undefined}
             icon={
@@ -140,4 +155,4 @@ const Style = StyleSheet.create({
   },
 });
 
-export default FloatingActionButton;
+export default FloatingActionButtonView;

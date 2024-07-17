@@ -5,28 +5,42 @@ import EditSettingsScreen from '@screens/Edit/EditSettingScreen';
 import EditDetailsScreen from '@screens/Edit/EditSettingScreen';
 import HomeTab from './HomeTabs';
 
+export enum SCREENS {
+  HOME = 'home',
+  EDIT = 'edit',
+  EDIT_DETAILS = 'editDetails',
+  EDIT_SETTINGS = 'editSettings',
+}
+
+export type RootStackParamList = {
+  home: undefined;
+  edit: {videoURL: string};
+  editDetails: undefined;
+  editSettings: undefined;
+};
+
 function AppNavigator() {
-  const Stack = createNativeStackNavigator();
+  const Stack = createNativeStackNavigator<RootStackParamList>();
 
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="HomeTabs"
+        name={SCREENS.HOME}
         component={HomeTab}
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="Edit"
+        name={SCREENS.EDIT}
         component={EditScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="EditDetails"
+        name={SCREENS.EDIT_DETAILS}
         component={EditDetailsScreen}
         options={{headerShown: false}}
       />
       <Stack.Screen
-        name="EditSettings"
+        name={SCREENS.EDIT_SETTINGS}
         component={EditSettingsScreen}
         options={{headerShown: false}}
       />
