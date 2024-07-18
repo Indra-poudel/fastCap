@@ -27,6 +27,8 @@ module.exports = {
           '@theme': './src/theme',
           '@utils': './src/utils',
           '@containers': './src/containers',
+          '@constants': './src/constants',
+          '@apis/*': ['src/apis/*'],
         },
       },
     ],

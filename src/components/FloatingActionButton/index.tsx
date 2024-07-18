@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect} from 'react';
 import {Pressable, StyleSheet, useWindowDimensions} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, {
@@ -18,14 +18,18 @@ const ButtonBottom = 180;
 
 type FloatingActionButtonViewProps = {
   onAction: (action: FLOATING_ACTION) => void;
+  setOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  open: boolean;
 };
 
 const FloatingActionButtonView = ({
   onAction,
+  setOpen,
+  open,
 }: FloatingActionButtonViewProps) => {
   const {theme} = useTheme();
   const {width, height} = useWindowDimensions();
-  const [open, setOpen] = useState(false);
+
   const rotation = useSharedValue(0);
   const fabBorder = useSharedValue(10);
   const fabSize = useSharedValue(90);
@@ -46,10 +50,16 @@ const FloatingActionButtonView = ({
     };
   }, [width]);
 
+  useEffect(() => {
+    if (!open && rotation.value === 45) {
+      rotation.value = withTiming(0);
+    }
+  }, [open, rotation]);
+
   const handlePress = () => {
     const newValue = rotation.value === 0 ? 45 : 0;
     rotation.value = withTiming(newValue);
-    setOpen(!open);
+    setOpen(prev => !prev);
   };
 
   const handlePressChooseVideo = () => {

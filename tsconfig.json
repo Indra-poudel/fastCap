@@ -11,7 +11,9 @@
       "@styles/*": ["src/styles/*"],
       "@theme/*": ["src/theme/*"],
       "@utils/*": ["src/utils/*"],
-      "@containers/*": ["src/containers/*"]
+      "@containers/*": ["src/containers/*"],
+      "@constants/*": ["src/constants/*"],
+      "@apis/*": ["src/apis/*"]
     }
   },
   "include": ["src", "src/types", "App.tsx"]

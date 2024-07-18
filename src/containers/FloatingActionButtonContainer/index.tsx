@@ -1,5 +1,5 @@
 import FloatingActionButtonView from 'components/FloatingActionButton';
-import React from 'react';
+import React, {useState} from 'react';
 import {Alert} from 'react-native';
 import {openSettings} from 'react-native-permissions';
 import {
@@ -19,6 +19,7 @@ export enum FLOATING_ACTION {
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const FloatingActionButton = () => {
+  const [open, setOpen] = useState(false);
   const navigation = useNavigation<NavigationProp>();
   const handlePermission = async (action: FLOATING_ACTION) => {
     const granted = await checkAllPermissions();
@@ -62,6 +63,8 @@ const FloatingActionButton = () => {
       .then(response => {
         console.log('Response', response);
 
+        setOpen(prev => !prev);
+
         response.assets &&
           response?.assets[0].uri &&
           navigation.navigate('edit', {
@@ -82,6 +85,8 @@ const FloatingActionButton = () => {
       .then(response => {
         console.log('Response', response);
 
+        setOpen(prev => !prev);
+
         response.assets &&
           response?.assets[0].uri &&
           navigation.navigate('edit', {
@@ -93,7 +98,13 @@ const FloatingActionButton = () => {
       });
   };
 
-  return <FloatingActionButtonView onAction={handlePermission} />;
+  return (
+    <FloatingActionButtonView
+      open={open}
+      setOpen={setOpen}
+      onAction={handlePermission}
+    />
+  );
 };
 
 export default FloatingActionButton;
