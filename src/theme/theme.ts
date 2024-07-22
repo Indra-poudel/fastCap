@@ -8,9 +8,9 @@ export const FONTS_FAMILY = {
 } as const;
 
 const fontWeights: FontWeightsType = {
-  regular: 400,
-  semiBold: 600,
-  bold: 700,
+  regular: '400',
+  semiBold: '600',
+  bold: '700',
 };
 
 const darkTheme = {

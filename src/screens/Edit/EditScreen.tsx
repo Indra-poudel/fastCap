@@ -2,6 +2,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {Canvas, Fill, ImageShader, useVideo} from '@shopify/react-native-skia';
 import BottomSheet from 'components/BottomSheet';
 import Button from 'components/Button/Button';
+import LanguageSelector from 'components/LanguageSelector';
 import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
 import React, {useState} from 'react';
 import {
@@ -33,6 +34,9 @@ const EditScreen = ({route}: EditScreenProps) => {
   const opacity = useSharedValue(1);
   const {width, height} = useWindowDimensions();
   const [isAddCaptionBottomSheetOpen, setAddCaptionBottomSheetOpen] =
+    useState(false);
+
+  const [isLanguageBottomSheetOpen, setLanguageBottomSheetOpen] =
     useState(false);
 
   const isPortrait = videoHeight > videoWidth;
@@ -71,6 +75,10 @@ const EditScreen = ({route}: EditScreenProps) => {
   const handleAddCaption = () => {
     handlePauseVideo();
     handleBottomSheet();
+  };
+
+  const toggleLanguageSelector = () => {
+    setLanguageBottomSheetOpen(prev => !prev);
   };
 
   return (
@@ -133,6 +141,7 @@ const EditScreen = ({route}: EditScreenProps) => {
           label="Add caption">
           <View style={[Styles.bottomSheetContent]}>
             <Button
+              onPress={toggleLanguageSelector}
               style={Styles.languageButton}
               justifyContent="space-between"
               label="Language"
@@ -173,6 +182,10 @@ const EditScreen = ({route}: EditScreenProps) => {
             />
           </View>
         </BottomSheet>
+      )}
+
+      {isLanguageBottomSheetOpen && (
+        <LanguageSelector onClose={toggleLanguageSelector} />
       )}
     </View>
   );

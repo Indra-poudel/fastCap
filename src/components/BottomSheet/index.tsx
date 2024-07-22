@@ -7,6 +7,7 @@ import {
   Text,
   ViewStyle,
   StyleProp,
+  Pressable,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -18,6 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import {useTheme} from 'theme/ThemeContext';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window');
 
@@ -28,6 +30,8 @@ interface BottomSheetProps {
   children: ReactNode;
   label?: string;
   contentWrapperStyle?: StyleProp<ViewStyle>;
+  isFullSize?: boolean;
+  onTouch?: () => void;
 }
 
 const BottomSheet: React.FC<BottomSheetProps> = ({
@@ -37,10 +41,14 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   children, // Allowing custom children to be passed
   label,
   contentWrapperStyle,
+  isFullSize,
+  onTouch,
 }) => {
   const {theme} = useTheme();
-  const INITIAL_TOP = SCREEN_HEIGHT * (1 - initialHeightPercentage / 100); // Calculate initial top position
-  const MAX_TOP = SCREEN_HEIGHT * 0.2; // Maximum top position (20% of screen height)
+  const MAX_TOP = SCREEN_HEIGHT * 0.1; // Maximum top position (20% of screen height)
+  const INITIAL_TOP = isFullSize
+    ? MAX_TOP
+    : SCREEN_HEIGHT * (1 - initialHeightPercentage / 100); // Calculate initial top position
   const BOTTOM_SHEET_HEIGHT = SCREEN_HEIGHT - INITIAL_TOP; // Height of the bottom sheet
 
   const RUBBER_BAND_EFFECT_DIVISOR = 2; // Fraction of the translation for a rubber band effect
@@ -51,6 +59,11 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
 
   const top = useSharedValue(INITIAL_TOP); // Initially at the specified height
   const startY = useSharedValue(0); // Keep track of the initial touch position
+
+  const singleTap = Gesture.Tap().onStart(() => {
+    onTouch && runOnJS(onTouch)();
+    return;
+  });
 
   const panGesture = Gesture.Pan()
     .onStart(() => {
@@ -69,19 +82,13 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
         // Implement rubber band effect when not draggable
         top.value = startY.value + e.translationY / RUBBER_BAND_EFFECT_DIVISOR;
       }
-
-      if (
-        onClose &&
-        top.value > INITIAL_TOP + BOTTOM_SHEET_HEIGHT * DRAG_CLOSE_THRESHOLD
-      ) {
-        runOnJS(onClose)();
-      }
     })
     .onEnd(() => {
       if (
         onClose &&
         top.value > INITIAL_TOP + BOTTOM_SHEET_HEIGHT * DRAG_CLOSE_THRESHOLD
       ) {
+        runOnJS(onClose)();
         // If dragged more than the threshold of the bottom sheet's height, close the bottom sheet
         return;
       } else if (isDraggable) {
@@ -109,7 +116,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
     };
   });
 
-  const handleOutsidePress = () => {
+  const handleClose = () => {
     if (onClose) {
       top.value = withTiming(SCREEN_HEIGHT, {
         duration: SNAP_BACK_ANIMATION_DURATION,
@@ -118,12 +125,14 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
     }
   };
 
+  const composed = Gesture.Race(panGesture, singleTap);
+
   return (
     <>
-      <TouchableWithoutFeedback onPress={handleOutsidePress}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.touchableArea} />
       </TouchableWithoutFeedback>
-      <GestureDetector gesture={panGesture}>
+      <GestureDetector gesture={composed}>
         <Animated.View
           style={[
             styles.bottomSheet,
@@ -142,6 +151,16 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
                 borderColor: theme.colors.grey2,
               },
             ]}>
+            {isFullSize && (
+              <Pressable style={[styles.headerIcon]} onPress={handleClose}>
+                <Icon
+                  name={'chevron-left'}
+                  size={28}
+                  color={theme.colors.white}
+                />
+              </Pressable>
+            )}
+
             <Text
               style={[
                 theme.typography.header.small,
@@ -196,6 +215,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     display: 'flex',
     flexDirection: 'row',
+    justifyContent: 'center',
+    alignContent: 'center',
+    position: 'relative',
+  },
+
+  headerIcon: {
+    alignSelf: 'flex-start',
+    position: 'absolute',
+    left: 10,
+    bottom: 10,
+    display: 'flex',
     justifyContent: 'center',
     alignContent: 'center',
   },
