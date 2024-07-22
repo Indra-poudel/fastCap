@@ -67,8 +67,12 @@ const FloatingActionButton = () => {
 
         response.assets &&
           response?.assets[0].uri &&
+          response.assets[0].width &&
+          response.assets[0].height &&
           navigation.navigate('edit', {
             videoURL: response.assets[0].uri,
+            width: response.assets[0].width,
+            height: response.assets[0].height,
           });
       })
       .catch(error => {
@@ -89,8 +93,12 @@ const FloatingActionButton = () => {
 
         response.assets &&
           response?.assets[0].uri &&
+          response.assets[0].width &&
+          response.assets[0].height &&
           navigation.navigate('edit', {
             videoURL: response.assets[0].uri,
+            width: response.assets[0].width,
+            height: response.assets[0].height,
           });
       })
       .catch(error => {

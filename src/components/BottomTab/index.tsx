@@ -44,12 +44,13 @@ const BottomTab = ({state, descriptors, navigation}: BottomTabBarProps) => {
 
         return (
           <Pressable
-            style={[
+            style={({pressed}) => [
               Style.tabButton,
               {
                 borderTopColor: isFocused
                   ? theme.colors.primary
                   : theme.colors.transparent,
+                opacity: pressed ? 0.7 : 1,
               },
             ]}
             onLongPress={() => onLongPress(route)}

@@ -38,7 +38,7 @@ const FloatingActionButtonView = ({
     return {
       transform: [{rotate: `${rotation.value}deg`}],
     };
-  });
+  }, []);
 
   const fabButtonAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -87,7 +87,6 @@ const FloatingActionButtonView = ({
           <Button
             onPress={handlePressChooseVideo}
             label={'Choose a video'}
-            rightSlot={undefined}
             icon={
               <Icon
                 name={'image-outline'}
@@ -107,7 +106,6 @@ const FloatingActionButtonView = ({
           <Button
             onPress={handlePressRecord}
             label={'Record'}
-            rightSlot={undefined}
             icon={
               <Icon
                 name={'video-outline'}

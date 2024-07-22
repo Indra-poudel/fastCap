@@ -13,7 +13,7 @@ import {useTheme} from '@theme/ThemeContext';
 type ButtonProps = {
   icon?: React.ReactNode;
   label: string;
-  rightSlot: React.ReactNode;
+  rightSlot?: React.ReactNode;
   justifyContent?:
     | 'flex-start'
     | 'flex-end'
@@ -40,7 +40,7 @@ const Button = ({
   return (
     <Pressable
       onPress={onPress}
-      style={[
+      style={({pressed}) => [
         style,
         Style.buttonContainer,
         {
@@ -53,6 +53,7 @@ const Button = ({
               : 'rgba(47, 128, 237, 0.14))',
 
           borderColor: theme.colors.primary,
+          opacity: pressed ? 0.7 : 1,
         },
       ]}>
       <View style={[Style.iconLabelContainer]}>

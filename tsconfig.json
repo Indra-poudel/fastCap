@@ -13,7 +13,8 @@
       "@utils/*": ["src/utils/*"],
       "@containers/*": ["src/containers/*"],
       "@constants/*": ["src/constants/*"],
-      "@apis/*": ["src/apis/*"]
+      "@apis/*": ["src/apis/*"],
+      "@hooks/*": ["src/hooks/*"]
     }
   },
   "include": ["src", "src/types", "App.tsx"]
