@@ -30,6 +30,7 @@ module.exports = {
           '@constants': './src/constants',
           '@apis/*': './src/apis',
           '@hooks/*': './src/hooks',
+          '@mocks/*': './src/mocks',
         },
       },
     ],

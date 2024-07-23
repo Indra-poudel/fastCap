@@ -1,4 +1,4 @@
-import {FFmpegKit} from 'ffmpeg-kit-react-native';
+import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
 import RNFetchBlob from 'rn-fetch-blob';
 
 export const convertVideoToMp3 = (
@@ -39,3 +39,43 @@ export const convertVideoToMp3 = (
     }
   });
 };
+
+export const generateThumbnail = (videoUri: string): Promise<string> => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/thumbnail.jpg`;
+
+      // Specify the command to generate a thumbnail
+      const ffmpegCommand = `-y -i ${videoUri} -ss 00:00:01 -vframes 1 ${outputUri}`;
+
+      // Remove the existing file if it exists
+      RNFetchBlob.fs
+        .unlink(outputUri)
+        .catch(() => {
+          // Ignore the error if the file does not exist
+        })
+        .finally(() => {
+          const command = `-y -i ${videoUri} -ss 00:00:01 -vframes 1 ${outputUri}`;
+
+          FFmpegKit.execute(command)
+            .then(() => {
+              FFmpegKit.execute(command)
+                .then(() => {
+                  resolve(`file://${outputUri}`);
+                })
+                .catch(error => {
+                  reject(error);
+                });
+            })
+            .catch(error => {
+              reject(error);
+            });
+        });
+    } catch (error) {
+      console.error('Error generating thumbnail:', error);
+      reject(error); // Reject the promise with the caught error
+    }
+  });
+};
+
+export default generateThumbnail;

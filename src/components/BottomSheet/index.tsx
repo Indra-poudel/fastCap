@@ -132,48 +132,51 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
       <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.touchableArea} />
       </TouchableWithoutFeedback>
-      <GestureDetector gesture={composed}>
-        <Animated.View
-          style={[
-            styles.bottomSheet,
-            animatedStyle,
-            {
-              backgroundColor: theme.colors.black3,
-            },
-          ]}
-          entering={SlideInDown.duration(ENTER_ANIMATION_DURATION)}
-          exiting={SlideOutDown.duration(EXIT_ANIMATION_DURATION)}>
-          <View style={styles.handle} />
-          <View
-            style={[
-              styles.header,
-              {
-                borderColor: theme.colors.grey2,
-              },
-            ]}>
-            {isFullSize && (
-              <Pressable style={[styles.headerIcon]} onPress={handleClose}>
-                <Icon
-                  name={'chevron-left'}
-                  size={28}
-                  color={theme.colors.white}
-                />
-              </Pressable>
-            )}
-
-            <Text
+      <Animated.View
+        style={[
+          styles.bottomSheet,
+          animatedStyle,
+          {
+            backgroundColor: theme.colors.black3,
+          },
+        ]}
+        entering={SlideInDown.duration(ENTER_ANIMATION_DURATION)}
+        exiting={SlideOutDown.duration(EXIT_ANIMATION_DURATION)}>
+        <GestureDetector gesture={composed}>
+          <View>
+            <View style={styles.handle} />
+            <View
               style={[
-                theme.typography.header.small,
+                styles.header,
                 {
-                  color: theme.colors.white,
+                  borderColor: theme.colors.grey2,
                 },
               ]}>
-              {label}
-            </Text>
+              {isFullSize && (
+                <Pressable style={[styles.headerIcon]} onPress={handleClose}>
+                  <Icon
+                    name={'chevron-left'}
+                    size={28}
+                    color={theme.colors.white}
+                  />
+                </Pressable>
+              )}
+
+              <Text
+                style={[
+                  theme.typography.header.small,
+                  {
+                    color: theme.colors.white,
+                  },
+                ]}>
+                {label}
+              </Text>
+            </View>
           </View>
-          <View style={[styles.content, contentWrapperStyle]}>{children}</View>
-        </Animated.View>
-      </GestureDetector>
+        </GestureDetector>
+
+        <View style={[styles.content, contentWrapperStyle]}>{children}</View>
+      </Animated.View>
     </>
   );
 };

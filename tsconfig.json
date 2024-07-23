@@ -14,7 +14,8 @@
       "@containers/*": ["src/containers/*"],
       "@constants/*": ["src/constants/*"],
       "@apis/*": ["src/apis/*"],
-      "@hooks/*": ["src/hooks/*"]
+      "@hooks/*": ["src/hooks/*"],
+      "@mocks/*": ["src/mocks"]
     }
   },
   "include": ["src", "src/types", "App.tsx"]
