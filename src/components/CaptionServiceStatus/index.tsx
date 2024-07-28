@@ -8,13 +8,13 @@ import React, {useEffect} from 'react';
 import * as Progress from 'react-native-progress';
 import {StyleSheet, Text, View} from 'react-native';
 import {useTheme} from 'theme/ThemeContext';
-import {SentencesResponse} from 'assemblyai';
 import {languageType} from 'components/LanguageSelector';
+import {GeneratedSentence} from 'utils/sentencesBuilder';
 
 type CaptionServiceStatusProps = {
   videoUrl: string;
   onCancel: () => void;
-  onSuccess: (data: SentencesResponse) => void;
+  onSuccess: (data: GeneratedSentence[]) => void;
   language: languageType;
 };
 
@@ -31,7 +31,9 @@ const CaptionServiceStatus = ({
     sentences,
     error,
     startTranscriptionProcess,
-  } = useTranscriptionService();
+  } = useTranscriptionService({
+    isMock: true,
+  });
 
   const {theme} = useTheme();
 

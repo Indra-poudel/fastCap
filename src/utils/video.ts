@@ -45,9 +45,6 @@ export const generateThumbnail = (videoUri: string): Promise<string> => {
     try {
       const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/thumbnail.jpg`;
 
-      // Specify the command to generate a thumbnail
-      const ffmpegCommand = `-y -i ${videoUri} -ss 00:00:01 -vframes 1 ${outputUri}`;
-
       // Remove the existing file if it exists
       RNFetchBlob.fs
         .unlink(outputUri)

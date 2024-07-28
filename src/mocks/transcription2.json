@@ -1,0 +1,525 @@
+{
+  "id": "319c8041-a918-4186-b1be-9d910cee02a0",
+  "language_model": "assemblyai_default",
+  "acoustic_model": "assemblyai_default",
+  "language_code": "en_us",
+  "status": "completed",
+  "audio_url": "https://cdn.assemblyai.com/upload/ebc0244c-9c50-4344-bcaa-1e897b6667a4",
+  "text": "Hi guys, it's me, Indra. I am currently building an application for mobile to generate caption for video through the use of AI artificial intelligence. It helps created a small digital marketing agency to generate some stylistic caption in their video without putting lots of efforts.",
+  "words": [
+    {
+      "start": 720,
+      "end": 1000,
+      "text": "Hi",
+      "confidence": 0.80672,
+      "speaker": null
+    },
+    {
+      "start": 1030,
+      "end": 1574,
+      "text": "guys,",
+      "confidence": 0.78204,
+      "speaker": null
+    },
+    {
+      "start": 1702,
+      "end": 2142,
+      "text": "it's",
+      "confidence": 0.66305,
+      "speaker": null
+    },
+    {
+      "start": 2206,
+      "end": 2550,
+      "text": "me,",
+      "confidence": 0.99229,
+      "speaker": null
+    },
+    {
+      "start": 2630,
+      "end": 3366,
+      "text": "Indra.",
+      "confidence": 0.79957,
+      "speaker": null
+    },
+    {
+      "start": 3478,
+      "end": 3726,
+      "text": "I",
+      "confidence": 1,
+      "speaker": null
+    },
+    {
+      "start": 3758,
+      "end": 4046,
+      "text": "am",
+      "confidence": 0.98,
+      "speaker": null
+    },
+    {
+      "start": 4118,
+      "end": 4662,
+      "text": "currently",
+      "confidence": 0.99683,
+      "speaker": null
+    },
+    {
+      "start": 4806,
+      "end": 5326,
+      "text": "building",
+      "confidence": 0.56232,
+      "speaker": null
+    },
+    {
+      "start": 5438,
+      "end": 5782,
+      "text": "an",
+      "confidence": 0.98456,
+      "speaker": null
+    },
+    {
+      "start": 5846,
+      "end": 6686,
+      "text": "application",
+      "confidence": 0.98932,
+      "speaker": null
+    },
+    {
+      "start": 6798,
+      "end": 7142,
+      "text": "for",
+      "confidence": 0.98031,
+      "speaker": null
+    },
+    {
+      "start": 7206,
+      "end": 7930,
+      "text": "mobile",
+      "confidence": 0.82367,
+      "speaker": null
+    },
+    {
+      "start": 8430,
+      "end": 8814,
+      "text": "to",
+      "confidence": 0.99,
+      "speaker": null
+    },
+    {
+      "start": 8862,
+      "end": 9766,
+      "text": "generate",
+      "confidence": 0.9158,
+      "speaker": null
+    },
+    {
+      "start": 9958,
+      "end": 10750,
+      "text": "caption",
+      "confidence": 0.41793,
+      "speaker": null
+    },
+    {
+      "start": 10830,
+      "end": 11118,
+      "text": "for",
+      "confidence": 0.96906,
+      "speaker": null
+    },
+    {
+      "start": 11174,
+      "end": 11770,
+      "text": "video",
+      "confidence": 0.99007,
+      "speaker": null
+    },
+    {
+      "start": 12190,
+      "end": 12526,
+      "text": "through",
+      "confidence": 0.99417,
+      "speaker": null
+    },
+    {
+      "start": 12558,
+      "end": 12726,
+      "text": "the",
+      "confidence": 0.99,
+      "speaker": null
+    },
+    {
+      "start": 12758,
+      "end": 12950,
+      "text": "use",
+      "confidence": 0.99509,
+      "speaker": null
+    },
+    {
+      "start": 12990,
+      "end": 13382,
+      "text": "of",
+      "confidence": 0.99,
+      "speaker": null
+    },
+    {
+      "start": 13486,
+      "end": 14342,
+      "text": "AI",
+      "confidence": 0.69,
+      "speaker": null
+    },
+    {
+      "start": 14526,
+      "end": 15454,
+      "text": "artificial",
+      "confidence": 0.50796,
+      "speaker": null
+    },
+    {
+      "start": 15542,
+      "end": 16430,
+      "text": "intelligence.",
+      "confidence": 0.81863,
+      "speaker": null
+    },
+    {
+      "start": 16550,
+      "end": 16878,
+      "text": "It",
+      "confidence": 0.99404,
+      "speaker": null
+    },
+    {
+      "start": 16934,
+      "end": 17430,
+      "text": "helps",
+      "confidence": 0.55487,
+      "speaker": null
+    },
+    {
+      "start": 17510,
+      "end": 18450,
+      "text": "created",
+      "confidence": 0.35778,
+      "speaker": null
+    },
+    {
+      "start": 18790,
+      "end": 19530,
+      "text": "a",
+      "confidence": 0.45,
+      "speaker": null
+    },
+    {
+      "start": 20110,
+      "end": 20662,
+      "text": "small",
+      "confidence": 0.99797,
+      "speaker": null
+    },
+    {
+      "start": 20766,
+      "end": 21410,
+      "text": "digital",
+      "confidence": 0.99941,
+      "speaker": null
+    },
+    {
+      "start": 22430,
+      "end": 23310,
+      "text": "marketing",
+      "confidence": 0.99918,
+      "speaker": null
+    },
+    {
+      "start": 23390,
+      "end": 24374,
+      "text": "agency",
+      "confidence": 0.73632,
+      "speaker": null
+    },
+    {
+      "start": 24542,
+      "end": 25110,
+      "text": "to",
+      "confidence": 1,
+      "speaker": null
+    },
+    {
+      "start": 25230,
+      "end": 25894,
+      "text": "generate",
+      "confidence": 0.87225,
+      "speaker": null
+    },
+    {
+      "start": 25982,
+      "end": 26494,
+      "text": "some",
+      "confidence": 0.977,
+      "speaker": null
+    },
+    {
+      "start": 26622,
+      "end": 27770,
+      "text": "stylistic",
+      "confidence": 0.14331,
+      "speaker": null
+    },
+    {
+      "start": 27830,
+      "end": 28650,
+      "text": "caption",
+      "confidence": 0.65794,
+      "speaker": null
+    },
+    {
+      "start": 28810,
+      "end": 29082,
+      "text": "in",
+      "confidence": 0.99951,
+      "speaker": null
+    },
+    {
+      "start": 29106,
+      "end": 29338,
+      "text": "their",
+      "confidence": 0.6539,
+      "speaker": null
+    },
+    {
+      "start": 29394,
+      "end": 29802,
+      "text": "video",
+      "confidence": 0.99975,
+      "speaker": null
+    },
+    {
+      "start": 29906,
+      "end": 30550,
+      "text": "without",
+      "confidence": 0.99992,
+      "speaker": null
+    },
+    {
+      "start": 31450,
+      "end": 32042,
+      "text": "putting",
+      "confidence": 0.99925,
+      "speaker": null
+    },
+    {
+      "start": 32106,
+      "end": 32402,
+      "text": "lots",
+      "confidence": 0.99854,
+      "speaker": null
+    },
+    {
+      "start": 32426,
+      "end": 32826,
+      "text": "of",
+      "confidence": 1,
+      "speaker": null
+    },
+    {
+      "start": 32938,
+      "end": 33210,
+      "text": "efforts.",
+      "confidence": 0.86348,
+      "speaker": null
+    }
+  ],
+  "utterances": null,
+  "confidence": 0.845300217391304,
+  "audio_duration": 35,
+  "punctuate": true,
+  "format_text": true,
+  "dual_channel": null,
+  "webhook_url": null,
+  "webhook_status_code": null,
+  "webhook_auth": false,
+  "webhook_auth_header_name": null,
+  "speed_boost": false,
+  "auto_highlights_result": {
+    "status": "success",
+    "results": [
+      {
+        "count": 1,
+        "rank": 0.15,
+        "text": "AI artificial intelligence",
+        "timestamps": [
+          {
+            "start": 13486,
+            "end": 16430
+          }
+        ]
+      },
+      {
+        "count": 2,
+        "rank": 0.13,
+        "text": "video",
+        "timestamps": [
+          {
+            "start": 11174,
+            "end": 11770
+          },
+          {
+            "start": 29394,
+            "end": 29802
+          }
+        ]
+      },
+      {
+        "count": 2,
+        "rank": 0.13,
+        "text": "caption",
+        "timestamps": [
+          {
+            "start": 9958,
+            "end": 10750
+          },
+          {
+            "start": 27830,
+            "end": 28650
+          }
+        ]
+      },
+      {
+        "count": 1,
+        "rank": 0.12,
+        "text": "small digital marketing agency",
+        "timestamps": [
+          {
+            "start": 20110,
+            "end": 24374
+          }
+        ]
+      },
+      {
+        "count": 1,
+        "rank": 0.1,
+        "text": "mobile",
+        "timestamps": [
+          {
+            "start": 7206,
+            "end": 7930
+          }
+        ]
+      },
+      {
+        "count": 1,
+        "rank": 0.1,
+        "text": "lots",
+        "timestamps": [
+          {
+            "start": 32106,
+            "end": 32402
+          }
+        ]
+      },
+      {
+        "count": 1,
+        "rank": 0.09,
+        "text": "efforts",
+        "timestamps": [
+          {
+            "start": 32938,
+            "end": 33210
+          }
+        ]
+      },
+      {
+        "count": 1,
+        "rank": 0.08,
+        "text": "stylistic caption",
+        "timestamps": [
+          {
+            "start": 26622,
+            "end": 28650
+          }
+        ]
+      },
+      {
+        "count": 1,
+        "rank": 0.05,
+        "text": "use",
+        "timestamps": [
+          {
+            "start": 12758,
+            "end": 12950
+          }
+        ]
+      },
+      {
+        "count": 1,
+        "rank": 0.05,
+        "text": "application",
+        "timestamps": [
+          {
+            "start": 5846,
+            "end": 6686
+          }
+        ]
+      },
+      {
+        "count": 1,
+        "rank": 0.04,
+        "text": "Indra",
+        "timestamps": [
+          {
+            "start": 2630,
+            "end": 3366
+          }
+        ]
+      }
+    ]
+  },
+  "auto_highlights": true,
+  "audio_start_from": null,
+  "audio_end_at": null,
+  "word_boost": [],
+  "boost_param": null,
+  "filter_profanity": false,
+  "redact_pii": false,
+  "redact_pii_audio": false,
+  "redact_pii_audio_quality": null,
+  "redact_pii_policies": null,
+  "redact_pii_sub": null,
+  "speaker_labels": false,
+  "content_safety": false,
+  "iab_categories": false,
+  "content_safety_labels": {
+    "status": "unavailable",
+    "results": [],
+    "summary": {}
+  },
+  "iab_categories_result": {
+    "status": "unavailable",
+    "results": [],
+    "summary": {}
+  },
+  "language_detection": false,
+  "language_detection_threshold": null,
+  "language_confidence": null,
+  "custom_spelling": null,
+  "throttled": false,
+  "auto_chapters": false,
+  "summarization": false,
+  "summary_type": null,
+  "summary_model": null,
+  "custom_topics": false,
+  "topics": [],
+  "speech_threshold": null,
+  "speech_model": "best",
+  "chapters": null,
+  "disfluencies": false,
+  "entity_detection": false,
+  "sentiment_analysis": false,
+  "sentiment_analysis_results": null,
+  "entities": null,
+  "speakers_expected": null,
+  "summary": null,
+  "custom_topics_results": null,
+  "is_deleted": null
+}

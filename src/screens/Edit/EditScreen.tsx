@@ -5,29 +5,14 @@ import {
   ImageShader,
   useImage,
   useVideo,
-  Text as SkiaText,
-  useFont,
-  useFonts,
-  matchFont,
-  TextAlign,
-  Skia,
-  SkTextStyle,
-  SkParagraphStyle,
-  FontStyle,
-  Paragraph,
 } from '@shopify/react-native-skia';
-import {
-  SentencesResponse,
-  TranscriptSentence,
-  TranscriptWord,
-} from 'assemblyai';
 import BottomSheet from 'components/BottomSheet';
 import Button from 'components/Button/Button';
 import CaptionServiceStatus from 'components/CaptionServiceStatus';
 import LanguageSelector, {languageType} from 'components/LanguageSelector';
 import {languages_best} from 'constants/languages';
 import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -36,7 +21,6 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import Animated, {
-  runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
@@ -46,7 +30,8 @@ import Animated, {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useTheme} from 'theme/ThemeContext';
 import generateThumbnail from 'utils/video';
-import sentencesMock from 'mocks/sentences.json';
+import {GeneratedSentence} from 'utils/sentencesBuilder';
+import CustomParagraph from 'components/Skia/CustomParagraph';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -65,46 +50,33 @@ const EditScreen = ({route}: EditScreenProps) => {
   const [isLanguageBottomSheetOpen, setLanguageBottomSheetOpen] =
     useState(false);
 
-  const [sentences, setSentences] = useState<SentencesResponse>(sentencesMock);
-
   const [isCaptionsGenerating, setCaptionsGenerating] = useState(false);
 
   const [selectedLanguage, setSelectedLanguage] = useState<languageType>(
     languages_best[0],
   );
 
+  const [sentences, setSentences] = useState<GeneratedSentence[]>([]);
+
   const derivedPaused = useDerivedValue(() => {
     return paused;
   }, [paused]);
 
-  const {currentFrame, currentTime} = useVideo(videoURL, {
+  const {currentFrame, currentTime, framerate} = useVideo(videoURL, {
     paused: derivedPaused,
     volume: 1,
+    looping: false,
   });
-
-  const [allWords, setAllWords] = useState<TranscriptWord[]>([]);
-  const [currentWord, setCurrentWord] = useState<TranscriptWord | undefined>(
-    undefined,
-  );
 
   useEffect(() => {
     generateThumbnail(videoURL)
       .then(url => {
-        console.log(url);
         setThumbnailUrl(url);
       })
       .catch(error => {
         console.log(error);
       });
   }, [videoURL]);
-
-  useEffect(() => {
-    if (sentences) {
-      const words = accumulateWords(sentences.sentences);
-
-      setAllWords(words);
-    }
-  }, [sentences]);
 
   const handlePlayPause = () => {
     if (thumbnailUrl) {
@@ -156,61 +128,11 @@ const EditScreen = ({route}: EditScreenProps) => {
     setCaptionsGenerating(false);
   };
 
-  const handleCaptionServiceSuccess = (data: SentencesResponse) => {
+  const handleCaptionServiceSuccess = (data: GeneratedSentence[]) => {
     setSentences(data);
   };
 
-  const fontMgr = useFonts({
-    Inter: [
-      require('../../assets/fonts/Inter-Medium.ttf'),
-      require('../../assets/fonts/Inter-Black.ttf'),
-      require('../../assets/fonts/Inter-Bold.ttf'),
-      require('../../assets/fonts/Inter-ExtraBold.ttf'),
-      require('../../assets/fonts/Inter-ExtraLight.ttf'),
-      require('../../assets/fonts/Inter-Light.ttf'),
-      require('../../assets/fonts/Inter-Regular.ttf'),
-      require('../../assets/fonts/Inter-SemiBold.ttf'),
-      require('../../assets/fonts/Inter-Thin.ttf'),
-    ],
-  });
-
-  useAnimatedReaction(
-    () => currentTime.value,
-    latestTime => {
-      if (allWords) {
-        const activeWord = allWords.find(
-          word => latestTime >= word.start && latestTime <= word.end,
-        );
-        if (activeWord) {
-          runOnJS(setCurrentWord)(activeWord);
-        } else {
-          runOnJS(setCurrentWord)(undefined);
-        }
-      }
-    },
-    [allWords],
-  );
-
-  const paragraph = useMemo(() => {
-    // Are the font loaded already?
-    if (!fontMgr) {
-      return null;
-    }
-    const paragraphStyle: SkParagraphStyle = {
-      textAlign: TextAlign.Center,
-    };
-    const textStyle: SkTextStyle = {
-      color: Skia.Color('White'),
-      fontFamilies: ['Inter'],
-      fontSize: 32,
-      backgroundColor: Skia.Color(theme.colors.primary),
-      fontStyle: FontStyle.Bold,
-    };
-    return Skia.ParagraphBuilder.Make(paragraphStyle, fontMgr)
-      .pushStyle(textStyle)
-      .addText(currentWord?.text || '')
-      .build();
-  }, [fontMgr, theme, currentWord]);
+  console.log('Edit screen rendering');
 
   return (
     <View
@@ -221,22 +143,22 @@ const EditScreen = ({route}: EditScreenProps) => {
         },
       ]}>
       <Pressable onPress={handlePlayPause} style={[Styles.playerWrapper]}>
-        <Canvas style={Styles.canvas}>
+        <Canvas style={[Styles.canvas]}>
           <Fill>
             <ImageShader
               image={thumbnail || currentFrame}
-              rect={{x: 0, y: 0, width: width, height: height}}
+              rect={{x: 0, y: 0, width: width + 5, height: height}}
               fit={'contain'}
             />
           </Fill>
 
-          <Paragraph
-            paragraph={paragraph}
-            y={height / 1.5}
-            x={0}
-            width={width}
+          <CustomParagraph
+            currentTime={currentTime}
+            sentences={sentences}
+            frameRate={framerate}
           />
         </Canvas>
+
         <AnimatedPressable
           onPress={handlePlayPause}
           style={[
@@ -383,19 +305,3 @@ const Styles = StyleSheet.create({
 });
 
 export default EditScreen;
-
-const accumulateWords = (sentences: TranscriptSentence[]) => {
-  let allWords: TranscriptWord[] = [];
-  sentences.forEach(sentence => {
-    allWords = [...allWords, ...sentence.words];
-  });
-  return allWords;
-};
-
-const splitWordsIntoChunks = (words: TranscriptWord[], chunkSize: number) => {
-  const chunks = [];
-  for (let i = 0; i < words.length; i += chunkSize) {
-    chunks.push(words.slice(i, i + chunkSize));
-  }
-  return chunks;
-};
