@@ -1,8 +1,7 @@
 import {Mask, Rect, SkColor} from '@shopify/react-native-skia';
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {
   SharedValue,
-  runOnJS,
   useAnimatedReaction,
   useSharedValue,
   withTiming,
@@ -34,26 +33,25 @@ const KaraokeEffect = ({
   end,
 }: KaraokeTextProps) => {
   const animatedFillWidth = useSharedValue(0);
-  const [isActive, setIsActive] = useState(false);
+  const hasAnimated = useSharedValue(false);
 
   useAnimatedReaction(
     () => currentTime.value,
     latestTime => {
-      if (latestTime >= start && latestTime <= end) {
-        runOnJS(setIsActive)(true);
+      if (
+        latestTime >= start &&
+        latestTime <= end &&
+        hasAnimated.value === false
+      ) {
+        animatedFillWidth.value = withTiming(width, {
+          duration: duration,
+        });
+        hasAnimated.value = true;
       } else {
-        runOnJS(setIsActive)(false);
+        hasAnimated.value = false;
       }
     },
   );
-
-  useEffect(() => {
-    if (isActive) {
-      animatedFillWidth.value = withTiming(width, {
-        duration: duration,
-      });
-    }
-  }, [animatedFillWidth, duration, isActive, width]);
 
   return (
     <>

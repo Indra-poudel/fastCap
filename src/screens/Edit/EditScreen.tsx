@@ -32,6 +32,7 @@ import {useTheme} from 'theme/ThemeContext';
 import generateThumbnail from 'utils/video';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
 import CustomParagraph from 'components/Skia/CustomParagraph';
+import MyParagraph from 'components/Skia/NewCustomParagraph';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -132,8 +133,6 @@ const EditScreen = ({route}: EditScreenProps) => {
     setSentences(data);
   };
 
-  console.log('Edit screen rendering');
-
   return (
     <View
       style={[
@@ -152,7 +151,7 @@ const EditScreen = ({route}: EditScreenProps) => {
             />
           </Fill>
 
-          <CustomParagraph
+          <MyParagraph
             currentTime={currentTime}
             sentences={sentences}
             frameRate={framerate}
