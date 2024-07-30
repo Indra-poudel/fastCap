@@ -1,21 +1,21 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React from 'react';
 import {
   Paragraph,
   Skia,
   useFonts,
   TextAlign,
-  TileMode,
-  BlurStyle,
-  BlendMode,
   Mask,
   Rect,
   SkParagraphStyle,
   SkTextStyle,
+  PaintStyle,
+  Group,
+  Paint,
+  Shadow,
 } from '@shopify/react-native-skia';
 import {fontSource} from 'constants/fonts';
 import {
   SharedValue,
-  runOnJS,
   useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
@@ -23,7 +23,6 @@ import {
 } from 'react-native-reanimated';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
 import {useWindowDimensions} from 'react-native';
-import KaraokeEffect from 'components/Skia/KaraokeEffect';
 
 type CustomParagraphProps = {
   currentTime: SharedValue<number>;
@@ -57,7 +56,7 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
     const textStyle: SkTextStyle = {
       color: Skia.Color('white'),
       fontFamilies: ['Inter'],
-      fontSize: 24,
+      fontSize: 32,
     };
 
     const paragraphBuilder = Skia.ParagraphBuilder.Make(
@@ -71,6 +70,48 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
           ...textStyle,
         },
         undefined,
+        undefined,
+      );
+
+      paragraphBuilder.addText(word.text + ' '); // Add space after each word
+      paragraphBuilder.pop();
+    });
+
+    const paragraph = paragraphBuilder.build();
+    paragraph.layout(width - 32);
+    return paragraph;
+  }, [customFontMgr, currentSentence]);
+
+  const outLine = useDerivedValue(() => {
+    // Are the font loaded already?
+    if (!customFontMgr) {
+      return null;
+    }
+    const paragraphStyle: SkParagraphStyle = {
+      textAlign: TextAlign.Center,
+    };
+    const textStyle: SkTextStyle = {
+      color: Skia.Color('white'),
+      fontFamilies: ['Inter'],
+      fontSize: 32,
+    };
+
+    const paragraphBuilder = Skia.ParagraphBuilder.Make(
+      paragraphStyle,
+      customFontMgr,
+    );
+
+    const foregroundPaint = Skia.Paint();
+    foregroundPaint.setStyle(PaintStyle.Stroke);
+    foregroundPaint.setColor(Skia.Color('black'));
+    foregroundPaint.setStrokeWidth(5);
+
+    currentSentence.value.words.forEach((word, _index) => {
+      paragraphBuilder.pushStyle(
+        {
+          ...textStyle,
+        },
+        foregroundPaint,
         undefined,
       );
 
@@ -122,20 +163,46 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
 
   return (
     <>
-      <Paragraph
-        paragraph={paragraph}
-        x={16}
-        y={height / 1.5}
-        width={width - 32}
-      />
+      <Group
+        layer={
+          <Paint>
+            <Shadow blur={0} dx={0} dy={4} color={Skia.Color('Black')} />
+          </Paint>
+        }>
+        <Paragraph
+          paragraph={outLine}
+          x={16}
+          y={height / 1.5}
+          width={width - 32}
+        />
+        <Paragraph
+          paragraph={paragraph}
+          x={16}
+          y={height / 1.5}
+          width={width - 32}
+        />
+      </Group>
       <Mask
         mask={
-          <Paragraph
-            paragraph={paragraph}
-            x={16}
-            y={height / 1.5}
-            width={width - 32}
-          />
+          <Group
+            layer={
+              <Paint>
+                <Shadow blur={0} dx={0} dy={4} color={Skia.Color('Black')} />
+              </Paint>
+            }>
+            <Paragraph
+              paragraph={outLine}
+              x={16}
+              y={height / 1.5}
+              width={width - 32}
+            />
+            <Paragraph
+              paragraph={paragraph}
+              x={16}
+              y={height / 1.5}
+              width={width - 32}
+            />
+          </Group>
         }
         mode="luminance">
         <Rect
