@@ -142,7 +142,7 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
         currentSentence.value = EMPTY_SENTENCE;
       }
     },
-    [paragraphDimension, currentTime, sentences],
+    [currentTime, sentences],
   );
 
   useAnimatedReaction(
