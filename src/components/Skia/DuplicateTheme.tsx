@@ -7,6 +7,7 @@ import {
   SkParagraphStyle,
   SkTextStyle,
   FontWeight,
+  RoundedRect,
 } from '@shopify/react-native-skia';
 import {fontSource} from 'constants/fonts';
 import {
@@ -104,8 +105,29 @@ const DuplicateTheme = ({currentTime, sentences}: CustomParagraphProps) => {
     [currentTime, sentences],
   );
 
+  const paragraphHeight = useDerivedValue(() => {
+    return paragraph.value?.getHeight() || 0;
+  }, [paragraph]);
+
+  const paragraphWidth = useDerivedValue(() => {
+    return paragraph.value?.getMaxIntrinsicWidth() || 0;
+  }, [paragraph]);
+
+  const paragraphXpos = useDerivedValue(() => {
+    return width / 2 - paragraphWidth.value / 2;
+  }, [paragraphWidth]);
+
   return (
     <>
+      <RoundedRect
+        x={paragraphXpos}
+        y={height / 1.5}
+        width={paragraphWidth}
+        height={paragraphHeight}
+        r={0}
+        color="black"
+        opacity={0.5}
+      />
       <Paragraph
         paragraph={paragraph}
         x={16}
