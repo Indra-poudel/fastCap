@@ -35,6 +35,8 @@ import {GeneratedSentence} from 'utils/sentencesBuilder';
 // import CustomParagraph from 'components/Skia/CustomParagraph';
 // import MyParagraph from 'components/Skia/NewCustomParagraph';
 import DuplicateTheme from 'components/Skia/DuplicateTheme';
+import Timeline from 'components/Skia/Timeline';
+import TimelineView from 'components/Skia/TimelineView';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -63,7 +65,7 @@ const EditScreen = ({route}: EditScreenProps) => {
   const {currentFrame, currentTime, framerate, duration} = useVideo(videoURL, {
     paused: paused,
     volume: 1,
-    looping: false,
+    looping: true,
     seek: seek,
   });
 
@@ -180,7 +182,7 @@ const EditScreen = ({route}: EditScreenProps) => {
             <ImageShader
               image={currentFrame}
               fit={'contain'}
-              rect={{x: 0, y: 0, width: width + 5, height: height}}
+              rect={{x: 0, y: 0, width: width, height: height - 150}}
             />
           </Fill>
 
@@ -225,19 +227,31 @@ const EditScreen = ({route}: EditScreenProps) => {
         </AnimatedPressable>
       </Pressable>
 
-      <Button
-        onPress={handleAddCaption}
-        style={[Styles.button]}
-        label="Add caption"
-        buttonType={'primary'}
-        icon={
-          <Icon
-            name={'closed-caption-outline'}
-            size={24}
-            color={theme.colors.white}
-          />
-        }
-      />
+      {/* later optimized sentence to shared value and use display none or something like that */}
+      {!!sentences.length && (
+        <TimelineView
+          currentTime={currentTime}
+          sentences={sentences}
+          frameRate={framerate}
+          totalDuration={totalDuration}
+          seek={seek}
+        />
+      )}
+      {!sentences.length && (
+        <Button
+          onPress={handleAddCaption}
+          style={[Styles.button]}
+          label="Add caption"
+          buttonType={'primary'}
+          icon={
+            <Icon
+              name={'closed-caption-outline'}
+              size={24}
+              color={theme.colors.white}
+            />
+          }
+        />
+      )}
       {isAddCaptionBottomSheetOpen && (
         <BottomSheet
           onClose={handleBottomSheet}
