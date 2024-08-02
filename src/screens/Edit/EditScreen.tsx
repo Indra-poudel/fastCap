@@ -35,8 +35,7 @@ import {GeneratedSentence} from 'utils/sentencesBuilder';
 // import CustomParagraph from 'components/Skia/CustomParagraph';
 // import MyParagraph from 'components/Skia/NewCustomParagraph';
 import DuplicateTheme from 'components/Skia/DuplicateTheme';
-import Timeline from 'components/Skia/Timeline';
-import TimelineView from 'components/Skia/TimelineView';
+import Timeline from 'components/Timeline/Timeline';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -69,25 +68,23 @@ const EditScreen = ({route}: EditScreenProps) => {
     seek: seek,
   });
 
+  const frameDurationMs = 1000 / framerate;
+
   const totalDuration = useDerivedValue(() => {
     return duration;
   }, [duration]);
-
-  const videoFrameRate = useDerivedValue(() => {
-    return framerate;
-  }, [framerate]);
 
   useAnimatedReaction(
     () => {
       return currentTime.value;
     },
     latestTime => {
-      if (latestTime + 1000 / videoFrameRate.value >= totalDuration.value) {
+      if (latestTime + frameDurationMs * 2 >= totalDuration.value) {
         paused.value = true;
         opacity.value = withTiming(1);
       }
     },
-    [currentTime, totalDuration, videoFrameRate],
+    [currentTime, totalDuration, framerate],
   );
 
   useEffect(() => {
@@ -166,8 +163,6 @@ const EditScreen = ({route}: EditScreenProps) => {
     setSentences(data);
   };
 
-  console.log('Edit Screen re-rendering');
-
   return (
     <View
       style={[
@@ -229,12 +224,13 @@ const EditScreen = ({route}: EditScreenProps) => {
 
       {/* later optimized sentence to shared value and use display none or something like that */}
       {!!sentences.length && (
-        <TimelineView
+        <Timeline
           currentTime={currentTime}
           sentences={sentences}
           frameRate={framerate}
           totalDuration={totalDuration}
           seek={seek}
+          height={150}
         />
       )}
       {!sentences.length && (

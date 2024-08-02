@@ -27,7 +27,7 @@ const Interval = ({
             height: height,
 
             backgroundColor: lineColor,
-            left: x,
+            left: x || 0,
           },
           Style.wrapper,
         ]}
@@ -37,10 +37,10 @@ const Interval = ({
           theme.typography.subheader.small,
           {
             color: theme.colors.grey4,
-            left: x,
+            left: x || 0,
             transform: [
               {
-                translateY: 40,
+                translateY: 32,
               },
               {
                 translateX: -20,
