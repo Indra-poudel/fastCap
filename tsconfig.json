@@ -15,7 +15,8 @@
       "@constants/*": ["src/constants/*"],
       "@apis/*": ["src/apis/*"],
       "@hooks/*": ["src/hooks/*"],
-      "@mocks/*": ["src/mocks"]
+      "@mocks/*": ["src/mocks"],
+      "@redux/*": ["src/redux"]
     }
   },
   "include": ["src", "src/types", "App.tsx"]

@@ -2,6 +2,7 @@ import {AutoHighlightResult, TranscriptWord} from 'assemblyai';
 
 export type SentenceWord = TranscriptWord & {
   highlighted?: boolean;
+  // later add type for styling individual word
 };
 
 export type GeneratedSentence = {
