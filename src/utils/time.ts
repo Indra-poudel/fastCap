@@ -1,5 +1,10 @@
-export const formatDuration = (ms: number): string => {
-  const minutes = Math.floor(ms / 60000);
-  const seconds = Math.floor((ms % 60000) / 1000); // Ensure seconds is a number
-  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+export const formatDuration = (seconds: number): string => {
+  if (seconds < 0 || isNaN(seconds)) {
+    return '0:00';
+  }
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  return `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
 };

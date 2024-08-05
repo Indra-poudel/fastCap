@@ -116,6 +116,8 @@ const EditScreen = ({route}: EditScreenProps) => {
     const isoString = date.toISOString();
     const title = VIDEO_NAME_PREFIX + '-' + Date.now();
 
+    console.log('route',route.params.duration)
+
     dispatch(
       addVideo({
         id: uuid.v4().toString(),
@@ -125,7 +127,7 @@ const EditScreen = ({route}: EditScreenProps) => {
         sentences: [],
         createdAt: isoString,
         updatedAt: isoString,
-        duration: duration,
+        duration: route.params.duration || 0,
         thumbnailUrl: thumbnailUrl,
         width: route.params.width,
         height: route.params.height,

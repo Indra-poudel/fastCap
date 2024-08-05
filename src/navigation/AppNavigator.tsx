@@ -14,7 +14,7 @@ export enum SCREENS {
 
 export type RootStackParamList = {
   home: undefined;
-  edit: {videoURL: string; width: number; height: number};
+  edit: {videoURL: string; width: number; height: number; duration?: number };
   editDetails: undefined;
   editSettings: undefined;
 };

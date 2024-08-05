@@ -64,7 +64,14 @@ const HomeScreen = () => {
         </View>
       ) : (
         <View style={style.emptyContainer}>
-          <Skottie source={VideoRecordingAnimation} autoPlay={true} />
+          <Skottie
+            source={VideoRecordingAnimation}
+            autoPlay={true}
+            style={{
+              height: 200,
+              width: 200,
+            }}
+          />
           <View style={[style.emptyContainerTextWrapper]}>
             <Text
               style={[
