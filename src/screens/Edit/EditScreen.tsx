@@ -37,9 +37,10 @@ import {GeneratedSentence} from 'utils/sentencesBuilder';
 import DuplicateTheme from 'components/Skia/DuplicateTheme';
 import Timeline from 'components/Timeline/Timeline';
 import {useAppDispatch} from 'hooks/useStore';
-import {addVideo} from 'store/videos/slice';
-import {VIDEO_NAME_PREFIX} from 'constants/index';
-import uuid from 'react-native-uuid';
+import {updateVideo} from 'store/videos/slice';
+import {useSelector} from 'react-redux';
+import {selectSelectedVideo} from 'store/videos/selector';
+import {Video} from 'store/videos/type';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -65,6 +66,8 @@ const EditScreen = ({route}: EditScreenProps) => {
     languages_best[0],
   );
   const [sentences, setSentences] = useState<GeneratedSentence[]>([]);
+
+  const selectedVideo = useSelector(selectSelectedVideo);
 
   const {currentFrame, currentTime, framerate, duration} = useVideo(videoURL, {
     paused: paused,
@@ -92,6 +95,13 @@ const EditScreen = ({route}: EditScreenProps) => {
     [currentTime, totalDuration, framerate],
   );
 
+  const assignThumbnailImageToCurrentFrame = (url: string) => {
+    Skia.Data.fromURI(url).then(data => {
+      const image = Skia.Image.MakeImageFromEncoded(data);
+      currentFrame.value = image;
+    });
+  };
+
   useEffect(() => {
     return () => {
       paused.value = true;
@@ -99,40 +109,27 @@ const EditScreen = ({route}: EditScreenProps) => {
   }, []);
 
   useEffect(() => {
-    generateThumbnail(videoURL)
-      .then(async url => {
-        const data = await Skia.Data.fromURI(url);
-        const image = Skia.Image.MakeImageFromEncoded(data);
-        currentFrame.value = image;
-        handleAddVideoObjectToStore(url);
-      })
-      .catch(error => {
-        console.log(error);
-      });
-  }, [videoURL]);
+    if (selectedVideo && !selectedVideo?.thumbnailUrl) {
+      generateThumbnail(videoURL, selectedVideo.id)
+        .then(async url => {
+          assignThumbnailImageToCurrentFrame(url);
 
-  const handleAddVideoObjectToStore = (thumbnailUrl: string) => {
-    const date = new Date(Date.now());
-    const isoString = date.toISOString();
-    const title = VIDEO_NAME_PREFIX + '-' + Date.now();
+          const updatedVideo: Video = {
+            ...selectedVideo,
+            thumbnailUrl: url,
+          };
+          updateVideoObjectToStore(updatedVideo);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    } else if (selectedVideo && selectedVideo.thumbnailUrl) {
+      assignThumbnailImageToCurrentFrame(selectedVideo.thumbnailUrl);
+    }
+  }, [selectedVideo]);
 
-    console.log('route',route.params.duration)
-
-    dispatch(
-      addVideo({
-        id: uuid.v4().toString(),
-        title: title,
-        url: videoURL,
-        language: undefined,
-        sentences: [],
-        createdAt: isoString,
-        updatedAt: isoString,
-        duration: route.params.duration || 0,
-        thumbnailUrl: thumbnailUrl,
-        width: route.params.width,
-        height: route.params.height,
-      }),
-    );
+  const updateVideoObjectToStore = (video: Video) => {
+    dispatch(updateVideo(video));
   };
 
   const handlePlayPause = () => {

@@ -4,7 +4,7 @@ import {Video, VideoId, VideosSliceState} from 'store/videos/type';
 const initialState: VideosSliceState = {
   byId: {},
   allIds: [],
-  selectedVideoId: '',
+  selectedVideoId: undefined,
 };
 
 const videosSlice = createSlice({
@@ -30,9 +30,18 @@ const videosSlice = createSlice({
     reorderVideos: (state, action: PayloadAction<VideoId[]>) => {
       state.allIds = action.payload;
     },
+
+    setSelectedVideo: (state, action: PayloadAction<VideoId | undefined>) => {
+      state.selectedVideoId = action.payload;
+    },
   },
 });
 
-export const {addVideo, removeVideo, updateVideo, reorderVideos} =
-  videosSlice.actions;
+export const {
+  addVideo,
+  removeVideo,
+  updateVideo,
+  reorderVideos,
+  setSelectedVideo,
+} = videosSlice.actions;
 export default videosSlice.reducer;

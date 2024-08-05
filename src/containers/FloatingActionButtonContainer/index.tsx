@@ -6,10 +6,18 @@ import {
   checkAllPermissions,
   requestAllPermissions,
 } from 'utils/permissionHandler';
-import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
+import {
+  ImagePickerResponse,
+  launchCamera,
+  launchImageLibrary,
+} from 'react-native-image-picker';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {RootStackParamList} from 'navigation/AppNavigator';
 import {useNavigation} from '@react-navigation/native';
+import {VIDEO_NAME_PREFIX} from 'constants/index';
+import {useAppDispatch} from 'hooks/useStore';
+import {addVideo, setSelectedVideo} from 'store/videos/slice';
+import uuid from 'react-native-uuid';
 
 export enum FLOATING_ACTION {
   RECORD = 'record',
@@ -20,7 +28,10 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const FloatingActionButton = () => {
   const [open, setOpen] = useState(false);
+
+  const dispatch = useAppDispatch();
   const navigation = useNavigation<NavigationProp>();
+
   const handlePermission = async (action: FLOATING_ACTION) => {
     const granted = await checkAllPermissions();
 
@@ -54,6 +65,38 @@ const FloatingActionButton = () => {
     }
   };
 
+  const handleAddVideoObjectToStore = (response: ImagePickerResponse) => {
+    if (
+      response.assets &&
+      response?.assets[0].uri &&
+      response.assets[0].width &&
+      response.assets[0].height
+    ) {
+      const date = new Date(Date.now());
+      const isoString = date.toISOString();
+      const title = VIDEO_NAME_PREFIX + '-' + Date.now();
+
+      const id = uuid.v4().toString();
+
+      dispatch(
+        addVideo({
+          id: id,
+          title: title,
+          url: response?.assets[0].uri,
+          language: undefined,
+          sentences: [],
+          createdAt: isoString,
+          updatedAt: isoString,
+          duration: response.assets[0].duration || 0,
+          width: response.assets[0].width,
+          height: response.assets[0].height,
+        }),
+      );
+
+      dispatch(setSelectedVideo(id));
+    }
+  };
+
   const handleSelectVideoFromGallery = () => {
     launchImageLibrary({
       mediaType: 'video',
@@ -61,19 +104,15 @@ const FloatingActionButton = () => {
       selectionLimit: 1,
     })
       .then(response => {
+        handleAddVideoObjectToStore(response);
         console.log('Response', response);
 
         setOpen(prev => !prev);
 
         response.assets &&
           response?.assets[0].uri &&
-          response.assets[0].width &&
-          response.assets[0].height &&
           navigation.navigate('edit', {
             videoURL: response.assets[0].uri,
-            width: response.assets[0].width,
-            height: response.assets[0].height,
-            duration:response.assets[0].duration
           });
       })
       .catch(error => {
@@ -88,19 +127,15 @@ const FloatingActionButton = () => {
       saveToPhotos: true,
     })
       .then(response => {
+        handleAddVideoObjectToStore(response);
         console.log('Response', response);
 
         setOpen(prev => !prev);
 
         response.assets &&
           response?.assets[0].uri &&
-          response.assets[0].width &&
-          response.assets[0].height &&
           navigation.navigate('edit', {
             videoURL: response.assets[0].uri,
-            width: response.assets[0].width,
-            height: response.assets[0].height,
-            duration: response.assets[0].duration,
           });
       })
       .catch(error => {

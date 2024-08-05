@@ -1,6 +1,6 @@
 import React from 'react';
-import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
-import {useAppSelector} from 'hooks/useStore';
+import {StyleSheet, Text, View} from 'react-native';
+import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {selectAllVideos} from 'store/videos/selector';
 import withPageWrapper from 'hoc/withPageWrapper';
 import Header from 'screens/Home/components/Header';
@@ -11,12 +11,27 @@ import {Video} from 'store/videos/type';
 import {FlashList, ListRenderItem} from '@shopify/flash-list';
 import {Skottie} from 'react-native-skottie';
 import VideoRecordingAnimation from 'assets/lotties/VideoPlayer.json';
+import {useNavigation} from '@react-navigation/native';
+import {RootStackParamList} from 'navigation/AppNavigator';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {setSelectedVideo} from 'store/videos/slice';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const HomeScreen = () => {
+  const dispatch = useAppDispatch();
   const videos = useAppSelector(selectAllVideos);
   const {theme} = useTheme();
 
-  const {width, height} = useWindowDimensions();
+  const navigation = useNavigation<NavigationProp>();
+
+  const handleClickVideoCard = (video: Video) => {
+    dispatch(setSelectedVideo(video.id));
+
+    navigation.navigate('edit', {
+      videoURL: video.url,
+    });
+  };
 
   const renderItem: ListRenderItem<Video> = ({item}) => {
     return (
@@ -25,6 +40,7 @@ const HomeScreen = () => {
         name={item.title}
         duration={item.duration}
         createdAt={item.createdAt}
+        onPress={() => handleClickVideoCard(item)}
       />
     );
   };
@@ -67,10 +83,8 @@ const HomeScreen = () => {
           <Skottie
             source={VideoRecordingAnimation}
             autoPlay={true}
-            style={{
-              height: 200,
-              width: 200,
-            }}
+            style={style.animation}
+            resizeMode="contain"
           />
           <View style={[style.emptyContainerTextWrapper]}>
             <Text
@@ -151,6 +165,12 @@ const style = StyleSheet.create({
   info: {
     width: 300,
     textAlign: 'center',
+  },
+
+  animation: {
+    height: 200,
+    width: 200,
+    marginBottom: -20,
   },
 });
 

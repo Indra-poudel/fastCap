@@ -40,10 +40,13 @@ export const convertVideoToMp3 = (
   });
 };
 
-export const generateThumbnail = (videoUri: string): Promise<string> => {
+export const generateThumbnail = (
+  videoUri: string,
+  id: string,
+): Promise<string> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/thumbnail.jpg`;
+      const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/${id}.jpg`;
 
       // Remove the existing file if it exists
       try {

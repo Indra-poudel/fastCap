@@ -4,7 +4,7 @@ import {GeneratedSentence} from 'utils/sentencesBuilder';
 export type VideosSliceState = {
   byId: Record<VideoId, Video>;
   allIds: VideoId[];
-  selectedVideoId: '';
+  selectedVideoId: VideoId | undefined;
 };
 
 export type VideoId = string;
@@ -19,7 +19,7 @@ export type Video = {
   createdAt: string;
   updatedAt: string;
   duration: number;
-  thumbnailUrl: string;
+  thumbnailUrl?: string;
   height: number;
   width: number;
 };
