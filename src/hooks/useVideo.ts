@@ -98,6 +98,9 @@ export const useVideo = (
     value => {
       if (value !== null) {
         video?.seek(value);
+        if (video && isPaused) {
+          setFrame(video, currentFrame);
+        }
         currentTime.value = value;
         seek.value = null;
       }

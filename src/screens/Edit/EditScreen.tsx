@@ -36,6 +36,10 @@ import {GeneratedSentence} from 'utils/sentencesBuilder';
 // import MyParagraph from 'components/Skia/NewCustomParagraph';
 import DuplicateTheme from 'components/Skia/DuplicateTheme';
 import Timeline from 'components/Timeline/Timeline';
+import {useAppDispatch} from 'hooks/useStore';
+import {addVideo} from 'store/videos/slice';
+import {VIDEO_NAME_PREFIX} from 'constants/index';
+import uuid from 'react-native-uuid';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -45,6 +49,7 @@ const EditScreen = ({route}: EditScreenProps) => {
   const {theme} = useTheme();
 
   const videoURL = route.params.videoURL;
+  const dispatch = useAppDispatch();
 
   const paused = useSharedValue(true);
   const opacity = useSharedValue(1);
@@ -99,11 +104,34 @@ const EditScreen = ({route}: EditScreenProps) => {
         const data = await Skia.Data.fromURI(url);
         const image = Skia.Image.MakeImageFromEncoded(data);
         currentFrame.value = image;
+        handleAddVideoObjectToStore(url);
       })
       .catch(error => {
         console.log(error);
       });
   }, [videoURL]);
+
+  const handleAddVideoObjectToStore = (thumbnailUrl: string) => {
+    const date = new Date(Date.now());
+    const isoString = date.toISOString();
+    const title = VIDEO_NAME_PREFIX + '-' + Date.now();
+
+    dispatch(
+      addVideo({
+        id: uuid.v4().toString(),
+        title: title,
+        url: videoURL,
+        language: undefined,
+        sentences: [],
+        createdAt: isoString,
+        updatedAt: isoString,
+        duration: duration,
+        thumbnailUrl: thumbnailUrl,
+        width: route.params.width,
+        height: route.params.height,
+      }),
+    );
+  };
 
   const handlePlayPause = () => {
     paused.value = !paused.value;

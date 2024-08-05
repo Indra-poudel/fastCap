@@ -13,11 +13,13 @@ export type Video = {
   id: VideoId;
   title: string;
   url: string;
-  language: TranscriptLanguageCode;
+  language?: TranscriptLanguageCode;
   sentences: GeneratedSentence[];
-  templateId: string;
+  templateId?: string;
   createdAt: string;
   updatedAt: string;
   duration: number;
   thumbnailUrl: string;
+  height: number;
+  width: number;
 };

@@ -108,6 +108,7 @@ const LanguageSelector = ({onClose, onSelect}: LanguageSelectorProps) => {
             renderItem={renderItem}
             data={filterLanguagesMemo}
             estimatedItemSize={50}
+            showsVerticalScrollIndicator={false}
           />
         </View>
       </>

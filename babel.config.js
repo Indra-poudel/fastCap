@@ -32,6 +32,7 @@ module.exports = {
           '@hooks/*': './src/hooks',
           '@mocks/*': './src/mocks',
           '@redux/*': './src/redux',
+          '@hoc/*': './src/hoc',
         },
       },
     ],

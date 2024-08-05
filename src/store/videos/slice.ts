@@ -14,7 +14,7 @@ const videosSlice = createSlice({
     addVideo: (state, action: PayloadAction<Video>) => {
       const video = action.payload;
       state.byId[video.id] = video;
-      state.allIds.push(video.id);
+      state.allIds.unshift(video.id);
     },
     removeVideo: (state, action: PayloadAction<VideoId>) => {
       const videoId = action.payload;
