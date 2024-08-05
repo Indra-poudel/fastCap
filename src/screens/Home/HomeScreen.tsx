@@ -36,7 +36,7 @@ const HomeScreen = () => {
   const renderItem: ListRenderItem<Video> = ({item}) => {
     return (
       <Card
-        imageURL={item.url}
+        imageURL={item.thumbnailUrl || item.url}
         name={item.title}
         duration={item.duration}
         createdAt={item.createdAt}
