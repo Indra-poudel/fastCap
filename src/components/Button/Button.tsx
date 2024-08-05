@@ -25,6 +25,7 @@ type ButtonProps = {
   buttonType: 'primary' | 'secondary' | 'tertiary';
   style?: StyleProp<ViewStyle>;
   onPress?: ((event: GestureResponderEvent) => void) | null | undefined;
+  color?: string;
 };
 
 const Button = ({
@@ -35,6 +36,7 @@ const Button = ({
   buttonType,
   style,
   onPress,
+  color,
 }: ButtonProps) => {
   const {theme} = useTheme();
   return (
@@ -52,7 +54,7 @@ const Button = ({
               ? theme.colors.transparent
               : 'rgba(47, 128, 237, 0.14))',
 
-          borderColor: theme.colors.primary,
+          borderColor: color || theme.colors.primary,
           opacity: pressed ? 0.7 : 1,
         },
       ]}>
@@ -63,7 +65,7 @@ const Button = ({
           style={[
             theme.typography.header.small,
             {
-              color: theme.colors.white,
+              color: color || theme.colors.white,
             },
             Style.label,
           ]}>

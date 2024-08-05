@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import {StyleSheet, Text, TextInput, View} from 'react-native';
 import {useAppDispatch, useAppSelector} from 'hooks/useStore';
-import {selectAllVideos} from 'store/videos/selector';
+import {selectAllVideos, selectSelectedVideo} from 'store/videos/selector';
 import Header from 'screens/Home/components/Header';
 import {useTheme} from 'theme/ThemeContext';
 import Label from 'components/label';
@@ -13,10 +13,11 @@ import VideoRecordingAnimation from 'assets/lotties/VideoPlayer.json';
 import {useNavigation} from '@react-navigation/native';
 import {RootStackParamList} from 'navigation/AppNavigator';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {setSelectedVideo} from 'store/videos/slice';
+import {removeVideo, setSelectedVideo} from 'store/videos/slice';
 import CardAction from 'screens/Home/components/CardAction';
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {TABS, TabParamList} from 'navigation/HomeTabs';
+import Dialog from 'components/Dialog';
 
 type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
   setFabVisible: (visible: boolean) => void;
@@ -30,10 +31,33 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const videos = useAppSelector(selectAllVideos);
+  const selectedVideo = useAppSelector(selectSelectedVideo);
+
   const {theme} = useTheme();
   const [isCardActionEnable, setCardAction] = useState(false);
 
+  const [isEditDialogEnable, setEditDialog] = useState(false);
+  const [isDeleteDialogEnable, setDeleteDialog] = useState(false);
+
   const navigation = useNavigation<NavigationProp>();
+
+  const handleHideBottomTab = () => {
+    setFabVisible(false);
+    routeNavigation.setOptions({
+      tabBarStyle: {
+        display: 'none',
+      },
+    });
+  };
+
+  const handleVisibleBottomTab = () => {
+    setFabVisible(true);
+    routeNavigation.setOptions({
+      tabBarStyle: {
+        display: 'flex',
+      },
+    });
+  };
 
   const handleClickVideoCard = (video: Video) => {
     dispatch(setSelectedVideo(video.id));
@@ -43,24 +67,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     });
   };
 
-  const onLongPress = () => {
-    setFabVisible(false);
-    routeNavigation.setOptions({
-      tabBarStyle: {
-        display: 'none',
-      },
-    });
-
+  const onLongPress = (video: Video) => {
+    dispatch(setSelectedVideo(video.id));
+    handleHideBottomTab();
     setCardAction(true);
   };
 
-  const handleCardActionClose = () => {
-    setFabVisible(true);
-    routeNavigation.setOptions({
-      tabBarStyle: {
-        display: 'flex',
-      },
-    });
+  const handleCardActionClose = (hideBottomBar?: boolean) => {
+    // dispatch(setSelectedVideo(undefined));
+    !hideBottomBar && handleVisibleBottomTab();
     setCardAction(false);
   };
 
@@ -72,13 +87,39 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         duration={item.duration}
         createdAt={item.createdAt}
         onPress={() => handleClickVideoCard(item)}
-        onLongPress={() => onLongPress()}
+        onLongPress={() => onLongPress(item)}
       />
     );
   };
 
   const renderItemSeperator = () => {
     return <View style={style.itemSeperator} />;
+  };
+
+  const handleCardEditAction = () => {
+    handleHideBottomTab();
+    setEditDialog(true);
+  };
+
+  const handleCardDeleteAction = () => {
+    setDeleteDialog(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    handleVisibleBottomTab();
+    setEditDialog(false);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    handleVisibleBottomTab();
+    setDeleteDialog(false);
+  };
+
+  const handleRemoveVideo = () => {
+    setDeleteDialog(false);
+    handleVisibleBottomTab();
+    // TODO: remove associated video from cache too
+    selectedVideo && dispatch(removeVideo(selectedVideo.id));
   };
 
   return (
@@ -91,9 +132,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
       ]}>
       <Header />
 
+      {/* TODO: POST MVP */}
       {videos.length > 0 && (
         <View style={[style.selectWrapper]}>
-          <Label text={'Select'} />
+          {/* <Label text={'Select'} /> */}
         </View>
       )}
 
@@ -148,13 +190,49 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
                 +{' '}
               </Text>{' '}
               to add your first video. We'll handle the subtitles, you handle
-              the creativity!🚀
+              the creativity! 🚀
             </Text>
           </View>
         </View>
       )}
 
-      {isCardActionEnable && <CardAction onClose={handleCardActionClose} />}
+      {isCardActionEnable && (
+        <CardAction
+          onClose={handleCardActionClose}
+          onEdit={handleCardEditAction}
+          onDelete={handleCardDeleteAction}
+        />
+      )}
+
+      {isEditDialogEnable && (
+        <Dialog
+          title={'Rename'}
+          onClose={handleCloseEditDialog}
+          onAction={() => {}}
+          primaryActionLabel={'Save'}
+          primaryActionColor={theme.colors.primary}>
+          <TextInput value={selectedVideo?.title} />
+        </Dialog>
+      )}
+
+      {isDeleteDialogEnable && (
+        <Dialog
+          title={'Warning!'}
+          onClose={handleCloseDeleteDialog}
+          onAction={handleRemoveVideo}
+          primaryActionLabel={'Delete'}
+          primaryActionColor={theme.colors.error}>
+          <Text
+            style={[
+              theme.typography.body.medium,
+              {
+                color: theme.colors.white,
+              },
+            ]}>
+            This action cannot be undo - are you sure you want to continue?
+          </Text>
+        </Dialog>
+      )}
     </View>
   );
 };
