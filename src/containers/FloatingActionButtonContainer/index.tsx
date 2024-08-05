@@ -73,6 +73,7 @@ const FloatingActionButton = () => {
             videoURL: response.assets[0].uri,
             width: response.assets[0].width,
             height: response.assets[0].height,
+            duration:response.assets[0].duration
           });
       })
       .catch(error => {
@@ -99,6 +100,7 @@ const FloatingActionButton = () => {
             videoURL: response.assets[0].uri,
             width: response.assets[0].width,
             height: response.assets[0].height,
+            duration: response.assets[0].duration,
           });
       })
       .catch(error => {
