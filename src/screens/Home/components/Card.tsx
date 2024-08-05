@@ -40,6 +40,7 @@ const Card = ({
 
   return (
     <Pressable
+      delayLongPress={300}
       style={[style.wrapper]}
       onPress={onPress}
       onLongPress={onLongPress}>

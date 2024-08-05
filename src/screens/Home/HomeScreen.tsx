@@ -1,8 +1,7 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {selectAllVideos} from 'store/videos/selector';
-import withPageWrapper from 'hoc/withPageWrapper';
 import Header from 'screens/Home/components/Header';
 import {useTheme} from 'theme/ThemeContext';
 import Label from 'components/label';
@@ -15,13 +14,24 @@ import {useNavigation} from '@react-navigation/native';
 import {RootStackParamList} from 'navigation/AppNavigator';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import {setSelectedVideo} from 'store/videos/slice';
+import CardAction from 'screens/Home/components/CardAction';
+import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
+import {TABS, TabParamList} from 'navigation/HomeTabs';
+
+type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
+  setFabVisible: (visible: boolean) => void;
+};
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const HomeScreen = () => {
+const HomeScreen: React.FC<HomeScreenProps> = ({
+  navigation: routeNavigation,
+  setFabVisible,
+}) => {
   const dispatch = useAppDispatch();
   const videos = useAppSelector(selectAllVideos);
   const {theme} = useTheme();
+  const [isCardActionEnable, setCardAction] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
 
@@ -33,6 +43,27 @@ const HomeScreen = () => {
     });
   };
 
+  const onLongPress = () => {
+    setFabVisible(false);
+    routeNavigation.setOptions({
+      tabBarStyle: {
+        display: 'none',
+      },
+    });
+
+    setCardAction(true);
+  };
+
+  const handleCardActionClose = () => {
+    setFabVisible(true);
+    routeNavigation.setOptions({
+      tabBarStyle: {
+        display: 'flex',
+      },
+    });
+    setCardAction(false);
+  };
+
   const renderItem: ListRenderItem<Video> = ({item}) => {
     return (
       <Card
@@ -41,6 +72,7 @@ const HomeScreen = () => {
         duration={item.duration}
         createdAt={item.createdAt}
         onPress={() => handleClickVideoCard(item)}
+        onLongPress={() => onLongPress()}
       />
     );
   };
@@ -121,6 +153,8 @@ const HomeScreen = () => {
           </View>
         </View>
       )}
+
+      {isCardActionEnable && <CardAction onClose={handleCardActionClose} />}
     </View>
   );
 };
@@ -174,4 +208,4 @@ const style = StyleSheet.create({
   },
 });
 
-export default withPageWrapper(HomeScreen);
+export default HomeScreen;
