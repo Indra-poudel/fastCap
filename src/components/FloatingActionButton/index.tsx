@@ -144,8 +144,6 @@ const FloatingActionButtonView = ({
 
 const Style = StyleSheet.create({
   container: {
-    height: 90,
-    width: 90,
     borderRadius: 45,
     display: 'flex',
     justifyContent: 'center',

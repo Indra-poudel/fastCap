@@ -1,4 +1,4 @@
-import {FFmpegKit, FFmpegKitConfig} from 'ffmpeg-kit-react-native';
+import {FFmpegKit, FFmpegKitConfig, Level} from 'ffmpeg-kit-react-native';
 import RNFetchBlob from 'rn-fetch-blob';
 
 export const convertVideoToMp3 = (
@@ -40,33 +40,38 @@ export const convertVideoToMp3 = (
   });
 };
 
-export const generateThumbnail = (videoUri: string): Promise<string> => {
+export const generateThumbnail = (
+  videoUri: string,
+  id: string,
+): Promise<string> => {
   return new Promise(async (resolve, reject) => {
     try {
-      const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/thumbnail.jpg`;
+      const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/${id}.jpg`;
 
       // Remove the existing file if it exists
-      RNFetchBlob.fs
-        .unlink(outputUri)
-        .catch(() => {
-          // Ignore the error if the file does not exist
-        })
-        .finally(() => {
-          const command = `-y -i ${videoUri} -ss 00:00:01 -vframes 1 ${outputUri}`;
+      try {
+        await RNFetchBlob.fs.unlink(outputUri);
+      } catch (error) {
+        // Ignore the error if the file does not exist
+      }
 
-          FFmpegKit.execute(command)
-            .then(() => {
-              FFmpegKit.execute(command)
-                .then(() => {
-                  resolve(`file://${outputUri}`);
-                })
-                .catch(error => {
-                  reject(error);
-                });
-            })
-            .catch(error => {
-              reject(error);
-            });
+      const command = `-y -i ${videoUri} -ss 00:00:01 -vframes 1 ${outputUri}`;
+
+      FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
+
+      // Execute FFmpeg command to generate the thumbnail
+      FFmpegKit.execute(command)
+        .then(async session => {
+          const returnCode = await session.getReturnCode();
+
+          if (returnCode.isValueSuccess()) {
+            resolve(`file://${outputUri}`);
+          } else {
+            reject(new Error('FFmpeg command failed'));
+          }
+        })
+        .catch(error => {
+          reject(error);
         });
     } catch (error) {
       console.error('Error generating thumbnail:', error);
@@ -74,5 +79,3 @@ export const generateThumbnail = (videoUri: string): Promise<string> => {
     }
   });
 };
-
-export default generateThumbnail;

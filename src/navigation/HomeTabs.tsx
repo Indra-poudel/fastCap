@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   BottomTabBarProps,
   createBottomTabNavigator,
@@ -14,9 +14,20 @@ export enum TABS {
   PROFILE = 'profile_tab',
 }
 
-const Tab = createBottomTabNavigator();
+export type TabParamList = {
+  [TABS.HOME]: undefined;
+  [TABS.PROFILE]: undefined;
+};
+
+const Tab = createBottomTabNavigator<TabParamList>();
 
 function HomeTabs() {
+  const [isFabVisible, setFabVisible] = useState(true);
+
+  const handleFabVisibility = (visible: boolean) => {
+    setFabVisible(visible);
+  };
+
   return (
     <>
       <Tab.Navigator
@@ -26,12 +37,14 @@ function HomeTabs() {
         })}>
         <Tab.Screen
           name={TABS.HOME}
-          component={HomeScreen}
           options={{
             tabBarIcon: homeScreenTabBarIcon,
             title: 'Home',
-          }}
-        />
+          }}>
+          {props => (
+            <HomeScreen {...props} setFabVisible={handleFabVisibility} />
+          )}
+        </Tab.Screen>
         <Tab.Screen
           name={TABS.PROFILE}
           component={ProfileScreen}
@@ -41,7 +54,7 @@ function HomeTabs() {
           }}
         />
       </Tab.Navigator>
-      <FloatingActionButton />
+      {isFabVisible && <FloatingActionButton />}
     </>
   );
 }

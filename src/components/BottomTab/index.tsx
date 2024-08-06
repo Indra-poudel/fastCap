@@ -1,5 +1,12 @@
 import React from 'react';
-import {Text, View, Pressable, StyleSheet} from 'react-native';
+import {
+  Text,
+  View,
+  Pressable,
+  StyleSheet,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import {BottomTabDescriptor} from '@react-navigation/bottom-tabs/lib/typescript/src/types';
 import {useTheme} from '@theme/ThemeContext';
@@ -27,6 +34,9 @@ const BottomTab = ({state, descriptors, navigation}: BottomTabBarProps) => {
     });
   };
 
+  const tabBarStyle = descriptors[state.routes[state.index].key].options
+    .tabBarStyle as StyleProp<ViewStyle>;
+
   return (
     <View
       style={[
@@ -34,6 +44,7 @@ const BottomTab = ({state, descriptors, navigation}: BottomTabBarProps) => {
         {
           backgroundColor: theme.colors.black2,
         },
+        tabBarStyle,
       ]}>
       {state.routes.map((route, index: number) => {
         const {options} = descriptors[route.key] as BottomTabDescriptor;

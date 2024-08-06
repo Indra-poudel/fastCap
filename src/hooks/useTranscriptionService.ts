@@ -10,7 +10,7 @@ import {
   GeneratedSentence,
   transformWordsToSentences,
 } from 'utils/sentencesBuilder';
-import {output} from 'mocks/output';
+import mock from 'mocks/transcript.json';
 
 const POLLING_INTERVAL = 2000; // 5 seconds
 
@@ -50,10 +50,18 @@ export const useTranscriptionService = ({isMock}: {isMock?: boolean}) => {
 
   const startTranscriptionProcess = useCallback(
     async (videoUri: string, language: languageType) => {
-      console.log('VIDEO URI', videoUri);
       if (isMock) {
-        setSentences(output);
-        setOverallStatus(OverallProcessStatus.COMPLETED);
+        const words = mock.words || [];
+        const highlightedWords = mock.auto_highlights_result?.results || [];
+        const generatedSentences = transformWordsToSentences(
+          words,
+          highlightedWords,
+        );
+
+        setTimeout(() => {
+          setSentences(generatedSentences);
+          setOverallStatus(OverallProcessStatus.COMPLETED);
+        }, 1000);
       } else {
         try {
           setError(null);

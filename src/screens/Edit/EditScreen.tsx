@@ -3,7 +3,7 @@ import {
   Canvas,
   Fill,
   ImageShader,
-  useImage,
+  Skia,
   useVideo,
 } from '@shopify/react-native-skia';
 import BottomSheet from 'components/BottomSheet';
@@ -25,13 +25,22 @@ import Animated, {
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useTheme} from 'theme/ThemeContext';
-import generateThumbnail from 'utils/video';
+import {generateThumbnail} from 'utils/video';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
-import CustomParagraph from 'components/Skia/CustomParagraph';
+// import CustomParagraph from 'components/Skia/CustomParagraph';
+// import MyParagraph from 'components/Skia/NewCustomParagraph';
+import DuplicateTheme from 'components/Skia/DuplicateTheme';
+import Timeline from 'components/Timeline/Timeline';
+import {useAppDispatch} from 'hooks/useStore';
+import {updateVideo} from 'store/videos/slice';
+import {useSelector} from 'react-redux';
+import {selectSelectedVideo} from 'store/videos/selector';
+import {Video} from 'store/videos/type';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -39,58 +48,99 @@ type EditScreenProps = NativeStackScreenProps<RootStackParamList, SCREENS.EDIT>;
 
 const EditScreen = ({route}: EditScreenProps) => {
   const {theme} = useTheme();
+
   const videoURL = route.params.videoURL;
-  const [paused, setPaused] = useState(true);
+  const dispatch = useAppDispatch();
+
+  const paused = useSharedValue(true);
   const opacity = useSharedValue(1);
+  const seek = useSharedValue(0);
+
   const {width, height} = useWindowDimensions();
   const [isAddCaptionBottomSheetOpen, setAddCaptionBottomSheetOpen] =
     useState(false);
-  const [thumbnailUrl, setThumbnailUrl] = useState('');
-
   const [isLanguageBottomSheetOpen, setLanguageBottomSheetOpen] =
     useState(false);
-
   const [isCaptionsGenerating, setCaptionsGenerating] = useState(false);
-
   const [selectedLanguage, setSelectedLanguage] = useState<languageType>(
     languages_best[0],
   );
-
   const [sentences, setSentences] = useState<GeneratedSentence[]>([]);
 
-  const derivedPaused = useDerivedValue(() => {
-    return paused;
-  }, [paused]);
+  const selectedVideo = useSelector(selectSelectedVideo);
 
-  const {currentFrame, currentTime, framerate} = useVideo(videoURL, {
-    paused: derivedPaused,
+  const {currentFrame, currentTime, framerate, duration} = useVideo(videoURL, {
+    paused: paused,
     volume: 1,
-    looping: false,
+    looping: true,
+    seek: seek,
   });
 
+  const frameDurationMs = 1000 / framerate;
+
+  const totalDuration = useDerivedValue(() => {
+    return duration;
+  }, [duration]);
+
+  useAnimatedReaction(
+    () => {
+      return currentTime.value;
+    },
+    latestTime => {
+      if (latestTime + frameDurationMs * 2 >= totalDuration.value) {
+        paused.value = true;
+        opacity.value = withTiming(1);
+      }
+    },
+    [currentTime, totalDuration, framerate],
+  );
+
+  const assignThumbnailImageToCurrentFrame = (url: string) => {
+    Skia.Data.fromURI(url).then(data => {
+      const image = Skia.Image.MakeImageFromEncoded(data);
+      currentFrame.value = image;
+    });
+  };
+
   useEffect(() => {
-    generateThumbnail(videoURL)
-      .then(url => {
-        setThumbnailUrl(url);
-      })
-      .catch(error => {
-        console.log(error);
-      });
-  }, [videoURL]);
+    return () => {
+      paused.value = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (selectedVideo && !selectedVideo?.thumbnailUrl) {
+      generateThumbnail(videoURL, selectedVideo.id)
+        .then(async url => {
+          assignThumbnailImageToCurrentFrame(url);
+
+          const updatedVideo: Video = {
+            ...selectedVideo,
+            thumbnailUrl: url,
+          };
+          updateVideoObjectToStore(updatedVideo);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    } else if (selectedVideo && selectedVideo.thumbnailUrl) {
+      assignThumbnailImageToCurrentFrame(selectedVideo.thumbnailUrl);
+    }
+  }, [selectedVideo]);
+
+  const updateVideoObjectToStore = (video: Video) => {
+    dispatch(updateVideo(video));
+  };
 
   const handlePlayPause = () => {
-    if (thumbnailUrl) {
-      setThumbnailUrl('');
-    }
-    setPaused(prev => !prev);
+    paused.value = !paused.value;
     const opacityNewValue = opacity.value === 1 ? 0 : 1;
     opacity.value = withTiming(opacityNewValue);
   };
 
   const handlePauseVideo = () => {
-    setPaused(true);
-    const opacityNewValue = 1;
-    opacity.value = withTiming(opacityNewValue);
+    paused.value = true;
+    opacity.value = withTiming(1);
   };
 
   const playButtonAnimatedStyle = useAnimatedStyle(() => {
@@ -98,6 +148,15 @@ const EditScreen = ({route}: EditScreenProps) => {
       opacity: opacity.value,
     };
   }, []);
+
+  const pausedButtonAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withSequence(
+        withTiming(paused.value === false ? 0.6 : 0),
+        withTiming(0),
+      ),
+    };
+  }, [paused]);
 
   const handleBottomSheet = () => {
     setAddCaptionBottomSheetOpen(prev => !prev);
@@ -122,17 +181,14 @@ const EditScreen = ({route}: EditScreenProps) => {
     setCaptionsGenerating(true);
   };
 
-  const thumbnail = useImage(thumbnailUrl);
-
   const handleCaptionServiceCancel = () => {
     setCaptionsGenerating(false);
   };
 
   const handleCaptionServiceSuccess = (data: GeneratedSentence[]) => {
+    seek.value = 0;
     setSentences(data);
   };
-
-  console.log('Edit screen rendering');
 
   return (
     <View
@@ -146,13 +202,19 @@ const EditScreen = ({route}: EditScreenProps) => {
         <Canvas style={[Styles.canvas]}>
           <Fill>
             <ImageShader
-              image={thumbnail || currentFrame}
-              rect={{x: 0, y: 0, width: width + 5, height: height}}
+              image={currentFrame}
               fit={'contain'}
+              rect={{x: 0, y: 0, width: width, height: height - 150}}
             />
           </Fill>
 
-          <CustomParagraph
+          {/* <MyParagraph
+            currentTime={currentTime}
+            sentences={sentences}
+            frameRate={framerate}
+          /> */}
+
+          <DuplicateTheme
             currentTime={currentTime}
             sentences={sentences}
             frameRate={framerate}
@@ -170,27 +232,49 @@ const EditScreen = ({route}: EditScreenProps) => {
               top: height / 2 - 40,
             },
           ]}>
-          <Icon
-            name={paused ? 'play' : 'pause'}
-            size={52}
-            color={theme.colors.primary}
-          />
+          <Icon name={'play'} size={52} color={theme.colors.primary} />
+        </AnimatedPressable>
+        <AnimatedPressable
+          onPress={handlePlayPause}
+          style={[
+            Styles.playButton,
+            pausedButtonAnimatedStyle,
+            {
+              backgroundColor: theme.colors.black4,
+              left: width / 2 - 40,
+              top: height / 2 - 40,
+            },
+          ]}>
+          <Icon name={'pause'} size={52} color={theme.colors.primary} />
         </AnimatedPressable>
       </Pressable>
 
-      <Button
-        onPress={handleAddCaption}
-        style={[Styles.button]}
-        label="Add caption"
-        buttonType={'primary'}
-        icon={
-          <Icon
-            name={'closed-caption-outline'}
-            size={24}
-            color={theme.colors.white}
-          />
-        }
-      />
+      {/* later optimized sentence to shared value and use display none or something like that */}
+      {!!sentences.length && (
+        <Timeline
+          currentTime={currentTime}
+          sentences={sentences}
+          frameRate={framerate}
+          totalDuration={totalDuration}
+          seek={seek}
+          height={150}
+        />
+      )}
+      {!sentences.length && (
+        <Button
+          onPress={handleAddCaption}
+          style={[Styles.button]}
+          label="Add caption"
+          buttonType={'primary'}
+          icon={
+            <Icon
+              name={'closed-caption-outline'}
+              size={24}
+              color={theme.colors.white}
+            />
+          }
+        />
+      )}
       {isAddCaptionBottomSheetOpen && (
         <BottomSheet
           onClose={handleBottomSheet}
