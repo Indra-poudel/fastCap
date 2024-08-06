@@ -211,7 +211,15 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           onAction={() => {}}
           primaryActionLabel={'Save'}
           primaryActionColor={theme.colors.primary}>
-          <TextInput value={selectedVideo?.title} />
+          <TextInput
+            value={selectedVideo?.title}
+            placeholder="Video name"
+            placeholderTextColor={theme.colors.grey4}
+            style={[
+              {...theme.typography.body.large, color: theme.colors.white},
+            ]}
+            cursorColor={theme.colors.primary}
+          />
         </Dialog>
       )}
 

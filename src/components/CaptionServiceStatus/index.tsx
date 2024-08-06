@@ -32,7 +32,7 @@ const CaptionServiceStatus = ({
     error,
     startTranscriptionProcess,
   } = useTranscriptionService({
-    isMock: true,
+    isMock: false,
   });
 
   const {theme} = useTheme();
