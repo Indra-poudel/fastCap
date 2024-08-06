@@ -13,11 +13,12 @@ import VideoRecordingAnimation from 'assets/lotties/VideoPlayer.json';
 import {useNavigation} from '@react-navigation/native';
 import {RootStackParamList} from 'navigation/AppNavigator';
 import {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import {removeVideo, setSelectedVideo} from 'store/videos/slice';
+import {removeVideo, setSelectedVideo, updateVideo} from 'store/videos/slice';
 import CardAction from 'screens/Home/components/CardAction';
 import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {TABS, TabParamList} from 'navigation/HomeTabs';
 import Dialog from 'components/Dialog';
+import Edit from 'screens/Home/components/Edit';
 
 type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
   setFabVisible: (visible: boolean) => void;
@@ -122,6 +123,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     selectedVideo && dispatch(removeVideo(selectedVideo.id));
   };
 
+  const handleRename = (newTitle: string) => {
+    handleVisibleBottomTab();
+
+    if (selectedVideo) {
+      const updatedVideo: Video = {
+        ...selectedVideo,
+        title: newTitle,
+      };
+
+      // Dispatch the updateVideo action
+      dispatch(updateVideo(updatedVideo));
+    }
+  };
+
   return (
     <View
       style={[
@@ -204,23 +219,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         />
       )}
 
-      {isEditDialogEnable && (
-        <Dialog
-          title={'Rename'}
-          onClose={handleCloseEditDialog}
-          onAction={() => {}}
-          primaryActionLabel={'Save'}
-          primaryActionColor={theme.colors.primary}>
-          <TextInput
-            value={selectedVideo?.title}
-            placeholder="Video name"
-            placeholderTextColor={theme.colors.grey4}
-            style={[
-              {...theme.typography.body.large, color: theme.colors.white},
-            ]}
-            cursorColor={theme.colors.primary}
-          />
-        </Dialog>
+      {isEditDialogEnable && selectedVideo && (
+        <Edit
+          handleClose={handleCloseEditDialog}
+          value={selectedVideo.title}
+          handleRename={handleRename}
+        />
       )}
 
       {isDeleteDialogEnable && (
