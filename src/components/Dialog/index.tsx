@@ -16,6 +16,7 @@ type DialogProps = {
   onAction: () => void;
   primaryActionLabel: string;
   primaryActionColor: string;
+  disabled?: boolean;
 };
 
 const Dialog = ({
@@ -25,6 +26,7 @@ const Dialog = ({
   title,
   primaryActionColor,
   onAction,
+  disabled,
 }: DialogProps) => {
   const {height, width} = useWindowDimensions();
   const {theme} = useTheme();
@@ -93,7 +95,10 @@ const Dialog = ({
               },
             ]}
           />
-          <Pressable style={styles.button} onPress={onAction}>
+          <Pressable
+            style={styles.button}
+            onPress={!disabled ? onAction : undefined}
+            disabled={!!disabled}>
             <Text
               style={[
                 theme.typography.subheader.small,
