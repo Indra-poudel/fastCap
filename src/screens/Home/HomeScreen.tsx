@@ -123,11 +123,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     selectedVideo && dispatch(removeVideo(selectedVideo.id));
   };
 
-  const handleEditVideoTitle = (newTitle: string) => {
+  const handleRename = (newTitle: string) => {
     handleVisibleBottomTab();
 
-    if (selectedVideo && newTitle) {
-      // Create a new video object with the updated title
+    if (selectedVideo) {
       const updatedVideo: Video = {
         ...selectedVideo,
         title: newTitle,
@@ -224,7 +223,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         <Edit
           handleClose={handleCloseEditDialog}
           value={selectedVideo.title}
-          handleEditVideoTitle={handleEditVideoTitle}
+          handleRename={handleRename}
         />
       )}
 

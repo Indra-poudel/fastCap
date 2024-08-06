@@ -1,9 +1,9 @@
 import React from 'react';
 import {
+  GestureResponderEvent,
   Pressable,
   StyleSheet,
   Text,
-  TouchableWithoutFeedback,
   View,
   useWindowDimensions,
 } from 'react-native';
@@ -30,6 +30,12 @@ const Dialog = ({
 }: DialogProps) => {
   const {height, width} = useWindowDimensions();
   const {theme} = useTheme();
+
+  // Function to stop event propagation
+  const handleChildPress = (event: GestureResponderEvent) => {
+    event.stopPropagation();
+  };
+
   return (
     <Pressable
       onPress={onClose}
@@ -41,6 +47,8 @@ const Dialog = ({
         },
       ]}>
       <View
+        onStartShouldSetResponder={() => true} // Ensure the child View handles touch events
+        onTouchEnd={handleChildPress} // Stop propagation when touched
         style={[
           styles.dialog,
           {
@@ -97,7 +105,7 @@ const Dialog = ({
           />
           <Pressable
             style={styles.button}
-            onPress={!disabled ? onAction : undefined}
+            onPress={disabled ? () => {} : onAction}
             disabled={!!disabled}>
             <Text
               style={[

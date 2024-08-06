@@ -5,15 +5,11 @@ import {useTheme} from 'theme/ThemeContext';
 
 type EditProps = {
   handleClose: () => void;
-  handleEditVideoTitle: (newTitle: string) => void;
+  handleRename: (newTitle: string) => void;
   value: string;
 };
 
-const Edit: React.FC<EditProps> = ({
-  handleClose,
-  value,
-  handleEditVideoTitle,
-}) => {
+const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
   const {theme} = useTheme();
 
   const [editValue, setEditValue] = useState<string>(value);
@@ -33,15 +29,9 @@ const Edit: React.FC<EditProps> = ({
   };
 
   const handleSave = () => {
-    handleEditVideoTitle(editValue);
+    handleRename(editValue);
     handleClose();
   };
-
-  console.log(
-    'Update title',
-    editValue.length,
-    !editValue || editValue.trim().length === 0,
-  );
 
   return (
     <Dialog
@@ -50,7 +40,7 @@ const Edit: React.FC<EditProps> = ({
       onAction={handleSave}
       primaryActionLabel="Save"
       primaryActionColor={theme.colors.primary}
-      disabled={!editValue || editValue.trim().length === 0}>
+      disabled={!editValue.trim()}>
       <View
         style={[
           styles.textInputContainer,
