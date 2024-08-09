@@ -12,6 +12,7 @@ import Animated, {
 import {useTheme} from 'theme/ThemeContext';
 import TimeIndicator from 'components/Timeline/TimeIndicator';
 import SubInterval from 'components/Timeline/SubInterval';
+import {GeneratedSentence} from 'utils/sentencesBuilder';
 
 type TimelineProps = {
   currentTime: SharedValue<number>;
@@ -19,6 +20,7 @@ type TimelineProps = {
   totalDuration: SharedValue<number>;
   seek: SharedValue<number>;
   height: number;
+  sentences: GeneratedSentence[];
 };
 
 const Timeline = ({
@@ -67,7 +69,7 @@ const Timeline = ({
 
   const gesture = Gesture.Pan()
     .onChange(e => {
-      x.value += e.translationX;
+      x.value += e.changeX;
 
       // stop moving x less than 0
       if (x.value >= 0) {

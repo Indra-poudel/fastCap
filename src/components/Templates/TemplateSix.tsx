@@ -4,16 +4,14 @@ import {
   Skia,
   useFonts,
   TextAlign,
-  Mask,
-  Rect,
   SkParagraphStyle,
   SkTextStyle,
   PaintStyle,
   Group,
   Paint,
   Shadow,
-  RoundedRect,
   FontWeight,
+  RoundedRect,
 } from '@shopify/react-native-skia';
 import {fontSource} from 'constants/fonts';
 import {
@@ -40,16 +38,17 @@ const EMPTY_SENTENCE = {
 };
 
 const TEMPLATE_DETAILS = {
-  color: '#ffffff',
+  color: 'transparent',
   activeWord: {
     // background: '#5966EC',
     background: 'transparent',
-    color: '#c6fd78',
+    color: '#ffffff',
   },
-  fontFamily: 'EuclidCircularA',
+  fontFamily: 'HandMarker',
+  outlineColor: '#B82851',
 };
 
-const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
+const TemplateFive = ({currentTime, sentences}: CustomParagraphProps) => {
   const customFontMgr = useFonts(fontSource);
 
   const {height, width} = useWindowDimensions();
@@ -68,10 +67,7 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
     const textStyle: SkTextStyle = {
       color: Skia.Color('white'),
       fontFamilies: [TEMPLATE_DETAILS.fontFamily],
-      fontSize: 32,
-      fontStyle: {
-        weight: FontWeight.Bold,
-      },
+      fontSize: 48,
     };
 
     const paragraphBuilder = Skia.ParagraphBuilder.Make(
@@ -80,9 +76,15 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
     );
 
     currentSentence.value.words.forEach((word, _index) => {
+      const isWordTimePassed =
+        currentTime.value >= word.start || currentTime.value >= word.end;
+
       paragraphBuilder.pushStyle(
         {
           ...textStyle,
+          color: isWordTimePassed
+            ? Skia.Color(TEMPLATE_DETAILS.activeWord.color)
+            : Skia.Color(TEMPLATE_DETAILS.color),
         },
         undefined,
         undefined,
@@ -106,9 +108,9 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
       textAlign: TextAlign.Center,
     };
     const textStyle: SkTextStyle = {
-      color: Skia.Color('white'),
+      color: Skia.Color(TEMPLATE_DETAILS.outlineColor),
       fontFamilies: [TEMPLATE_DETAILS.fontFamily],
-      fontSize: 32,
+      fontSize: 48,
       fontStyle: {
         weight: FontWeight.Bold,
       },
@@ -121,15 +123,20 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
 
     const foregroundPaint = Skia.Paint();
     foregroundPaint.setStyle(PaintStyle.Stroke);
-    foregroundPaint.setColor(Skia.Color('black'));
+    foregroundPaint.setColor(Skia.Color(TEMPLATE_DETAILS.outlineColor));
     foregroundPaint.setStrokeWidth(5);
 
     currentSentence.value.words.forEach((word, _index) => {
+      const isWordTimePassed =
+        currentTime.value >= word.start || currentTime.value >= word.end;
       paragraphBuilder.pushStyle(
         {
           ...textStyle,
+          color: isWordTimePassed
+            ? Skia.Color(TEMPLATE_DETAILS.activeWord.color)
+            : Skia.Color(TEMPLATE_DETAILS.color),
         },
-        foregroundPaint,
+        isWordTimePassed ? foregroundPaint : undefined,
         undefined,
       );
 
@@ -175,10 +182,6 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
     [currentSentence, paragraphDimension],
   );
 
-  const MaskRectX = useDerivedValue(() => {
-    return (width - 32) / 2 - paragraphDimension.value / 2 + 16;
-  }, [paragraphDimension]);
-
   const paragraphHeight = useDerivedValue(() => {
     return paragraph.value?.getHeight() || 0;
   }, [paragraph]);
@@ -199,19 +202,15 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
 
   return (
     <>
-      <RoundedRect
-        x={paragraphXpos}
-        y={height / 1.5}
-        width={paragraphWidth}
-        height={paragraphHeight}
-        r={10}
-        color="black"
-        opacity={0.5}
-      />
       <Group
         layer={
           <Paint>
-            <Shadow blur={0} dx={0} dy={2} color={Skia.Color('black')} />
+            <Shadow
+              blur={3}
+              dx={0}
+              dy={0}
+              color={Skia.Color(TEMPLATE_DETAILS.outlineColor)}
+            />
           </Paint>
         }>
         <Paragraph
@@ -227,39 +226,8 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
           width={width - 32}
         />
       </Group>
-      <Mask
-        mask={
-          <Group
-            layer={
-              <Paint>
-                <Shadow blur={0} dx={0} dy={4} color={Skia.Color('Black')} />
-              </Paint>
-            }>
-            <Paragraph
-              paragraph={outLine}
-              x={16}
-              y={height / 1.5}
-              width={width - 32}
-            />
-            <Paragraph
-              paragraph={paragraph}
-              x={16}
-              y={height / 1.5}
-              width={width - 32}
-            />
-          </Group>
-        }
-        mode="luminance">
-        <Rect
-          width={animatedWidth}
-          x={MaskRectX}
-          y={height / 1.5}
-          height={height}
-          color={Skia.Color(TEMPLATE_DETAILS.activeWord.color)}
-        />
-      </Mask>
     </>
   );
 };
 
-export default MyParagraph;
+export default TemplateFive;

@@ -4,16 +4,17 @@ import {
   Skia,
   useFonts,
   TextAlign,
-  Mask,
-  Rect,
   SkParagraphStyle,
   SkTextStyle,
   PaintStyle,
   Group,
   Paint,
   Shadow,
-  RoundedRect,
   FontWeight,
+  RoundedRect,
+  Mask,
+  Rect,
+  rect,
 } from '@shopify/react-native-skia';
 import {fontSource} from 'constants/fonts';
 import {
@@ -40,16 +41,17 @@ const EMPTY_SENTENCE = {
 };
 
 const TEMPLATE_DETAILS = {
-  color: '#ffffff',
+  color: 'transparent',
   activeWord: {
     // background: '#5966EC',
     background: 'transparent',
-    color: '#c6fd78',
+    color: '#ffffff',
   },
-  fontFamily: 'EuclidCircularA',
+  fontFamily: 'HandMarker',
+  outlineColor: '#B82851',
 };
 
-const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
+const TemplateFive = ({currentTime, sentences}: CustomParagraphProps) => {
   const customFontMgr = useFonts(fontSource);
 
   const {height, width} = useWindowDimensions();
@@ -68,10 +70,7 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
     const textStyle: SkTextStyle = {
       color: Skia.Color('white'),
       fontFamilies: [TEMPLATE_DETAILS.fontFamily],
-      fontSize: 32,
-      fontStyle: {
-        weight: FontWeight.Bold,
-      },
+      fontSize: 48,
     };
 
     const paragraphBuilder = Skia.ParagraphBuilder.Make(
@@ -83,6 +82,7 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
       paragraphBuilder.pushStyle(
         {
           ...textStyle,
+          color: Skia.Color(TEMPLATE_DETAILS.activeWord.color),
         },
         undefined,
         undefined,
@@ -106,9 +106,9 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
       textAlign: TextAlign.Center,
     };
     const textStyle: SkTextStyle = {
-      color: Skia.Color('white'),
+      color: Skia.Color(TEMPLATE_DETAILS.outlineColor),
       fontFamilies: [TEMPLATE_DETAILS.fontFamily],
-      fontSize: 32,
+      fontSize: 48,
       fontStyle: {
         weight: FontWeight.Bold,
       },
@@ -121,13 +121,14 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
 
     const foregroundPaint = Skia.Paint();
     foregroundPaint.setStyle(PaintStyle.Stroke);
-    foregroundPaint.setColor(Skia.Color('black'));
+    foregroundPaint.setColor(Skia.Color(TEMPLATE_DETAILS.outlineColor));
     foregroundPaint.setStrokeWidth(5);
 
     currentSentence.value.words.forEach((word, _index) => {
       paragraphBuilder.pushStyle(
         {
           ...textStyle,
+          color: Skia.Color(TEMPLATE_DETAILS.activeWord.color),
         },
         foregroundPaint,
         undefined,
@@ -167,7 +168,8 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
     () => currentSentence.value,
     _currentSentence => {
       if (_currentSentence) {
-        animatedWidth.value = withTiming(paragraphDimension.value, {
+        const finalWidth = paragraphDimension.value + 16;
+        animatedWidth.value = withTiming(finalWidth, {
           duration: _currentSentence.end - _currentSentence.start,
         });
       }
@@ -179,10 +181,6 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
     return (width - 32) / 2 - paragraphDimension.value / 2 + 16;
   }, [paragraphDimension]);
 
-  const paragraphHeight = useDerivedValue(() => {
-    return paragraph.value?.getHeight() || 0;
-  }, [paragraph]);
-
   const paragraphWidth = useDerivedValue(() => {
     const maxWidthOutBreak = paragraph.value?.getMaxIntrinsicWidth() || 0;
     const maxLayoutWidth = paragraph.value?.getMaxWidth() || 0;
@@ -193,73 +191,46 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
     return width || 0;
   }, [paragraph]);
 
-  const paragraphXpos = useDerivedValue(() => {
-    return width / 2 - paragraphWidth.value / 2;
-  }, [paragraphWidth]);
+  const paragraphHeight = useDerivedValue(() => {
+    return paragraph.value?.getHeight() || 0;
+  }, [paragraph]);
+
+  const clipRect = useDerivedValue(() => {
+    return rect(
+      MaskRectX.value,
+      height / 1.5 - 16,
+      animatedWidth.value,
+      paragraphHeight.value + 32,
+    );
+  }, [animatedWidth, paragraph]);
 
   return (
-    <>
-      <RoundedRect
-        x={paragraphXpos}
+    <Group
+      clip={clipRect}
+      layer={
+        <Paint>
+          <Shadow
+            blur={3}
+            dx={0}
+            dy={0}
+            color={Skia.Color(TEMPLATE_DETAILS.outlineColor)}
+          />
+        </Paint>
+      }>
+      <Paragraph
+        paragraph={outLine}
+        x={16}
         y={height / 1.5}
-        width={paragraphWidth}
-        height={paragraphHeight}
-        r={10}
-        color="black"
-        opacity={0.5}
+        width={width - 32}
       />
-      <Group
-        layer={
-          <Paint>
-            <Shadow blur={0} dx={0} dy={2} color={Skia.Color('black')} />
-          </Paint>
-        }>
-        <Paragraph
-          paragraph={outLine}
-          x={16}
-          y={height / 1.5}
-          width={width - 32}
-        />
-        <Paragraph
-          paragraph={paragraph}
-          x={16}
-          y={height / 1.5}
-          width={width - 32}
-        />
-      </Group>
-      <Mask
-        mask={
-          <Group
-            layer={
-              <Paint>
-                <Shadow blur={0} dx={0} dy={4} color={Skia.Color('Black')} />
-              </Paint>
-            }>
-            <Paragraph
-              paragraph={outLine}
-              x={16}
-              y={height / 1.5}
-              width={width - 32}
-            />
-            <Paragraph
-              paragraph={paragraph}
-              x={16}
-              y={height / 1.5}
-              width={width - 32}
-            />
-          </Group>
-        }
-        mode="luminance">
-        <Rect
-          width={animatedWidth}
-          x={MaskRectX}
-          y={height / 1.5}
-          height={height}
-          color={Skia.Color(TEMPLATE_DETAILS.activeWord.color)}
-        />
-      </Mask>
-    </>
+      <Paragraph
+        paragraph={paragraph}
+        x={16}
+        y={height / 1.5}
+        width={width - 32}
+      />
+    </Group>
   );
 };
 
-export default MyParagraph;
+export default TemplateFive;

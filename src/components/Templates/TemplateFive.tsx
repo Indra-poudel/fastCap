@@ -49,7 +49,7 @@ const TEMPLATE_DETAILS = {
   fontFamily: 'EuclidCircularA',
 };
 
-const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
+const TemplateFive = ({currentTime, sentences}: CustomParagraphProps) => {
   const customFontMgr = useFonts(fontSource);
 
   const {height, width} = useWindowDimensions();
@@ -262,4 +262,4 @@ const MyParagraph = ({currentTime, sentences}: CustomParagraphProps) => {
   );
 };
 
-export default MyParagraph;
+export default TemplateFive;

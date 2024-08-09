@@ -55,7 +55,7 @@ export const generateThumbnail = (
         // Ignore the error if the file does not exist
       }
 
-      const command = `-y -i ${videoUri} -ss 00:00:01 -vframes 1 ${outputUri}`;
+      const command = `-y -i ${videoUri} -ss 00:00:00 -vframes 1 ${outputUri}`;
 
       FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
 
