@@ -19,6 +19,8 @@ import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
 import {TABS, TabParamList} from 'navigation/HomeTabs';
 import Dialog from 'components/Dialog';
 import Edit from 'screens/Home/components/Edit';
+import withPageWrapper from 'hoc/withPageWrapper';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
   setFabVisible: (visible: boolean) => void;
@@ -138,7 +140,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   return (
-    <View
+    <SafeAreaView
       style={[
         style.wrapper,
         {
@@ -245,7 +247,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           </Text>
         </Dialog>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 

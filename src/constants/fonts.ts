@@ -23,4 +23,5 @@ export const fontSource = {
     require('../assets/fonts/EuclidCircularA-SemiBoldItalic.ttf'),
     require('../assets/fonts/EuclidCircularA-SemiBold.ttf'),
   ],
+  HandMarker: [require('../assets/fonts/HandMarker.ttf')],
 };

@@ -100,8 +100,8 @@ const CaptionServiceStatus = ({
                 color: theme.colors.grey3,
               },
             ]}>
-            ⏳ Hang tight! We're adding captions to your video. Please keep the
-            app open and your screen unlocked. 📱💬
+            ⏳ Hold up! We're dropping captions on your vid. Keep the app open
+            and the screen unlocked, fam! 📱💬
           </Text>
         </View>
         <Button label={'Cancel'} buttonType={'primary'} onPress={onCancel} />

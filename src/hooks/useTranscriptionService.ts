@@ -15,11 +15,11 @@ import mock from 'mocks/transcript.json';
 const POLLING_INTERVAL = 2000; // 5 seconds
 
 enum TranscriptionSteps {
-  CONVERT_VIDEO_TO_MP3 = 'Converting video to MP3',
-  UPLOAD_AUDIO = 'Uploading audio',
-  GENERATE_TRANSCRIPTION = 'Generating transcription',
-  CHECK_TRANSCRIPTION_STATUS = 'Checking transcription status',
-  COMPLETE = 'Complete',
+  CONVERT_VIDEO_TO_MP3 = '🎥➡️ Video to MP3 Magic 🎶',
+  UPLOAD_AUDIO = '📤 Sending Audio Up',
+  GENERATE_TRANSCRIPTION = '📝 Creating the Script',
+  CHECK_TRANSCRIPTION_STATUS = '🔍 Checking the Vibes',
+  COMPLETE = '✅ All Done, Fam!',
 }
 
 export enum OverallProcessStatus {
@@ -77,8 +77,6 @@ export const useTranscriptionService = ({isMock}: {isMock?: boolean}) => {
           if (!isMounted.current) {
             return;
           }
-
-          console.log('Audio url', mp3Uri);
 
           // Step 2: Upload audio
           setCurrentStep(TranscriptionSteps.UPLOAD_AUDIO);

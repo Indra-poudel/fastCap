@@ -54,8 +54,6 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   const RUBBER_BAND_EFFECT_DIVISOR = 2; // Fraction of the translation for a rubber band effect
   const DRAG_CLOSE_THRESHOLD = 0.65; // 65% of the bottom sheet's height
   const SNAP_BACK_ANIMATION_DURATION = 150; // Duration of the snap back animation
-  const ENTER_ANIMATION_DURATION = 300; // Duration of the enter animation
-  const EXIT_ANIMATION_DURATION = 300; // Duration of the exit animation
 
   const top = useSharedValue(INITIAL_TOP); // Initially at the specified height
   const startY = useSharedValue(0); // Keep track of the initial touch position
@@ -88,7 +86,9 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
         onClose &&
         top.value > INITIAL_TOP + BOTTOM_SHEET_HEIGHT * DRAG_CLOSE_THRESHOLD
       ) {
-        runOnJS(onClose)();
+        top.value = withTiming(SCREEN_HEIGHT, undefined, () => {
+          runOnJS(onClose)();
+        });
         // If dragged more than the threshold of the bottom sheet's height, close the bottom sheet
         return;
       } else if (isDraggable) {
@@ -118,10 +118,9 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
 
   const handleClose = () => {
     if (onClose) {
-      top.value = withTiming(SCREEN_HEIGHT, {
-        duration: SNAP_BACK_ANIMATION_DURATION,
-      }); // Move bottom sheet off screen
-      onClose();
+      top.value = withTiming(SCREEN_HEIGHT, undefined, () => {
+        runOnJS(onClose)();
+      });
     }
   };
 
@@ -140,8 +139,8 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
             backgroundColor: theme.colors.black3,
           },
         ]}
-        entering={SlideInDown.duration(ENTER_ANIMATION_DURATION)}
-        exiting={SlideOutDown.duration(EXIT_ANIMATION_DURATION)}>
+        entering={SlideInDown}
+        exiting={SlideOutDown}>
         <GestureDetector gesture={composed}>
           <View>
             <View style={styles.handle} />

@@ -1,9 +1,10 @@
 import Interval from 'components/Timeline/Interval';
-import React from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {View, useWindowDimensions} from 'react-native';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
   SharedValue,
+  SlideInRight,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
@@ -12,46 +13,53 @@ import Animated, {
 import {useTheme} from 'theme/ThemeContext';
 import TimeIndicator from 'components/Timeline/TimeIndicator';
 import SubInterval from 'components/Timeline/SubInterval';
+import {GeneratedSentence} from 'utils/sentencesBuilder';
 
 type TimelineProps = {
   currentTime: SharedValue<number>;
   frameRate: number;
-  totalDuration: SharedValue<number>;
+  totalDuration: number;
   seek: SharedValue<number>;
   height: number;
+  sentences: GeneratedSentence[];
 };
 
+const frameRate = 30;
+const framesPerInterval = 10;
+const frameDurationMs = 1000 / frameRate;
+const intervalDurationMs = frameDurationMs * framesPerInterval;
+const widthPerMs = 0.5;
+const widthPerInterval = intervalDurationMs * widthPerMs;
+const widthPerFrame = widthPerInterval / framesPerInterval;
+
 const Timeline = ({
-  frameRate,
   currentTime,
   seek,
   totalDuration: totalVideoDuration,
   height,
 }: TimelineProps) => {
-  const framesPerInterval = 10;
-  const frameDurationMs = 1000 / frameRate;
-  const intervalDurationMs = frameDurationMs * framesPerInterval;
-  const widthPerMs = 0.5;
-
   // Hacky way to fix gesture handler while reach at last.
-  const totalDuration = useDerivedValue(() => {
-    return totalVideoDuration.value - frameDurationMs * 2;
-  });
+  const totalDuration = useMemo(() => {
+    return totalVideoDuration - frameDurationMs * 2;
+  }, [totalVideoDuration]);
 
-  const totalWidth = totalDuration.value * widthPerMs;
-  const numberOfIntervals = Math.floor(
-    totalDuration.value / intervalDurationMs,
-  );
+  const totalWidth = useMemo(() => {
+    return totalDuration * widthPerMs;
+  }, [totalDuration]);
 
-  const partialIntervalWidth =
-    (totalDuration.value % intervalDurationMs) * widthPerMs;
-  const widthPerInterval = intervalDurationMs * widthPerMs;
-  const widthPerFrame = widthPerInterval / framesPerInterval;
+  const numberOfIntervals = useMemo(() => {
+    return Math.floor(totalDuration / intervalDurationMs);
+  }, [totalDuration]);
+
+  const partialIntervalWidth = useMemo(() => {
+    return (totalDuration % intervalDurationMs) * widthPerMs;
+  }, [totalDuration]);
 
   // Calculate frames in the last partial interval
-  const lastIntervalFrames = Math.floor(
-    (totalDuration.value % intervalDurationMs) / frameDurationMs,
-  );
+
+  const lastIntervalFrames = useMemo(() => {
+    return Math.floor((totalDuration % intervalDurationMs) / frameDurationMs);
+  }, [totalDuration]);
 
   const {width} = useWindowDimensions();
   const {theme} = useTheme();
@@ -67,7 +75,7 @@ const Timeline = ({
 
   const gesture = Gesture.Pan()
     .onChange(e => {
-      x.value += e.translationX;
+      x.value += e.changeX;
 
       // stop moving x less than 0
       if (x.value >= 0) {
@@ -92,6 +100,7 @@ const Timeline = ({
     <GestureDetector gesture={gesture}>
       <View style={{height: height, backgroundColor: theme.colors.black1}}>
         <Animated.View
+          entering={SlideInRight}
           style={[
             {
               width: totalWidth,

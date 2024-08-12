@@ -15,7 +15,7 @@ export type GeneratedSentence = {
 export const transformWordsToSentences = (
   words: SentenceWord[],
   highlightedWords: AutoHighlightResult[],
-  maxWords: number = 4,
+  maxWords: number = 10,
 ): GeneratedSentence[] => {
   const highlightedTimestamps = new Set<number>();
 
@@ -32,7 +32,7 @@ export const transformWordsToSentences = (
 
   words.forEach(word => {
     const isHighlighted = highlightedTimestamps.has(word.start);
-    word.highlighted = isHighlighted;
+    word.highlighted = word.highlighted || isHighlighted;
 
     const isUppercaseStart = word.text[0] === word.text[0].toUpperCase();
     const endsWithPunctuation = isSentenceEnding(word.text);
