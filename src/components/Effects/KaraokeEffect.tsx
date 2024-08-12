@@ -2,55 +2,65 @@ import {Mask, Rect, SkColor} from '@shopify/react-native-skia';
 import React from 'react';
 import {
   SharedValue,
+  cancelAnimation,
   useAnimatedReaction,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import {GeneratedSentence} from 'utils/sentencesBuilder';
 
 type KaraokeTextProps = {
-  x: number;
-  y: number;
+  x: SharedValue<number>;
+  y: SharedValue<number>;
   fillColor: SkColor;
-  duration: number;
-  width: number;
-  height: number;
+  width: SharedValue<number>;
+  height: SharedValue<number>;
   children: React.ReactNode;
   currentTime: SharedValue<number>;
-  end: number;
-  start: number;
+  currentSentence: SharedValue<GeneratedSentence>;
+  paused?: SharedValue<boolean>;
 };
 
 const KaraokeEffect = ({
   fillColor,
   x,
   y,
-  duration,
   width,
   height,
   children,
   currentTime,
-  start,
-  end,
+  currentSentence,
+  paused,
 }: KaraokeTextProps) => {
   const animatedFillWidth = useSharedValue(0);
-  const hasAnimated = useSharedValue(false);
 
   useAnimatedReaction(
     () => currentTime.value,
     latestTime => {
       if (
-        latestTime >= start &&
-        latestTime <= end &&
-        hasAnimated.value === false
+        latestTime >= currentSentence.value.start &&
+        latestTime <= currentSentence.value.end
       ) {
-        animatedFillWidth.value = withTiming(width, {
-          duration: duration,
-        });
-        hasAnimated.value = true;
-      } else {
-        hasAnimated.value = false;
+        if (paused && paused.value) {
+          cancelAnimation(animatedFillWidth);
+        } else {
+          animatedFillWidth.value = withTiming(width.value, {
+            duration: currentSentence.value.end - currentSentence.value.start,
+          });
+        }
       }
     },
+    [paused, currentSentence],
+  );
+
+  useAnimatedReaction(
+    () => animatedFillWidth.value,
+    value => {
+      if (value === width.value) {
+        animatedFillWidth.value = 0;
+      }
+    },
+    [animatedFillWidth],
   );
 
   return (

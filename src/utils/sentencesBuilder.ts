@@ -32,7 +32,7 @@ export const transformWordsToSentences = (
 
   words.forEach(word => {
     const isHighlighted = highlightedTimestamps.has(word.start);
-    word.highlighted = isHighlighted;
+    word.highlighted = word.highlighted || isHighlighted;
 
     const isUppercaseStart = word.text[0] === word.text[0].toUpperCase();
     const endsWithPunctuation = isSentenceEnding(word.text);

@@ -2,6 +2,7 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {
   Canvas,
   Fill,
+  FontWeight,
   ImageShader,
   Skia,
   TextAlign,
@@ -30,6 +31,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {useTheme} from 'theme/ThemeContext';
 import {generateThumbnail} from 'utils/video';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
@@ -42,6 +44,21 @@ import {Video} from 'store/videos/type';
 import Template from 'components/Template';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
+import TemplateSelector from 'containers/TemplateSelector';
+
+export const TEMPLATE_DETAILS = {
+  color: '#ffffff',
+  activeWord: {
+    // background: '#5966EC',
+    //color: '#5966EC
+    // inactive: '#708090'
+
+    // '#FF69B4' '#FFB6C1'
+    background: 'transparent',
+    color: '#c6fd78',
+  },
+  fontFamily: 'EuclidCircularA',
+};
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -49,7 +66,7 @@ type EditScreenProps = NativeStackScreenProps<RootStackParamList, SCREENS.EDIT>;
 
 const TEMPLATE_PADDING = 16;
 const SNAP = 32;
-const PLAY_BUTTON_FULL_OPACITY = 0.7;
+const CANVAS_BUTTONS_FULL_OPACITY = 0.8;
 const BACKGROUND_PADDING = 8;
 
 const EditScreen = ({route, navigation}: EditScreenProps) => {
@@ -61,9 +78,12 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const videoURL = route.params.videoURL;
   const paused = useSharedValue(true);
   const seek = useSharedValue(0);
+  const volume = useSharedValue(0);
+  const isAlreadyPlayedAfterScreenMount = useSharedValue(false);
   //
 
-  const playButtonOpacity = useSharedValue(PLAY_BUTTON_FULL_OPACITY);
+  const canvasButtonOpacity = useSharedValue(CANVAS_BUTTONS_FULL_OPACITY);
+  const playButtonOpacity = useSharedValue(CANVAS_BUTTONS_FULL_OPACITY);
 
   // BottomSheet
   const [isAddCaptionBottomSheetOpen, setAddCaptionBottomSheetOpen] =
@@ -76,7 +96,6 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const [selectedLanguage, setSelectedLanguage] = useState<languageType>(
     languages_best[0],
   );
-  const [sentences, setSentences] = useState<GeneratedSentence[]>([]);
   const selectedVideo = useSelector(selectSelectedVideo);
 
   const templateCurrentHeight = useSharedValue(0);
@@ -88,17 +107,13 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     videoURL,
     {
       paused: paused,
-      volume: 1,
+      volume: volume,
       looping: true,
       seek: seek,
     },
   );
 
   const frameDurationMs = 1000 / framerate;
-
-  const totalDuration = useDerivedValue(() => {
-    return duration;
-  }, [duration]);
 
   const isTopSnapLineActive = useSharedValue(false);
   const isBottomSnapLineActive = useSharedValue(false);
@@ -109,16 +124,20 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   // drag
   const isDragTrigger = useSharedValue(false);
 
+  const [renderTimeLine, setRenderTimeline] = useState(false);
+
+  const [isTemplateSelectorOpen, setTemplateSelector] = useState(false);
+
   useAnimatedReaction(
     () => {
       return currentTime.value;
     },
     latestTime => {
-      if (latestTime + frameDurationMs * 2 >= totalDuration.value) {
+      if (latestTime + frameDurationMs * 2 >= duration) {
         paused.value = true;
       }
     },
-    [currentTime, totalDuration, framerate],
+    [currentTime, duration, framerate],
   );
 
   const assignThumbnailImageToCurrentFrame = (url: string) => {
@@ -160,14 +179,24 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   const handlePlayPause = () => {
     'worklet';
+    if (!isAlreadyPlayedAfterScreenMount.value) {
+      seek.value = 0;
+    }
     paused.value = !paused.value;
+    isAlreadyPlayedAfterScreenMount.value = true;
   };
 
   const handlePauseVideo = () => {
     paused.value = true;
   };
 
-  const playButtonAnimatedStyle = useAnimatedStyle(() => {
+  const canvasButtonsAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: canvasButtonOpacity.value,
+    };
+  }, []);
+
+  const playButtonsAnimatedStyle = useAnimatedStyle(() => {
     return {
       opacity: playButtonOpacity.value,
     };
@@ -202,24 +231,47 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   const handleCaptionServiceSuccess = (data: GeneratedSentence[]) => {
     seek.value = 0;
-    setSentences(data);
+
+    if (selectedVideo) {
+      const videoObjectWithSentences: Video = {
+        ...selectedVideo,
+        sentences: data,
+      };
+
+      dispatch(updateVideo(videoObjectWithSentences));
+    }
   };
 
   useAnimatedReaction(
     () => {
-      if (isDragTrigger.value) {
-        return false;
-      }
       return paused.value;
     },
     value => {
       if (value) {
-        playButtonOpacity.value = withTiming(PLAY_BUTTON_FULL_OPACITY);
+        volume.value = 0;
+        playButtonOpacity.value = withTiming(CANVAS_BUTTONS_FULL_OPACITY);
       } else {
+        volume.value = 1;
         playButtonOpacity.value = withTiming(0);
       }
     },
-    [paused, isDragTrigger],
+    [paused],
+  );
+
+  useAnimatedReaction(
+    () => {
+      return isDragTrigger.value;
+    },
+    value => {
+      if (value) {
+        canvasButtonOpacity.value = withTiming(0);
+        playButtonOpacity.value = withTiming(0);
+      } else {
+        canvasButtonOpacity.value = withTiming(CANVAS_BUTTONS_FULL_OPACITY);
+        playButtonOpacity.value = withTiming(CANVAS_BUTTONS_FULL_OPACITY);
+      }
+    },
+    [isDragTrigger],
   );
 
   const handleBack = () => {
@@ -228,8 +280,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   };
 
   const imageShaderHeight = useDerivedValue(() => {
-    return height - (sentences.length ? 150 : 85);
-  }, [sentences, height]);
+    return height - (selectedVideo?.sentences.length ? 150 : 85);
+  }, [selectedVideo, height]);
 
   const templateTotalAvailableWidth = useDerivedValue(() => {
     const occupiedWidth = calculateFrameOccupiedWidth(
@@ -555,6 +607,20 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   const composed = Gesture.Simultaneous(dragGesture, tapGesture);
 
+  useEffect(() => {
+    if (duration !== 0 && renderTimeLine === false) {
+      setRenderTimeline(true);
+    }
+  }, [duration]);
+
+  const toggleTemplateSelector = () => {
+    setTemplateSelector(prev => !prev);
+  };
+
+  const handleCloseTemplateSelector = () => {
+    setTemplateSelector(false);
+  };
+
   return (
     <SafeAreaView
       style={[
@@ -571,27 +637,32 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
               fit={'contain'}
               height={imageShaderHeight}
               width={width}
-              origin={{
-                x: 0,
-                y: 0,
-              }}
             />
           </Fill>
 
-          <Template
-            currentTime={currentTime}
-            sentences={sentences}
-            paragraphLayoutWidth={templateTotalAvailableWidth}
-            backgroundPadding={BACKGROUND_PADDING}
-            backgroundOpacity={0.5}
-            x={dragDistanceX}
-            y={dragDistanceY}
-            setTemplateHeight={templateCurrentHeight}
-            setTemplateWidth={templateCurrentWidth}
-            setX={templateXpos}
-            setY={templateYpos}
-            alignment={TextAlign.Center}
-          />
+          {selectedVideo?.sentences && (
+            <Template
+              currentTime={currentTime}
+              sentences={selectedVideo?.sentences}
+              paragraphLayoutWidth={templateTotalAvailableWidth}
+              x={dragDistanceX}
+              y={dragDistanceY}
+              setTemplateHeight={templateCurrentHeight}
+              setTemplateWidth={templateCurrentWidth}
+              setX={templateXpos}
+              setY={templateYpos}
+              alignment={TextAlign.Center}
+              color={TEMPLATE_DETAILS.color}
+              fontSize={28}
+              fontFamily={TEMPLATE_DETAILS.fontFamily}
+              paused={paused}
+              activeColor={TEMPLATE_DETAILS.activeWord.color}
+              weight={FontWeight.Bold}
+              sentenceBackgroundColor={'black'}
+              sentenceBackgroundOpacity={0.5}
+              sentenceBackgroundPadding={8}
+            />
+          )}
         </Canvas>
 
         <GestureDetector gesture={composed}>
@@ -604,22 +675,64 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         <Animated.View style={[snapBottomHorizontalLine]} />
         <Animated.View style={[snapCentralVerticalLine]} />
 
-        <Pressable
-          onPress={handleBack}
-          style={[
-            Styles.back,
-            {
-              backgroundColor: theme.colors.grey3,
-            },
-          ]}>
-          <Icon name={'chevron-left'} size={24} color={theme.colors.white} />
-        </Pressable>
+        <View style={[Styles.toolBar]}>
+          <Pressable
+            onPress={handleBack}
+            style={[
+              Styles.back,
+              {
+                backgroundColor: theme.colors.grey2,
+              },
+            ]}>
+            <Icon name={'chevron-left'} size={24} color={theme.colors.white} />
+          </Pressable>
+
+          <View style={[Styles.rightIconsWrapperToolBar]}>
+            <AnimatedPressable
+              onPress={() => {
+                console.log('hello');
+              }}
+              style={[
+                Styles.exportWrapper,
+                canvasButtonsAnimatedStyle,
+                {
+                  backgroundColor: theme.colors.grey2,
+                },
+              ]}>
+              <Icon name={'upload'} size={24} color={theme.colors.white} />
+              <Text
+                style={[
+                  theme.typography.subheader.small,
+                  {
+                    color: theme.colors.white,
+                  },
+                ]}>
+                Export
+              </Text>
+            </AnimatedPressable>
+            <AnimatedPressable
+              onPress={toggleTemplateSelector}
+              style={[
+                Styles.templateIconWrapper,
+                canvasButtonsAnimatedStyle,
+                {
+                  backgroundColor: theme.colors.grey2,
+                },
+              ]}>
+              <MaterialIcon
+                name={'style'}
+                size={24}
+                color={theme.colors.white}
+              />
+            </AnimatedPressable>
+          </View>
+        </View>
 
         <AnimatedPressable
           onPress={handlePlayPause}
           style={[
             Styles.playButton,
-            playButtonAnimatedStyle,
+            playButtonsAnimatedStyle,
             {
               backgroundColor: theme.colors.black4,
               left: width / 2 - 40,
@@ -631,19 +744,19 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       </Pressable>
 
       {/* later optimized sentence to shared value and use display none or something like that */}
-      {!!sentences.length && (
+      {!!selectedVideo?.sentences.length && renderTimeLine && (
         <Timeline
           currentTime={currentTime}
-          sentences={sentences}
+          sentences={selectedVideo.sentences}
           frameRate={framerate}
-          totalDuration={totalDuration}
+          totalDuration={duration}
           seek={seek}
           height={100}
         />
       )}
 
       {/* Move to separate component */}
-      {!sentences.length && (
+      {!selectedVideo?.sentences.length && (
         <Button
           onPress={handleAddCaption}
           style={[Styles.button]}
@@ -725,6 +838,10 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           language={selectedLanguage}
         />
       )}
+
+      {isTemplateSelectorOpen && (
+        <TemplateSelector onClose={handleCloseTemplateSelector} />
+      )}
     </SafeAreaView>
   );
 };
@@ -773,14 +890,47 @@ const Styles = StyleSheet.create({
   back: {
     height: 32,
     width: 32,
-    position: 'absolute',
-    left: 16,
-    top: 16,
     borderRadius: 16,
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    opacity: 0.7,
+  },
+
+  templateIconWrapper: {
+    height: 48,
+    width: 48,
+    borderRadius: 24,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  exportWrapper: {
+    borderRadius: 12,
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    gap: 8,
+  },
+
+  toolBar: {
+    position: 'absolute',
+    display: 'flex',
+    justifyContent: 'space-between',
+    width: '100%',
+    alignItems: 'flex-start',
+    padding: 16,
+    flexDirection: 'row',
+  },
+
+  rightIconsWrapperToolBar: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    alignItems: 'flex-end',
+    gap: 24,
   },
 });
 
