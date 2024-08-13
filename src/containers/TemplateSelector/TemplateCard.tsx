@@ -1,4 +1,4 @@
-import {Canvas, FontWeight, TextAlign} from '@shopify/react-native-skia';
+import {Canvas} from '@shopify/react-native-skia';
 import Template from 'components/Template';
 import React from 'react';
 import {Pressable, StyleSheet, useWindowDimensions} from 'react-native';
@@ -7,7 +7,7 @@ import {
   useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
-import {TEMPLATE_DETAILS} from 'screens/Edit/EditScreen';
+import {Template as TemplateState} from 'store/templates/type';
 import {useTheme} from 'theme/ThemeContext';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
 
@@ -17,9 +17,17 @@ const HEIGHT = 100;
 type TemplateCard = {
   currentTime: SharedValue<number>;
   sentences: GeneratedSentence[];
-};
+  selectedTemplateId: string;
+  onPress: (template: TemplateState) => void;
+} & TemplateState;
 
-const TemplateCard = ({currentTime, sentences}: TemplateCard) => {
+const TemplateCard = ({
+  currentTime,
+  sentences,
+  selectedTemplateId,
+  onPress,
+  ...templateState
+}: TemplateCard) => {
   const {theme} = useTheme();
   const {width} = useWindowDimensions();
   const x = useSharedValue(width / 2 - PADDING);
@@ -29,13 +37,25 @@ const TemplateCard = ({currentTime, sentences}: TemplateCard) => {
   const derivedY = useDerivedValue(() => {
     return HEIGHT / 2 - paragraphHeight.value / 2;
   }, [paragraphHeight]);
+
+  const handlePress = () => {
+    onPress(templateState);
+  };
+
   return (
     <Pressable
-      style={[
+      onPress={handlePress}
+      style={({pressed}) => [
         styles.wrapper,
         {
           backgroundColor: theme.colors.grey2,
           width: width - PADDING * 2,
+          opacity: pressed ? 0.7 : 1,
+          borderWidth: selectedTemplateId === templateState.id ? 2 : 0,
+          borderColor:
+            selectedTemplateId === templateState.id
+              ? theme.colors.primary
+              : 'transparent',
         },
       ]}>
       <Canvas
@@ -49,17 +69,10 @@ const TemplateCard = ({currentTime, sentences}: TemplateCard) => {
           paragraphLayoutWidth={paragraphLayoutWidth}
           x={x}
           y={derivedY}
-          alignment={TextAlign.Center}
           setTemplateHeight={paragraphHeight}
           notHideSentenceBetweenSentenceInterval={true}
-          color={TEMPLATE_DETAILS.color}
-          fontSize={24}
-          fontFamily={TEMPLATE_DETAILS.fontFamily}
-          weight={FontWeight.Bold}
-          activeColor={TEMPLATE_DETAILS.activeWord.color}
-          sentenceBackgroundColor={'black'}
-          sentenceBackgroundOpacity={0.5}
-          sentenceBackgroundPadding={8}
+          // stylish state
+          {...templateState}
         />
       </Canvas>
     </Pressable>

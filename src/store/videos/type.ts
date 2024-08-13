@@ -1,4 +1,5 @@
 import {TranscriptLanguageCode} from 'assemblyai';
+import {TemplateId} from 'store/templates/type';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
 
 export type VideosSliceState = {
@@ -15,7 +16,7 @@ export type Video = {
   url: string;
   language?: TranscriptLanguageCode;
   sentences: GeneratedSentence[];
-  templateId?: string;
+  templateId: TemplateId;
   createdAt: string;
   updatedAt: string;
   duration: number;

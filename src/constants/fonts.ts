@@ -1,5 +1,11 @@
+export const FONT_FAMILY = {
+  Inter: 'Inter',
+  EuclidCircularA: 'EuclidCircularA',
+  HandMarker: 'HandMarker',
+};
+
 export const fontSource = {
-  Inter: [
+  [FONT_FAMILY.Inter]: [
     require('../assets/fonts/Inter-Medium.ttf'),
     require('../assets/fonts/Inter-Black.ttf'),
     require('../assets/fonts/Inter-Bold.ttf'),
@@ -11,7 +17,7 @@ export const fontSource = {
     require('../assets/fonts/Inter-Thin.ttf'),
   ],
 
-  EuclidCircularA: [
+  [FONT_FAMILY.EuclidCircularA]: [
     require('../assets/fonts/EuclidCircularA-BoldItalic.ttf'),
     require('../assets/fonts/EuclidCircularA-Bold.ttf'),
     require('../assets/fonts/EuclidCircularA-Italic.ttf'),
@@ -23,5 +29,5 @@ export const fontSource = {
     require('../assets/fonts/EuclidCircularA-SemiBoldItalic.ttf'),
     require('../assets/fonts/EuclidCircularA-SemiBold.ttf'),
   ],
-  HandMarker: [require('../assets/fonts/HandMarker.ttf')],
+  [FONT_FAMILY.HandMarker]: [require('../assets/fonts/HandMarker.ttf')],
 };
