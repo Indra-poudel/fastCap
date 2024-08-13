@@ -2,10 +2,8 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {
   Canvas,
   Fill,
-  FontWeight,
   ImageShader,
   Skia,
-  TextAlign,
   useVideo,
 } from '@shopify/react-native-skia';
 import BottomSheet from 'components/BottomSheet';
@@ -48,24 +46,9 @@ import Template from 'components/Template';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import TemplateSelector from 'containers/TemplateSelector';
-import {store} from 'store';
-import {PURGE} from 'redux-persist';
 import {selectTemplateForSelectedVideo} from 'store/templates/selector';
 import {Template as TemplateState} from 'store/templates/type';
-
-export const TEMPLATE_DETAILS = {
-  color: '#ffffff',
-  activeWord: {
-    // background: '#5966EC',
-    //color: '#5966EC
-    // inactive: '#708090'
-
-    // '#FF69B4' '#FFB6C1'
-    background: 'transparent',
-    color: '#c6fd78',
-  },
-  fontFamily: 'EuclidCircularA',
-};
+import {DEFAULT_MAX_WORDS} from 'constants/index';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -74,7 +57,6 @@ type EditScreenProps = NativeStackScreenProps<RootStackParamList, SCREENS.EDIT>;
 const TEMPLATE_PADDING = 16;
 const SNAP = 32;
 const CANVAS_BUTTONS_FULL_OPACITY = 0.8;
-const BACKGROUND_PADDING = 8;
 
 const EditScreen = ({route, navigation}: EditScreenProps) => {
   const {theme} = useTheme();
@@ -853,6 +835,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           onCancel={handleCaptionServiceCancel}
           onSuccess={handleCaptionServiceSuccess}
           language={selectedLanguage}
+          maxWords={selectedTemplate?.maxWords || DEFAULT_MAX_WORDS}
         />
       )}
 

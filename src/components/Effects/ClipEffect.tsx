@@ -40,26 +40,17 @@ const ClipEffect = ({
         latestTime >= currentSentence.value.start &&
         latestTime <= currentSentence.value.end
       ) {
-        if (paused && paused.value) {
-          cancelAnimation(animatedWidth);
-        } else {
-          animatedWidth.value = withTiming(width.value, {
-            duration: currentSentence.value.end - currentSentence.value.start,
-          });
-        }
+        const duration =
+          currentSentence.value.end - currentSentence.value.start;
+        animatedWidth.value = withTiming(width.value, {
+          duration,
+        });
+      } else {
+        cancelAnimation(animatedWidth);
+        animatedWidth.modify(() => 0, true);
       }
     },
-    [paused, currentSentence, currentTime, width],
-  );
-
-  useAnimatedReaction(
-    () => animatedWidth.value,
-    value => {
-      if (value === width.value) {
-        animatedWidth.value = 0;
-      }
-    },
-    [animatedWidth],
+    [paused, currentTime, width],
   );
 
   const clipRect = useDerivedValue(() => {

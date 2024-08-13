@@ -29,7 +29,13 @@ export enum OverallProcessStatus {
   ERROR = 'error',
 }
 
-export const useTranscriptionService = ({isMock}: {isMock?: boolean}) => {
+export const useTranscriptionService = ({
+  isMock,
+  maxWords,
+}: {
+  isMock?: boolean;
+  maxWords: number;
+}) => {
   const [currentStep, setCurrentStep] = useState<TranscriptionSteps>(
     TranscriptionSteps.CONVERT_VIDEO_TO_MP3,
   );
@@ -56,6 +62,7 @@ export const useTranscriptionService = ({isMock}: {isMock?: boolean}) => {
         const generatedSentences = transformWordsToSentences(
           words,
           highlightedWords,
+          maxWords,
         );
 
         setTimeout(() => {
@@ -140,6 +147,7 @@ export const useTranscriptionService = ({isMock}: {isMock?: boolean}) => {
             const generatedSentences = transformWordsToSentences(
               words,
               highlightedWords,
+              maxWords,
             );
 
             setSentences(generatedSentences);

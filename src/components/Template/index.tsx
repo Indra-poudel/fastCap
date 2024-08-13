@@ -111,6 +111,7 @@ type BaseParagraphProps = {
   fillColor?: string;
 
   paused?: SharedValue<boolean>;
+  id: string;
 };
 
 // Use the utility type to enforce essential dependencies only
@@ -191,6 +192,7 @@ const Template = ({
   fillColor,
 
   paused,
+  id,
 }: CustomParagraphProps) => {
   // Default logic implementation
   const activeColorValue = activeColor || color;
@@ -286,7 +288,7 @@ const Template = ({
     paragraph.layout(paragraphLayoutWidth.value);
 
     return paragraph;
-  }, [customFontMgr, currentSentence, paragraphLayoutWidth, fontFamily]);
+  }, [customFontMgr, currentSentence, id]);
 
   const outlineParagraph = useDerivedValue(() => {
     // Are the font loaded already?
@@ -347,7 +349,7 @@ const Template = ({
     paragraph.layout(paragraphLayoutWidth.value);
 
     return paragraph;
-  }, [customFontMgr, currentSentence, paragraphLayoutWidth, fontFamily]);
+  }, [customFontMgr, currentSentence, id]);
 
   useAnimatedReaction(
     () => currentTime.value,
@@ -408,11 +410,11 @@ const Template = ({
     } else {
       return 0;
     }
-  }, [paragraphWidth]);
+  }, [paragraphWidth, sentenceBackgroundPadding]);
 
   const backgroundHeight = useDerivedValue(() => {
     return paragraphHeight.value + sentenceBackgroundPadding * 2;
-  }, [paragraphHeight]);
+  }, [paragraphHeight, sentenceBackgroundPadding]);
 
   const backgroundX = useDerivedValue(() => {
     if (alignment === TextAlign.Left) {
@@ -430,15 +432,15 @@ const Template = ({
         sentenceBackgroundPadding
       );
     }
-  }, [minX, paragraphWidth, paragraphLayoutWidth]);
+  }, [minX, paragraphWidth, paragraphLayoutWidth, id]);
 
   const backgroundY = useDerivedValue(() => {
     return y.value;
-  }, [y, sentenceBackgroundPadding]);
+  }, [y]);
 
   const minY = useDerivedValue(() => {
     return y.value + sentenceBackgroundPadding;
-  }, [y]);
+  }, [y, sentenceBackgroundPadding]);
 
   useAnimatedReaction(
     () => backgroundY.value,

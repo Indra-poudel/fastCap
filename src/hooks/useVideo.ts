@@ -82,6 +82,7 @@ export const useVideo = (
   const rotation = useMemo(() => video?.rotation() ?? 0, [video]);
   const frameDuration = 1000 / framerate;
   const currentFrameDuration = Math.floor(frameDuration);
+
   Rea.useAnimatedReaction(
     () => isPaused.value,
     paused => {

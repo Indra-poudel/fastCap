@@ -57,7 +57,6 @@ const FloatingActionButton = () => {
   };
 
   const performAction = (selectedAction: FLOATING_ACTION) => {
-    console.log('Selected Action', selectedAction);
     if (selectedAction === FLOATING_ACTION.GALLERY) {
       handleSelectVideoFromGallery();
     } else {

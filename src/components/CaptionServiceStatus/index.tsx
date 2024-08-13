@@ -16,12 +16,14 @@ type CaptionServiceStatusProps = {
   onCancel: () => void;
   onSuccess: (data: GeneratedSentence[]) => void;
   language: languageType;
+  maxWords: number;
 };
 
 const CaptionServiceStatus = ({
   videoUrl,
   onCancel,
   onSuccess,
+  maxWords,
   language,
 }: CaptionServiceStatusProps) => {
   const {
@@ -33,6 +35,7 @@ const CaptionServiceStatus = ({
     startTranscriptionProcess,
   } = useTranscriptionService({
     isMock: true,
+    maxWords,
   });
 
   const {theme} = useTheme();
