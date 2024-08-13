@@ -171,7 +171,7 @@ export const fontSource = {
     require('@assets/fonts/OpenSans-LightItalic.ttf'),
     require('@assets/fonts/OpenSans-Light.ttf'),
     require('@assets/fonts/OpenSans-Italic.ttf'),
-    require('@assets/fonts/OpenSans-Italic-VariableFont.ttf'),
+    require('@assets/fonts/OpenSans-Italic-VariableFont_wdth.ttf'),
     require('@assets/fonts/OpenSans-ExtraBoldItalic.ttf'),
     require('@assets/fonts/OpenSans-ExtraBold.ttf'),
     require('@assets/fonts/OpenSans-BoldItalic.ttf'),
