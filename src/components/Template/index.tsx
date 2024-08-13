@@ -12,6 +12,7 @@ import {
   Group,
   Paint,
   Shadow,
+  PaintStyle,
 } from '@shopify/react-native-skia';
 import {fontSource} from 'constants/fonts';
 import {
@@ -285,7 +286,7 @@ const Template = ({
     paragraph.layout(paragraphLayoutWidth.value);
 
     return paragraph;
-  }, [customFontMgr, currentSentence, paragraphLayoutWidth]);
+  }, [customFontMgr, currentSentence, paragraphLayoutWidth, fontFamily]);
 
   const outlineParagraph = useDerivedValue(() => {
     // Are the font loaded already?
@@ -302,38 +303,41 @@ const Template = ({
       customFontMgr,
     );
 
+    const foregroundPaint = Skia.Paint();
+    foregroundPaint.setStyle(PaintStyle.Stroke);
+    foregroundPaint.setColor(Skia.Color(strokeColor || defaultColor));
+    foregroundPaint.setStrokeWidth(5);
+
     currentSentence.value.words.forEach((word, _index) => {
       const isActiveWord =
         currentTime.value >= word.start && currentTime.value <= word.end;
       const isBeforeWord = currentTime.value >= word.start;
 
-      paragraphBuilder.pushStyle({
-        color: isActiveWord
-          ? Skia.Color(activeStrokeColorValue)
-          : isBeforeWord
-          ? Skia.Color(strokeColorBeforeValue)
-          : Skia.Color(strokeColorAfterValue),
-        fontFamilies: [fontFamily],
-        fontSize: isActiveWord
-          ? activeFontSizeValue
-          : isBeforeWord
-          ? fontSizeBeforeValue
-          : fontSizeAfterValue,
-
-        fontStyle: {
-          weight: isActiveWord
-            ? activeFontWeightValue
+      paragraphBuilder.pushStyle(
+        {
+          fontFamilies: [fontFamily],
+          fontSize: isActiveWord
+            ? activeFontSizeValue
             : isBeforeWord
-            ? fontWeightBeforeValue
-            : fontWeightAfterValue,
-        },
+            ? fontSizeBeforeValue
+            : fontSizeAfterValue,
 
-        shadows: isActiveWord
-          ? activeShadowValue
-          : isBeforeWord
-          ? shadowBeforeValue
-          : shadowAfterValue,
-      });
+          fontStyle: {
+            weight: isActiveWord
+              ? activeFontWeightValue
+              : isBeforeWord
+              ? fontWeightBeforeValue
+              : fontWeightAfterValue,
+          },
+
+          shadows: isActiveWord
+            ? activeShadowValue
+            : isBeforeWord
+            ? shadowBeforeValue
+            : shadowAfterValue,
+        },
+        foregroundPaint,
+      );
 
       paragraphBuilder.addText(word.text + ' '); // Add space after each word
       paragraphBuilder.pop();
@@ -343,7 +347,7 @@ const Template = ({
     paragraph.layout(paragraphLayoutWidth.value);
 
     return paragraph;
-  }, [customFontMgr, currentSentence, paragraphLayoutWidth]);
+  }, [customFontMgr, currentSentence, paragraphLayoutWidth, fontFamily]);
 
   useAnimatedReaction(
     () => currentTime.value,
@@ -365,18 +369,19 @@ const Template = ({
   );
 
   const paragraphHeight = useDerivedValue(() => {
-    return paragraph.value?.getHeight() || 0;
+    return outlineParagraph.value?.getHeight() || 0;
   }, [paragraph]);
 
   const paragraphWidth = useDerivedValue(() => {
-    const maxWidthOutBreak = paragraph.value?.getMaxIntrinsicWidth() || 0;
-    const maxLayoutWidth = paragraph.value?.getMaxWidth() || 0;
+    const maxWidthOutBreak =
+      outlineParagraph.value?.getMaxIntrinsicWidth() || 0;
+    const maxLayoutWidth = outlineParagraph.value?.getMaxWidth() || 0;
 
     const width =
       maxWidthOutBreak > maxLayoutWidth ? maxLayoutWidth : maxWidthOutBreak;
 
     return width || 0;
-  }, [paragraph]);
+  }, [outlineParagraph]);
 
   const minX = useDerivedValue(() => {
     if (alignment === TextAlign.Left) {

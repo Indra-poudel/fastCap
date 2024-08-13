@@ -88,6 +88,7 @@ const FloatingActionButton = () => {
           createdAt: isoString,
           updatedAt: isoString,
           duration: response.assets[0].duration || 0,
+          templateId: '1',
           width: response.assets[0].width,
           height: response.assets[0].height,
         }),

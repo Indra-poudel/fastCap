@@ -15,7 +15,7 @@ export type GeneratedSentence = {
 export const transformWordsToSentences = (
   words: SentenceWord[],
   highlightedWords: AutoHighlightResult[],
-  maxWords: number = 10,
+  maxWords: number = 3,
 ): GeneratedSentence[] => {
   const highlightedTimestamps = new Set<number>();
 

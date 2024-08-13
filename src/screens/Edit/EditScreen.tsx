@@ -34,9 +34,12 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {useTheme} from 'theme/ThemeContext';
 import {generateThumbnail} from 'utils/video';
-import {GeneratedSentence} from 'utils/sentencesBuilder';
+import {
+  GeneratedSentence,
+  transformWordsToSentences,
+} from 'utils/sentencesBuilder';
 import Timeline from 'components/Timeline/Timeline';
-import {useAppDispatch} from 'hooks/useStore';
+import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {updateVideo} from 'store/videos/slice';
 import {useSelector} from 'react-redux';
 import {selectSelectedVideo} from 'store/videos/selector';
@@ -45,6 +48,10 @@ import Template from 'components/Template';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import TemplateSelector from 'containers/TemplateSelector';
+import {store} from 'store';
+import {PURGE} from 'redux-persist';
+import {selectTemplateForSelectedVideo} from 'store/templates/selector';
+import {Template as TemplateState} from 'store/templates/type';
 
 export const TEMPLATE_DETAILS = {
   color: '#ffffff',
@@ -92,6 +99,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     useState(false);
   const [isCaptionsGenerating, setCaptionsGenerating] = useState(false);
   //
+
+  const selectedTemplate = useAppSelector(selectTemplateForSelectedVideo);
 
   const [selectedLanguage, setSelectedLanguage] = useState<languageType>(
     languages_best[0],
@@ -239,6 +248,25 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       };
 
       dispatch(updateVideo(videoObjectWithSentences));
+    }
+  };
+
+  const handleSelectTemplate = (template: TemplateState) => {
+    if (selectedVideo) {
+      const allWords = selectedVideo.sentences.flatMap(value => value.words);
+      const newGeneratedSentences = transformWordsToSentences(
+        allWords,
+        [],
+        template.maxWords,
+      );
+
+      const videoObjectWithNewTemplateId: Video = {
+        ...selectedVideo,
+        templateId: template.id,
+        sentences: newGeneratedSentences,
+      };
+
+      dispatch(updateVideo(videoObjectWithNewTemplateId));
     }
   };
 
@@ -640,7 +668,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
             />
           </Fill>
 
-          {selectedVideo?.sentences && (
+          {selectedVideo?.sentences && selectedTemplate && (
             <Template
               currentTime={currentTime}
               sentences={selectedVideo?.sentences}
@@ -651,16 +679,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
               setTemplateWidth={templateCurrentWidth}
               setX={templateXpos}
               setY={templateYpos}
-              alignment={TextAlign.Center}
-              color={TEMPLATE_DETAILS.color}
-              fontSize={28}
-              fontFamily={TEMPLATE_DETAILS.fontFamily}
-              paused={paused}
-              activeColor={TEMPLATE_DETAILS.activeWord.color}
-              weight={FontWeight.Bold}
-              sentenceBackgroundColor={'black'}
-              sentenceBackgroundOpacity={0.5}
-              sentenceBackgroundPadding={8}
+              {...selectedTemplate}
             />
           )}
         </Canvas>
@@ -689,9 +708,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
           <View style={[Styles.rightIconsWrapperToolBar]}>
             <AnimatedPressable
-              onPress={() => {
-                console.log('hello');
-              }}
+              onPress={() => {}}
               style={[
                 Styles.exportWrapper,
                 canvasButtonsAnimatedStyle,
@@ -839,8 +856,12 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         />
       )}
 
-      {isTemplateSelectorOpen && (
-        <TemplateSelector onClose={handleCloseTemplateSelector} />
+      {isTemplateSelectorOpen && selectedVideo && (
+        <TemplateSelector
+          onSelect={handleSelectTemplate}
+          onClose={handleCloseTemplateSelector}
+          selectedTemplateId={selectedVideo.templateId}
+        />
       )}
     </SafeAreaView>
   );
