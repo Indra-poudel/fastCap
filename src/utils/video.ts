@@ -29,6 +29,8 @@ export const convertVideoToMp3 = (
         ffmpegCommand,
         async completedSession => {
           const returnCode = await completedSession.getReturnCode();
+          console.log(completedSession.getAllLogs());
+
           if (returnCode.isValueSuccess()) {
             console.log(`Video converted successfully: ${outputUri}`);
             resolve(outputUri); // Resolve the promise with the output URI
@@ -173,7 +175,7 @@ export const generateVideoFromFrames = async (
         .then(async session => {
           const returnCode = await session.getReturnCode();
           if (returnCode.isValueSuccess()) {
-            console.log('Video created successfully!');
+            console.log('Video created successfully!', outputVideoPath);
             resolve(outputVideoPath);
           } else {
             console.error(`FFmpegKit failed with return code: ${returnCode}`);

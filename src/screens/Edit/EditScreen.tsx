@@ -660,7 +660,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     if (ref.current && selectedVideo) {
       const frameRate = 30;
       const seekInterval = 1000 / frameRate;
-      const totalDuration = duration * 1000 - seekInterval * 2;
+      const totalDuration = duration - seekInterval * 2;
 
       const totalFrames = Math.floor(totalDuration / seekInterval);
 
@@ -670,11 +670,18 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         const image = await ref.current.makeImageSnapshotAsync();
         await saveFrame(image, i);
       }
-      generateVideoFromFrames(
+
+      const videoPath = await generateVideoFromFrames(
         selectedVideo?.audioUrl,
         duration,
         selectedVideo?.id,
       );
+
+      CameraRoll.saveAsset(videoPath, {
+        type: 'video',
+      }).then(() => {
+        console.log('successfully saved to camera roll');
+      });
     } else {
       console.error('No ref of canvas or selected video');
     }
