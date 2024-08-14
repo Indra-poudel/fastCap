@@ -3,7 +3,9 @@ import {
   Canvas,
   Fill,
   ImageShader,
+  SkImage,
   Skia,
+  useCanvasRef,
   useVideo,
 } from '@shopify/react-native-skia';
 import BottomSheet from 'components/BottomSheet';
@@ -12,7 +14,7 @@ import CaptionServiceStatus from 'components/CaptionServiceStatus';
 import LanguageSelector, {languageType} from 'components/LanguageSelector';
 import {languages_best} from 'constants/languages';
 import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -22,6 +24,7 @@ import {
 } from 'react-native';
 import Animated, {
   clamp,
+  runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
@@ -31,7 +34,11 @@ import Animated, {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {useTheme} from 'theme/ThemeContext';
-import {generateThumbnail} from 'utils/video';
+import {
+  generateThumbnail,
+  generateVideoFromFrames,
+  saveFrames,
+} from 'utils/video';
 import {
   GeneratedSentence,
   transformWordsToSentences,
@@ -49,6 +56,9 @@ import TemplateSelector from 'containers/TemplateSelector';
 import {selectTemplateForSelectedVideo} from 'store/templates/selector';
 import {Template as TemplateState} from 'store/templates/type';
 import {DEFAULT_MAX_WORDS} from 'constants/index';
+import RNFetchBlob from 'rn-fetch-blob';
+import {CameraRoll} from '@react-native-camera-roll/camera-roll';
+import ExportVideo from 'components/ExportVideo';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -63,6 +73,9 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   const {width, height} = useWindowDimensions();
 
+  const ref = useCanvasRef();
+  const canvasSize = useSharedValue({width: 0, height: 0});
+
   // Video
   const videoURL = route.params.videoURL;
   const paused = useSharedValue(true);
@@ -70,6 +83,12 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const volume = useSharedValue(0);
   const isAlreadyPlayedAfterScreenMount = useSharedValue(false);
   //
+
+  // Export
+  const [isExporting, setExporting] = useState(false);
+  const allFrames = useRef<Promise<SkImage>[]>([]);
+  const progress = useSharedValue<number>(0);
+  const isAllFramePushed = useSharedValue<boolean>(false);
 
   const canvasButtonOpacity = useSharedValue(CANVAS_BUTTONS_FULL_OPACITY);
   const playButtonOpacity = useSharedValue(CANVAS_BUTTONS_FULL_OPACITY);
@@ -126,9 +145,13 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     latestTime => {
       if (latestTime + frameDurationMs * 2 >= duration) {
         paused.value = true;
+
+        if (isExporting) {
+          isAllFramePushed.value = true;
+        }
       }
     },
-    [currentTime, duration, framerate],
+    [currentTime, duration, framerate, isExporting],
   );
 
   const assignThumbnailImageToCurrentFrame = (url: string) => {
@@ -261,11 +284,15 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         volume.value = 0;
         playButtonOpacity.value = withTiming(CANVAS_BUTTONS_FULL_OPACITY);
       } else {
-        volume.value = 1;
+        if (isExporting) {
+          volume.value = 0;
+        } else {
+          volume.value = 1;
+        }
         playButtonOpacity.value = withTiming(0);
       }
     },
-    [paused],
+    [paused, isExporting],
   );
 
   useAnimatedReaction(
@@ -631,6 +658,85 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     setTemplateSelector(false);
   };
 
+  const renderVideo = async () => {
+    if (selectedVideo) {
+      console.log('inside renderVideo');
+      saveFrames(allFrames.current)
+        .then(value => {
+          console.log(value);
+          generateVideoFromFrames(
+            selectedVideo?.audioUrl,
+            duration,
+            selectedVideo.id,
+          )
+            .then(url => {
+              CameraRoll.saveAsset(url, {type: 'video'})
+                .then(() => {
+                  console.log('finally saved');
+                })
+                .catch(() => {
+                  console.log('camera roll error');
+                });
+            })
+            .catch(() => {
+              console.error('error while generating video from frames');
+            });
+        })
+        .catch(() => {
+          console.error('error while saving frames');
+        });
+    }
+  };
+
+  const handleCaptureSnapShotOfCanvas = async () => {
+    const promiseImage = ref.current?.makeImageSnapshotAsync();
+
+    if (promiseImage) {
+      allFrames.current.push(promiseImage);
+      console.log('pushing frame', allFrames.current.length);
+    }
+  };
+
+  useAnimatedReaction(
+    () => currentFrame.value,
+    (_currentFrame, _prevFrame) => {
+      if (_currentFrame !== null && isExporting) {
+        runOnJS(handleCaptureSnapShotOfCanvas)();
+      }
+    },
+    [isExporting],
+  );
+
+  const onClickExport = () => {
+    seek.value = 0;
+    volume.value = 0;
+    paused.value = false;
+    setExporting(true);
+  };
+
+  const handleCancelVideoExport = () => {
+    setExporting(false);
+    allFrames.current = [];
+    paused.value = true;
+    volume.value = 1;
+  };
+
+  useAnimatedReaction(
+    () => {
+      return isAllFramePushed.value;
+    },
+    value => {
+      if (value) {
+        isAllFramePushed.value = false;
+        console.log('exporting started');
+        runOnJS(renderVideo)();
+      }
+    },
+    [isAllFramePushed, selectedVideo],
+  );
+
+  console.log(selectedVideo?.audioUrl);
+
   return (
     <SafeAreaView
       style={[
@@ -640,7 +746,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         },
       ]}>
       <Pressable onPress={handlePlayPause} style={[Styles.playerWrapper]}>
-        <Canvas style={[Styles.canvas]}>
+        <Canvas style={[Styles.canvas]} ref={ref} onSize={canvasSize}>
           <Fill>
             <ImageShader
               image={currentFrame}
@@ -688,43 +794,45 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
             <Icon name={'chevron-left'} size={24} color={theme.colors.white} />
           </Pressable>
 
-          <View style={[Styles.rightIconsWrapperToolBar]}>
-            <AnimatedPressable
-              onPress={() => {}}
-              style={[
-                Styles.exportWrapper,
-                canvasButtonsAnimatedStyle,
-                {
-                  backgroundColor: theme.colors.grey2,
-                },
-              ]}>
-              <Icon name={'upload'} size={24} color={theme.colors.white} />
-              <Text
+          {selectedVideo && selectedVideo?.sentences?.length > 0 && (
+            <View style={[Styles.rightIconsWrapperToolBar]}>
+              <AnimatedPressable
+                onPress={onClickExport}
                 style={[
-                  theme.typography.subheader.small,
+                  Styles.exportWrapper,
+                  canvasButtonsAnimatedStyle,
                   {
-                    color: theme.colors.white,
+                    backgroundColor: theme.colors.grey2,
                   },
                 ]}>
-                Export
-              </Text>
-            </AnimatedPressable>
-            <AnimatedPressable
-              onPress={toggleTemplateSelector}
-              style={[
-                Styles.templateIconWrapper,
-                canvasButtonsAnimatedStyle,
-                {
-                  backgroundColor: theme.colors.grey2,
-                },
-              ]}>
-              <MaterialIcon
-                name={'style'}
-                size={24}
-                color={theme.colors.white}
-              />
-            </AnimatedPressable>
-          </View>
+                <Icon name={'upload'} size={24} color={theme.colors.white} />
+                <Text
+                  style={[
+                    theme.typography.subheader.small,
+                    {
+                      color: theme.colors.white,
+                    },
+                  ]}>
+                  Export
+                </Text>
+              </AnimatedPressable>
+              <AnimatedPressable
+                onPress={toggleTemplateSelector}
+                style={[
+                  Styles.templateIconWrapper,
+                  canvasButtonsAnimatedStyle,
+                  {
+                    backgroundColor: theme.colors.grey2,
+                  },
+                ]}>
+                <MaterialIcon
+                  name={'style'}
+                  size={24}
+                  color={theme.colors.white}
+                />
+              </AnimatedPressable>
+            </View>
+          )}
         </View>
 
         <AnimatedPressable
@@ -832,6 +940,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       {isCaptionsGenerating && (
         <CaptionServiceStatus
           videoUrl={videoURL}
+          duration={duration}
           onCancel={handleCaptionServiceCancel}
           onSuccess={handleCaptionServiceSuccess}
           language={selectedLanguage}
@@ -845,6 +954,10 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           onClose={handleCloseTemplateSelector}
           selectedTemplateId={selectedVideo.templateId}
         />
+      )}
+
+      {isExporting && (
+        <ExportVideo onCancel={handleCancelVideoExport} percentage={progress} />
       )}
     </SafeAreaView>
   );

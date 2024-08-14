@@ -23,4 +23,5 @@ export type Video = {
   thumbnailUrl?: string;
   height: number;
   width: number;
+  audioUrl: string;
 };

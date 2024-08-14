@@ -11,14 +11,15 @@ import {
   transformWordsToSentences,
 } from 'utils/sentencesBuilder';
 import mock from 'mocks/transcript.json';
+import uuid from 'react-native-uuid';
 
 const POLLING_INTERVAL = 2000; // 5 seconds
 
 enum TranscriptionSteps {
-  CONVERT_VIDEO_TO_MP3 = '🎥➡️ Video to MP3 Magic 🎶',
-  UPLOAD_AUDIO = '📤 Sending Audio Up',
+  CONVERT_VIDEO_TO_MP3 = '🎥🎧 Extracting the Beats',
+  UPLOAD_AUDIO = '🎵 Processing the Soundwaves',
   GENERATE_TRANSCRIPTION = '📝 Creating the Script',
-  CHECK_TRANSCRIPTION_STATUS = '🔍 Checking the Vibes',
+  CHECK_TRANSCRIPTION_STATUS = '🔍 Confirming the Script',
   COMPLETE = '✅ All Done, Fam!',
 }
 
@@ -45,6 +46,7 @@ export const useTranscriptionService = ({
   );
   const [sentences, setSentences] = useState<GeneratedSentence[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState('');
 
   const isMounted = useRef(true);
 
@@ -55,8 +57,20 @@ export const useTranscriptionService = ({
   }, []);
 
   const startTranscriptionProcess = useCallback(
-    async (videoUri: string, language: languageType) => {
+    async (
+      videoUri: string,
+      language: languageType,
+      totalDurationInMilliSeconds: number,
+    ) => {
       if (isMock) {
+        const audioName = 'transcriptionAudio' + uuid.v4();
+        const mp3Uri = await convertVideoToMp3(
+          videoUri,
+          audioName,
+          totalDurationInMilliSeconds,
+          setStepProgress,
+        );
+
         const words = mock.words || [];
         const highlightedWords = mock.auto_highlights_result?.results || [];
         const generatedSentences = transformWordsToSentences(
@@ -66,6 +80,7 @@ export const useTranscriptionService = ({
         );
 
         setTimeout(() => {
+          setAudioUrl(mp3Uri);
           setSentences(generatedSentences);
           setOverallStatus(OverallProcessStatus.COMPLETED);
         }, 1000);
@@ -77,10 +92,14 @@ export const useTranscriptionService = ({
           // Step 1: Convert video to MP3
           setCurrentStep(TranscriptionSteps.CONVERT_VIDEO_TO_MP3);
           setStepProgress(0);
+          const audioName = 'transcriptionAudio' + uuid.v4();
           const mp3Uri = await convertVideoToMp3(
             videoUri,
-            'transcriptionAudio',
+            audioName,
+            totalDurationInMilliSeconds,
+            setStepProgress,
           );
+          console.log('mp3 uri', mp3Uri);
           if (!isMounted.current) {
             return;
           }
@@ -90,6 +109,7 @@ export const useTranscriptionService = ({
           const audioUrl = await uploadAudio(mp3Uri, progress => {
             setStepProgress(progress);
           });
+          setAudioUrl(mp3Uri);
           if (!isMounted.current) {
             return;
           }
@@ -173,6 +193,7 @@ export const useTranscriptionService = ({
     overallStatus,
     sentences,
     error,
+    audioUrl,
     startTranscriptionProcess,
   };
 };

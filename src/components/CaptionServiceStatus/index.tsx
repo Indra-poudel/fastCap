@@ -10,6 +10,9 @@ import {StyleSheet, Text, View} from 'react-native';
 import {useTheme} from 'theme/ThemeContext';
 import {languageType} from 'components/LanguageSelector';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
+import {useAppDispatch, useAppSelector} from 'hooks/useStore';
+import {selectSelectedVideo} from 'store/videos/selector';
+import {updateVideo} from 'store/videos/slice';
 
 type CaptionServiceStatusProps = {
   videoUrl: string;
@@ -17,6 +20,7 @@ type CaptionServiceStatusProps = {
   onSuccess: (data: GeneratedSentence[]) => void;
   language: languageType;
   maxWords: number;
+  duration: number;
 };
 
 const CaptionServiceStatus = ({
@@ -25,6 +29,7 @@ const CaptionServiceStatus = ({
   onSuccess,
   maxWords,
   language,
+  duration,
 }: CaptionServiceStatusProps) => {
   const {
     currentStep,
@@ -32,21 +37,33 @@ const CaptionServiceStatus = ({
     overallStatus,
     sentences,
     error,
+    audioUrl,
     startTranscriptionProcess,
   } = useTranscriptionService({
-    isMock: true,
+    isMock: false,
     maxWords,
   });
 
   const {theme} = useTheme();
+  const selectedVideo = useAppSelector(selectSelectedVideo);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (videoUrl && language) {
-      startTranscriptionProcess(videoUrl, language);
+    if (videoUrl && language && duration) {
+      startTranscriptionProcess(videoUrl, language, duration);
     }
-  }, [videoUrl, startTranscriptionProcess, language]);
+  }, [videoUrl, startTranscriptionProcess, language, duration]);
 
-  console.log(overallStatus);
+  useEffect(() => {
+    if (audioUrl && selectedVideo && !selectedVideo.audioUrl) {
+      const newVideoObjectWithAudioURL = {
+        ...selectedVideo,
+        audioUrl: audioUrl,
+      };
+
+      dispatch(updateVideo(newVideoObjectWithAudioURL));
+    }
+  }, [audioUrl, dispatch, selectedVideo]);
 
   useEffect(() => {
     if (overallStatus === OverallProcessStatus.COMPLETED) {
