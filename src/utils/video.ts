@@ -192,3 +192,28 @@ export const generateVideoFromFrames = async (
     }
   });
 };
+
+export const saveFrame = (image: SkImage, index: number): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const _index = index + 1;
+      const filename = `frame_${String(_index).padStart(6, '0')}.png`; // Zero-padded index
+      const path = `${RNFetchBlob.fs.dirs.CacheDir}/${filename}`;
+      const base64Image = image.encodeToBase64();
+
+      RNFetchBlob.fs
+        .writeFile(path, base64Image, 'base64')
+        .then(() => {
+          console.log('Saved Image of index ', index);
+          resolve(path); // Resolve with the file path
+        })
+        .catch(error => {
+          console.error('Error writing image:', filename, error);
+          reject(error); // Reject with the error
+        });
+    } catch (error) {
+      console.error('Error saving frames:', error);
+      reject(error); // Reject with the caught error
+    }
+  });
+};

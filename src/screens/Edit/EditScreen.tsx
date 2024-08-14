@@ -3,7 +3,6 @@ import {
   Canvas,
   Fill,
   ImageShader,
-  SkImage,
   Skia,
   useCanvasRef,
   useVideo,
@@ -14,7 +13,7 @@ import CaptionServiceStatus from 'components/CaptionServiceStatus';
 import LanguageSelector, {languageType} from 'components/LanguageSelector';
 import {languages_best} from 'constants/languages';
 import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -37,6 +36,7 @@ import {useTheme} from 'theme/ThemeContext';
 import {
   generateThumbnail,
   generateVideoFromFrames,
+  saveFrame,
   saveFrames,
 } from 'utils/video';
 import {
@@ -56,7 +56,6 @@ import TemplateSelector from 'containers/TemplateSelector';
 import {selectTemplateForSelectedVideo} from 'store/templates/selector';
 import {Template as TemplateState} from 'store/templates/type';
 import {DEFAULT_MAX_WORDS} from 'constants/index';
-import RNFetchBlob from 'rn-fetch-blob';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import ExportVideo from 'components/ExportVideo';
 
@@ -86,7 +85,6 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   // Export
   const [isExporting, setExporting] = useState(false);
-  const allFrames = useRef<Promise<SkImage>[]>([]);
   const progress = useSharedValue<number>(0);
   const isAllFramePushed = useSharedValue<boolean>(false);
 
@@ -658,84 +656,42 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     setTemplateSelector(false);
   };
 
-  const renderVideo = async () => {
-    if (selectedVideo) {
-      console.log('inside renderVideo');
-      saveFrames(allFrames.current)
-        .then(value => {
-          console.log(value);
-          generateVideoFromFrames(
-            selectedVideo?.audioUrl,
-            duration,
-            selectedVideo.id,
-          )
-            .then(url => {
-              CameraRoll.saveAsset(url, {type: 'video'})
-                .then(() => {
-                  console.log('finally saved');
-                })
-                .catch(() => {
-                  console.log('camera roll error');
-                });
-            })
-            .catch(() => {
-              console.error('error while generating video from frames');
-            });
-        })
-        .catch(() => {
-          console.error('error while saving frames');
-        });
-    }
-  };
+  const exportVideo = async () => {
+    if (ref.current && selectedVideo) {
+      const frameRate = 30;
+      const seekInterval = 1000 / frameRate;
+      const totalDuration = duration * 1000 - seekInterval * 2;
 
-  const handleCaptureSnapShotOfCanvas = async () => {
-    const promiseImage = ref.current?.makeImageSnapshotAsync();
+      const totalFrames = Math.floor(totalDuration / seekInterval);
 
-    if (promiseImage) {
-      allFrames.current.push(promiseImage);
-      console.log('pushing frame', allFrames.current.length);
-    }
-  };
-
-  useAnimatedReaction(
-    () => currentFrame.value,
-    (_currentFrame, _prevFrame) => {
-      if (_currentFrame !== null && isExporting) {
-        runOnJS(handleCaptureSnapShotOfCanvas)();
+      for (let i = 0; i < totalFrames; i++) {
+        const seekTime = i * seekInterval;
+        seek.value = seekTime;
+        const image = await ref.current.makeImageSnapshotAsync();
+        await saveFrame(image, i);
       }
-    },
-    [isExporting],
-  );
+      generateVideoFromFrames(
+        selectedVideo?.audioUrl,
+        duration,
+        selectedVideo?.id,
+      );
+    } else {
+      console.error('No ref of canvas or selected video');
+    }
+  };
 
   const onClickExport = () => {
     seek.value = 0;
     volume.value = 0;
-    paused.value = false;
     setExporting(true);
+    exportVideo();
   };
 
   const handleCancelVideoExport = () => {
     setExporting(false);
-    allFrames.current = [];
     paused.value = true;
     volume.value = 1;
   };
-
-  useAnimatedReaction(
-    () => {
-      return isAllFramePushed.value;
-    },
-    value => {
-      if (value) {
-        isAllFramePushed.value = false;
-        console.log('exporting started');
-        runOnJS(renderVideo)();
-      }
-    },
-    [isAllFramePushed, selectedVideo],
-  );
-
-  console.log(selectedVideo?.audioUrl);
 
   return (
     <SafeAreaView
