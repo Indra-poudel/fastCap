@@ -66,6 +66,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
     navigation.navigate('edit', {
       videoURL: video.url,
+      height: video.height,
+      width: video.width,
     });
   };
 

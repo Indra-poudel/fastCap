@@ -16,6 +16,8 @@ export type RootStackParamList = {
   home: undefined;
   edit: {
     videoURL: string;
+    width: number;
+    height: number;
   };
   editDetails: undefined;
   editSettings: undefined;

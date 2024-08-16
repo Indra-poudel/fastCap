@@ -115,7 +115,7 @@ type BaseParagraphProps = {
 };
 
 // Use the utility type to enforce essential dependencies only
-type CustomParagraphProps = RequireIf<
+export type CustomParagraphProps = RequireIf<
   RequireIf<BaseParagraphProps, 'strokeWidth', 'strokeColor'>,
   'effect',
   'fillColor'

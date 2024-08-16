@@ -90,6 +90,7 @@ const FloatingActionButton = () => {
           templateId: '1',
           width: response.assets[0].width,
           height: response.assets[0].height,
+          audioUrl: '',
         }),
       );
 
@@ -111,8 +112,12 @@ const FloatingActionButton = () => {
 
         response.assets &&
           response?.assets[0].uri &&
+          response.assets[0].width &&
+          response.assets[0].height &&
           navigation.navigate('edit', {
             videoURL: response.assets[0].uri,
+            height: response.assets[0].height,
+            width: response.assets[0].width,
           });
       })
       .catch(error => {
@@ -134,8 +139,12 @@ const FloatingActionButton = () => {
 
         response.assets &&
           response?.assets[0].uri &&
+          response.assets[0].width &&
+          response.assets[0].height &&
           navigation.navigate('edit', {
             videoURL: response.assets[0].uri,
+            height: response.assets[0].height,
+            width: response.assets[0].width,
           });
       })
       .catch(error => {
