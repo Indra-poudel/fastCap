@@ -1,6 +1,7 @@
 import {SkImage} from '@shopify/react-native-skia';
 import {FFmpegKit, FFmpegKitConfig, Level} from 'ffmpeg-kit-react-native';
 import RNFetchBlob from 'rn-fetch-blob';
+import uuid from 'react-native-uuid';
 
 FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
 
@@ -152,20 +153,35 @@ export const generateVideoFromFrames = async (
       const outputVideoPath = `${RNFetchBlob.fs.dirs.CacheDir}/${videoId}.mp4`;
 
       const ffmpegCommand = [
+        '-y', // Automatically overwrite existing files
         '-framerate',
-        '30', // Set the frame rate to 30 fps for images
+        '30', // Frame rate for images
         '-i',
-        inputPattern, // Input pattern for images, e.g., frame_%06d.png
+        inputPattern, // Input image pattern
         '-i',
-        audioUrl, // Input audio file path
+        audioUrl, // Input audio
         '-c:v',
-        'mpeg4', // Use MPEG-4 codec for encoding the video
-        '-c:a',
-        'aac',
+        'libx264', // Use H.264 codec for high-quality video encoding
+        '-preset',
+        'veryslow', // Best quality encoding preset
+        '-crf',
+        '16', // Near-lossless quality CRF
+        '-b:v',
+        '10M', // High video bitrate for best quality
         '-pix_fmt',
-        'yuv420p', // Pixel format for wide compatibility
-        '-shortest', // Trim the video to the length of the shortest input
-        outputVideoPath, // Output path for the generated video file with audio
+        'yuv420p', // Wide compatibility pixel format
+        '-vf',
+        'scale=trunc(iw/2)*2:trunc(ih/2)*2', // Ensure width and height are divisible by 2
+        '-tune',
+        'film', // Optimize for film-like content (adjust if needed)
+        '-c:a',
+        'aac', // Audio codec
+        '-b:a',
+        '320k', // High audio bitrate for best audio quality
+        '-shortest', // Trim video to the length of the shortest input
+        '-movflags',
+        '+faststart', // Optimize for web streaming
+        outputVideoPath, // Output video file path
       ].join(' ');
 
       console.log(ffmpegCommand);
@@ -203,10 +219,9 @@ export const saveFrame = (image: SkImage, index: number): Promise<string> => {
       const path = `${RNFetchBlob.fs.dirs.CacheDir}/${filename}`;
       const base64Image = image.encodeToBase64();
 
-      RNFetchBlob.fs
+      return RNFetchBlob.fs
         .writeFile(path, base64Image, 'base64')
         .then(() => {
-          console.log('Saved Image of index ', index);
           resolve(path); // Resolve with the file path
         })
         .catch(error => {

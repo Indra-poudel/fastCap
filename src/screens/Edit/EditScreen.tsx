@@ -3,8 +3,10 @@ import {
   Canvas,
   Fill,
   ImageShader,
+  SkImage,
   Skia,
   useCanvasRef,
+  useFonts,
   useVideo,
 } from '@shopify/react-native-skia';
 import BottomSheet from 'components/BottomSheet';
@@ -56,8 +58,8 @@ import {Template as TemplateState} from 'store/templates/type';
 import {DEFAULT_MAX_WORDS} from 'constants/index';
 import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import ExportVideo from 'components/ExportVideo';
-import RNFetchBlob from 'rn-fetch-blob';
-import uuid from 'react-native-uuid';
+import {renderOffScreenTemplate} from 'offScreenComponents/offScreenTemplate';
+import {fontSource} from 'constants/fonts';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -71,6 +73,8 @@ const WITHOUT_TIMELINE_HEIGHT = 85;
 
 const EditScreen = ({route, navigation}: EditScreenProps) => {
   const {theme} = useTheme();
+
+  const customFontMgr = useFonts(fontSource);
 
   const {width, height} = useWindowDimensions();
 
@@ -89,6 +93,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   // Export
   const [isExporting, setExporting] = useState(false);
+  let exporting = false;
   const progress = useSharedValue<number>(0);
   const isAllFramePushed = useSharedValue<boolean>(false);
 
@@ -115,15 +120,12 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   const dispatch = useAppDispatch();
 
-  const {currentFrame, currentTime, framerate, duration, size} = useVideo(
-    videoURL,
-    {
-      paused: paused,
-      volume: volume,
-      looping: true,
-      seek: seek,
-    },
-  );
+  const {currentFrame, currentTime, framerate, duration} = useVideo(videoURL, {
+    paused: paused,
+    volume: volume,
+    looping: true,
+    seek: seek,
+  });
 
   const frameDurationMs = 1000 / framerate;
 
@@ -336,7 +338,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     const _scaleWidth = targetWidth / originalWidth;
 
     return _scaleWidth;
-  }, []);
+  }, [isExporting]);
 
   const scaleHeight = useDerivedValue(() => {
     const targetHeight = imageShaderHeight.value;
@@ -394,11 +396,33 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     return [offsetY.value, offsetY.value + occupiedHeight];
   }, [scaleFactor, offsetY]);
 
+  const dragDistanceX = useSharedValue(width / 2);
+  const dragDistanceY = useSharedValue(imageShaderHeight.value / 1.5);
+
+  const dragDistancePercentageX = useDerivedValue(() => {
+    const distanceFromCanvas = dragDistanceX.value - offsetX.value;
+    const occupiedWidth = route.params.width * scaleFactor.value;
+
+    const distanceFromEdgeOfCanvas = (distanceFromCanvas / occupiedWidth) * 100;
+
+    return distanceFromEdgeOfCanvas;
+  }, [dragDistanceX, offsetX]);
+
+  const dragDistancePercentageY = useDerivedValue(() => {
+    const distanceFromCanvas = dragDistanceY.value - offsetY.value;
+    const occupiedHeight = route.params.height * scaleFactor.value;
+
+    const distanceFromEdgeOfCanvas =
+      (distanceFromCanvas / occupiedHeight) * 100;
+
+    return distanceFromEdgeOfCanvas;
+  }, [dragDistanceY, offsetY]);
+
   // Template
   const templateXpos = useSharedValue(0);
   const templateYpos = useSharedValue(height / 2);
-  const dragDistanceX = useSharedValue(width / 2);
-  const dragDistanceY = useSharedValue(imageShaderHeight.value / 1.5);
+  // const dragDistanceX = useSharedValue(width / 2);
+  // const dragDistanceY = useSharedValue(imageShaderHeight.value / 1.5);
 
   const draggableStyle = useAnimatedStyle(() => {
     return {
@@ -714,21 +738,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     setTemplateSelector(false);
   };
 
-  const exportVideo = async () => {
-    if (ref.current && selectedVideo) {
-      const frameRate = 30;
-      const seekInterval = 1000 / frameRate;
-      const totalDuration = duration;
-
-      const totalFrames = Math.floor(totalDuration / seekInterval);
-
-      for (let i = 0; i < totalFrames; i++) {
-        const seekTime = i * seekInterval;
-        seek.value = seekTime;
-        const image = await ref.current.makeImageSnapshotAsync();
-        await saveFrame(image, i);
-      }
-
+  const generateAndSave = async () => {
+    if (selectedVideo) {
       const videoPath = await generateVideoFromFrames(
         selectedVideo?.audioUrl,
         duration,
@@ -745,21 +756,68 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     }
   };
 
-  const onClickExport = () => {
-    seek.value = 0;
-    volume.value = 0;
+  const onClickExport = async () => {
+    paused.value = true;
     setExporting(true);
-    exportVideo();
+    exporting = true;
+
+    if (exporting) {
+      const video = await Skia.Video(route.params.videoURL);
+      video.setVolume(0);
+      video.pause();
+
+      const frameRate = video.framerate();
+      const seekInterval = 1000 / frameRate;
+      const totalDuration = duration;
+
+      const totalFrames = Math.floor(totalDuration / seekInterval);
+
+      for (let i = 0; i <= totalFrames; i++) {
+        if (!exporting) {
+          return;
+        }
+
+        const seekValue = i * seekInterval;
+
+        video.seek(seekValue);
+
+        const currentImage = video.nextImage();
+
+        if (currentImage) {
+          await drawOffScreen(i, currentImage, seekValue);
+
+          console.log(
+            'drawing percentage,',
+            `${i}`,
+            ((i / totalFrames) * 100).toFixed(2),
+          );
+        }
+      }
+
+      if (exporting) {
+        generateAndSave();
+      }
+    }
   };
 
   const handleCancelVideoExport = () => {
     setExporting(false);
-    paused.value = true;
-    volume.value = 1;
+    exporting = false;
   };
 
-  const drawOffScreen = () => {
-    const offScreen = Skia.Surface.MakeOffscreen(size.width, size.height);
+  const offScreenParagraphLayoutWidth = useDerivedValue(() => {
+    return route.params.width - TEMPLATE_PADDING * 2;
+  }, [route.params.width]);
+
+  const drawOffScreen = async (
+    index: number,
+    imageToDraw: SkImage,
+    seekValue: number,
+  ) => {
+    const offScreen = Skia.Surface.MakeOffscreen(
+      route.params.width,
+      route.params.height,
+    );
 
     if (!offScreen) {
       return;
@@ -767,35 +825,38 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
     const canvas = offScreen.getCanvas();
 
-    if (currentFrame.value) {
-      canvas.drawImage(currentFrame.value, 0, 0);
+    const image = imageToDraw.makeNonTextureImage();
+
+    const imagePaint = Skia.Paint();
+    imagePaint.setAntiAlias(true);
+    imagePaint.setDither(true);
+
+    canvas.drawImage(image, 0, 0, imagePaint);
+
+    if (selectedTemplate) {
+      renderOffScreenTemplate(canvas, {
+        currentTime: seekValue,
+        sentences: selectedVideo?.sentences || [],
+        paragraphLayoutWidth: offScreenParagraphLayoutWidth,
+        x: route.params.width * (dragDistancePercentageX.value / 100),
+        y: route.params.height * (dragDistancePercentageY.value / 100),
+        customFontMgr: customFontMgr,
+        ...selectedTemplate,
+        fontSize:
+          selectedTemplate.fontSize *
+          (route.params.width / (route.params.width * scaleFactor.value)),
+      });
     }
 
     offScreen.flush();
 
     const img = offScreen.makeImageSnapshot();
-
-    const base64Image = img.encodeToBase64();
-
-    const path = `${RNFetchBlob.fs.dirs.CacheDir}/${uuid.v4()}.png`;
-
-    RNFetchBlob.fs
-      .writeFile(path, base64Image, 'base64')
-      .then(() => {
-        console.log('Saved Image of index ', path);
-        CameraRoll.saveAsset(path, {
-          type: 'video',
-        })
-          .then(() => {
-            console.log('saved', path);
-          })
-          .catch(error => {
-            console.log('error', error);
-          });
-      })
-      .catch(error => {
-        console.error('Error writing image:', error);
-      });
+    await saveFrame(img, index).catch(errr => {
+      console.log(errr);
+    });
+    canvas.clear(Skia.Color('transparent'));
+    img.dispose();
+    offScreen.dispose();
   };
 
   return (
@@ -828,6 +889,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
               setTemplateWidth={templateCurrentWidth}
               setX={templateXpos}
               setY={templateYpos}
+              customFontMgr={customFontMgr}
               {...selectedTemplate}
             />
           )}
