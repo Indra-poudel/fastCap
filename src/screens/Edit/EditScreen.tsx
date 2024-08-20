@@ -17,6 +17,7 @@ import {languages_best} from 'constants/languages';
 import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
 import React, {useEffect, useState} from 'react';
 import {
+  InteractionManager,
   Pressable,
   StyleSheet,
   Text,
@@ -772,34 +773,36 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
       const totalFrames = Math.floor(totalDuration / seekInterval);
 
-      for (let i = 0; i <= totalFrames; i++) {
-        if (!exporting) {
-          return;
+      // Using InteractionManager to optimize the process
+      InteractionManager.runAfterInteractions(async () => {
+        for (let i = 0; i <= totalFrames; i++) {
+          if (!exporting) {
+            return;
+          }
+
+          const seekValue = i * seekInterval;
+
+          video.seek(seekValue);
+
+          const currentImage = video.nextImage();
+
+          if (currentImage) {
+            await drawOffScreen(i, currentImage, seekValue);
+
+            console.log(
+              'drawing percentage,',
+              `${i}`,
+              ((i / totalFrames) * 100).toFixed(2),
+            );
+          }
         }
 
-        const seekValue = i * seekInterval;
-
-        video.seek(seekValue);
-
-        const currentImage = video.nextImage();
-
-        if (currentImage) {
-          await drawOffScreen(i, currentImage, seekValue);
-
-          console.log(
-            'drawing percentage,',
-            `${i}`,
-            ((i / totalFrames) * 100).toFixed(2),
-          );
+        if (exporting) {
+          generateAndSave();
         }
-      }
-
-      if (exporting) {
-        generateAndSave();
-      }
+      });
     }
   };
-
   const handleCancelVideoExport = () => {
     setExporting(false);
     exporting = false;
