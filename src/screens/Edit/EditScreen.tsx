@@ -15,7 +15,7 @@ import CaptionServiceStatus from 'components/CaptionServiceStatus';
 import LanguageSelector, {languageType} from 'components/LanguageSelector';
 import {languages_best} from 'constants/languages';
 import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   InteractionManager,
   Pressable,
@@ -94,8 +94,6 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   // Export
   const [isExporting, setExporting] = useState(false);
-  let exporting = false;
-  const progress = useSharedValue<number>(0);
   const isAllFramePushed = useSharedValue<boolean>(false);
 
   const canvasButtonOpacity = useSharedValue(CANVAS_BUTTONS_FULL_OPACITY);
@@ -121,12 +119,15 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   const dispatch = useAppDispatch();
 
-  const {currentFrame, currentTime, framerate, duration} = useVideo(videoURL, {
-    paused: paused,
-    volume: volume,
-    looping: true,
-    seek: seek,
-  });
+  const {currentFrame, currentTime, framerate, duration, video} = useVideo(
+    videoURL,
+    {
+      paused: paused,
+      volume: volume,
+      looping: true,
+      seek: seek,
+    },
+  );
 
   const frameDurationMs = 1000 / framerate;
 
@@ -739,128 +740,17 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     setTemplateSelector(false);
   };
 
-  const generateAndSave = async () => {
-    if (selectedVideo) {
-      const videoPath = await generateVideoFromFrames(
-        selectedVideo?.audioUrl,
-        duration,
-        selectedVideo?.id,
-      );
-
-      CameraRoll.saveAsset(videoPath, {
-        type: 'video',
-      }).then(() => {
-        console.log('successfully saved to camera roll');
-      });
-    } else {
-      console.error('No ref of canvas or selected video');
-    }
-  };
-
   const onClickExport = async () => {
     paused.value = true;
     setExporting(true);
-    exporting = true;
-
-    if (exporting) {
-      const video = await Skia.Video(route.params.videoURL);
-      video.setVolume(0);
-      video.pause();
-
-      const frameRate = video.framerate();
-      const seekInterval = 1000 / frameRate;
-      const totalDuration = duration;
-
-      const totalFrames = Math.floor(totalDuration / seekInterval);
-
-      // Using InteractionManager to optimize the process
-      InteractionManager.runAfterInteractions(async () => {
-        for (let i = 0; i <= totalFrames; i++) {
-          if (!exporting) {
-            return;
-          }
-
-          const seekValue = i * seekInterval;
-
-          video.seek(seekValue);
-
-          const currentImage = video.nextImage();
-
-          if (currentImage) {
-            await drawOffScreen(i, currentImage, seekValue);
-
-            console.log(
-              'drawing percentage,',
-              `${i}`,
-              ((i / totalFrames) * 100).toFixed(2),
-            );
-          }
-        }
-
-        if (exporting) {
-          generateAndSave();
-        }
-      });
-    }
   };
   const handleCancelVideoExport = () => {
     setExporting(false);
-    exporting = false;
   };
 
   const offScreenParagraphLayoutWidth = useDerivedValue(() => {
     return route.params.width - TEMPLATE_PADDING * 2;
   }, [route.params.width]);
-
-  const drawOffScreen = async (
-    index: number,
-    imageToDraw: SkImage,
-    seekValue: number,
-  ) => {
-    const offScreen = Skia.Surface.MakeOffscreen(
-      route.params.width,
-      route.params.height,
-    );
-
-    if (!offScreen) {
-      return;
-    }
-
-    const canvas = offScreen.getCanvas();
-
-    const image = imageToDraw.makeNonTextureImage();
-
-    const imagePaint = Skia.Paint();
-    imagePaint.setAntiAlias(true);
-    imagePaint.setDither(true);
-
-    canvas.drawImage(image, 0, 0, imagePaint);
-
-    if (selectedTemplate) {
-      renderOffScreenTemplate(canvas, {
-        currentTime: seekValue,
-        sentences: selectedVideo?.sentences || [],
-        paragraphLayoutWidth: offScreenParagraphLayoutWidth,
-        x: route.params.width * (dragDistancePercentageX.value / 100),
-        y: route.params.height * (dragDistancePercentageY.value / 100),
-        customFontMgr: customFontMgr,
-        ...selectedTemplate,
-        fontSize:
-          selectedTemplate.fontSize *
-          (route.params.width / (route.params.width * scaleFactor.value)),
-      });
-    }
-
-    offScreen.flush();
-
-    const img = offScreen.makeImageSnapshot();
-    await saveFrame(img, index).catch(errr => {
-      console.log(errr);
-    });
-    canvas.clear(Skia.Color('transparent'));
-    img.dispose();
-    offScreen.dispose();
-  };
 
   return (
     <SafeAreaView
@@ -1082,8 +972,21 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         />
       )}
 
-      {isExporting && (
-        <ExportVideo onCancel={handleCancelVideoExport} percentage={progress} />
+      {isExporting && selectedTemplate && selectedVideo?.audioUrl && (
+        <ExportVideo
+          video={video}
+          onCancel={handleCancelVideoExport}
+          width={route.params.width}
+          height={route.params.height}
+          audioURL={selectedVideo?.audioUrl}
+          template={selectedTemplate}
+          paragraphLayoutWidth={offScreenParagraphLayoutWidth}
+          sentences={selectedVideo?.sentences || []}
+          dragPercentageX={dragDistancePercentageX.value}
+          dragPercentageY={dragDistancePercentageY.value}
+          customFontManager={customFontMgr}
+          scaleFactor={scaleFactor}
+        />
       )}
     </SafeAreaView>
   );

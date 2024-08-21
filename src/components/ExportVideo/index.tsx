@@ -1,31 +1,45 @@
 import BottomSheet from 'components/BottomSheet';
-import React from 'react';
-import {Pressable, StyleSheet, useWindowDimensions} from 'react-native';
-import Animated, {SharedValue} from 'react-native-reanimated';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import React, {useEffect} from 'react';
+import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
 import {useTheme} from 'theme/ThemeContext';
 import * as Progress from 'react-native-progress';
+import {ExportServiceProps, useExportService} from 'hooks/useExportService';
+import Button from 'components/Button/Button';
 
 type ExportVideoProps = {
   onCancel: () => void;
-  percentage: SharedValue<number>;
-};
+} & ExportServiceProps;
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-const ICON_SIZE = 32;
-
-const ExportVideo = ({onCancel, percentage}: ExportVideoProps) => {
+const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
   const {theme} = useTheme();
 
-  const {height, width} = useWindowDimensions();
+  const {width} = useWindowDimensions();
+
+  const {
+    currentStep,
+    stepProgress,
+    overallStatus,
+    generatedVideoInfo,
+    startExportProcess,
+  } = useExportService({
+    ...exportServiceProps,
+  });
+
+  useEffect(() => {
+    setTimeout(() => {
+      console.log('Start process');
+      startExportProcess();
+    }, 200);
+  }, []);
 
   return (
-    <BottomSheet label="Let's Make It Viral!🚀🔥">
+    <BottomSheet label="Let's Make It Viral!🚀🔥" initialHeightPercentage={50}>
       <Progress.Bar
         animated
-        progress={10 / 100}
-        color={theme.colors.primary}
+        progress={stepProgress / 100}
+        color={
+          stepProgress === 100 ? theme.colors.success : theme.colors.primary
+        }
         unfilledColor="rgba(29, 29, 29, 0.30))"
         height={6}
         borderRadius={12}
@@ -33,35 +47,70 @@ const ExportVideo = ({onCancel, percentage}: ExportVideoProps) => {
         width={width}
         useNativeDriver={true}
       />
-      <AnimatedPressable
-        style={[
-          Style.container,
-          {
-            backgroundColor: theme.colors.error,
-            borderColor: theme.colors.error,
-            top: (((height / 100) * 40) / 100) * 70 - ICON_SIZE,
-          },
-        ]}
-        onPress={onCancel}>
-        <Animated.View
-          style={{
-            transform: [{rotate: `${45}deg`}],
-          }}>
-          <Icon name={'plus'} size={ICON_SIZE} color={theme.colors.white} />
-        </Animated.View>
-      </AnimatedPressable>
+
+      <View style={[Style.container]}>
+        <View style={[Style.wrapperTextSection]}>
+          <Text
+            style={[
+              theme.typography.header.medium,
+              {
+                color: theme.colors.white,
+              },
+              Style.percentage,
+            ]}>
+            {`${stepProgress.toFixed(0)}%`}
+          </Text>
+
+          <View style={[Style.textWrapper]}>
+            <Text
+              style={[
+                theme.typography.header.medium,
+                {
+                  color: theme.colors.white,
+                },
+              ]}>
+              {currentStep}
+            </Text>
+            <Text
+              style={[
+                theme.typography.body.medium,
+                {
+                  color: theme.colors.grey3,
+                },
+                Style.textCenter,
+              ]}>
+              ⚡ Almost there! Don't close the app or lock your screen! 🎬✨
+            </Text>
+          </View>
+        </View>
+        <Button label={'Cancel'} buttonType={'tertiary'} onPress={onCancel} />
+      </View>
     </BottomSheet>
   );
 };
 
 const Style = StyleSheet.create({
+  percentage: {
+    marginTop: 12,
+  },
+  wrapperTextSection: {
+    alignItems: 'center',
+    gap: 12,
+  },
   container: {
-    borderRadius: 45,
-    height: 45,
-    width: 45,
-    display: 'flex',
+    gap: 24,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  textWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 12,
+    textAlign: 'center',
+  },
+
+  textCenter: {
+    textAlign: 'center',
   },
 });
 

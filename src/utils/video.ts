@@ -1,7 +1,6 @@
 import {SkImage} from '@shopify/react-native-skia';
 import {FFmpegKit, FFmpegKitConfig, Level} from 'ffmpeg-kit-react-native';
 import RNFetchBlob from 'rn-fetch-blob';
-import uuid from 'react-native-uuid';
 
 FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
 
@@ -23,7 +22,7 @@ export const convertVideoToMp3 = (
 
       const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/${outputFileName}.aac`;
 
-      const ffmpegCommand = `-y -i ${videoUri} -codec:a aac -b:a 192k -map a ${outputUri}`;
+      const ffmpegCommand = `-y -i ${videoUri} -codec:a aac -b:a 320k -map a ${outputUri}`;
 
       // Start the FFmpeg command asynchronously
       const sessionPromise = FFmpegKit.executeAsync(
@@ -137,6 +136,7 @@ export const generateVideoFromFrames = async (
   audioUrl: string,
   totalDurationInMilliSeconds: number,
   videoId: string,
+  onProgress: (value: number) => void,
 ) => {
   return new Promise<string>((resolve, reject) => {
     try {
@@ -145,7 +145,7 @@ export const generateVideoFromFrames = async (
         const currentTimeInSeconds = statistics.getTime();
         const progress =
           (currentTimeInSeconds / totalDurationInMilliSeconds) * 100;
-        console.log(progress); // Call the progress callback with the current progress
+        onProgress(progress);
       });
 
       // Define the input path pattern and output video path
@@ -153,7 +153,7 @@ export const generateVideoFromFrames = async (
       const outputVideoPath = `${RNFetchBlob.fs.dirs.CacheDir}/${videoId}.mp4`;
 
       const ffmpegCommand = [
-        '-y', // Automatically overwrite existing files
+        '-y', // Overwrite existing files
         '-framerate',
         '30', // Frame rate for images
         '-i',
@@ -161,51 +161,44 @@ export const generateVideoFromFrames = async (
         '-i',
         audioUrl, // Input audio
         '-c:v',
-        'libx264', // Use H.264 codec for high-quality video encoding
+        'libx264', // H.264 codec for high-quality video
         '-preset',
-        'veryslow', // Best quality encoding preset
+        'slow', // Balance encoding speed and quality
         '-crf',
-        '16', // Near-lossless quality CRF
+        '16', // Very high quality (lower CRF means better quality)
         '-b:v',
-        '10M', // High video bitrate for best quality
+        '15M', // High video bitrate to preserve text quality
         '-pix_fmt',
-        'yuv420p', // Wide compatibility pixel format
+        'yuv420p', // Ensures wide compatibility across platforms
         '-vf',
-        'scale=trunc(iw/2)*2:trunc(ih/2)*2', // Ensure width and height are divisible by 2
+        'scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p', // Scaling to ensure even dimensions
         '-tune',
-        'film', // Optimize for film-like content (adjust if needed)
+        'animation', // Tune for text/graphics to preserve sharpness
         '-c:a',
         'aac', // Audio codec
         '-b:a',
-        '320k', // High audio bitrate for best audio quality
-        '-shortest', // Trim video to the length of the shortest input
+        '320k', // High-quality audio bitrate
         '-movflags',
-        '+faststart', // Optimize for web streaming
+        '+faststart', // Optimized for web playback
         outputVideoPath, // Output video file path
       ].join(' ');
-
-      console.log(ffmpegCommand);
 
       // Execute the FFmpegKit command
       FFmpegKit.execute(ffmpegCommand)
         .then(async session => {
           const returnCode = await session.getReturnCode();
           if (returnCode.isValueSuccess()) {
-            console.log('Video created successfully!', outputVideoPath);
             resolve(outputVideoPath);
           } else {
-            console.error(`FFmpegKit failed with return code: ${returnCode}`);
             reject(
               new Error(`FFmpegKit failed with return code: ${returnCode}`),
             );
           }
         })
         .catch(error => {
-          console.error('Error executing FFmpegKit command:', error);
           reject(error);
         });
     } catch (error) {
-      console.error('Error generating video:', error);
       reject(error);
     }
   });
