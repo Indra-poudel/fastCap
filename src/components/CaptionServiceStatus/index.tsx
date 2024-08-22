@@ -97,10 +97,10 @@ const CaptionServiceStatus = ({
             progress={stepProgress / 100}
             color={theme.colors.white}
             unfilledColor="rgba(29, 29, 29, 0.30))"
-            height={6}
-            borderRadius={12}
+            height={verticalScale(6)}
+            borderRadius={scale(12)}
             borderWidth={0}
-            width={60}
+            width={scale(60)}
             useNativeDriver={true}
           />
         </View>

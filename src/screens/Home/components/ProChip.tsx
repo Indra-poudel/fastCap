@@ -3,6 +3,7 @@ import {Pressable, StyleSheet, Text} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {storage} from 'store/mmkvStorage';
 import {useTheme} from 'theme/ThemeContext';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 const ProChip = () => {
   const {theme} = useTheme();
@@ -25,11 +26,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    gap: 8,
+    paddingVertical: verticalScale(8),
+    paddingHorizontal: scale(14),
+    gap: verticalScale(8),
     backgroundColor: '#FCDB33',
-    borderRadius: 8,
+    borderRadius: scale(8),
   },
 });
 

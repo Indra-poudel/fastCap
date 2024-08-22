@@ -2,6 +2,7 @@ import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import AppTitle from 'screens/Home/components/AppTitle';
 import ProChip from 'screens/Home/components/ProChip';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 import {useTheme} from 'theme/ThemeContext';
 
 const Header = () => {
@@ -20,8 +21,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 18,
+    paddingVertical: verticalScale(12),
+    paddingHorizontal: scale(18),
   },
 });
 

@@ -4,6 +4,7 @@ import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useTheme} from 'theme/ThemeContext';
+import { verticalScale} from 'react-native-size-matters/extend';
 
 type CardActionProps = {
   onClose: (hideTabBar?: boolean) => void;
@@ -50,8 +51,8 @@ const CardAction = ({onClose, onDelete, onEdit}: CardActionProps) => {
 const style = StyleSheet.create({
   wrapper: {
     display: 'flex',
-    gap: 24,
-    paddingVertical: 24,
+    gap: verticalScale(24),
+    paddingVertical: verticalScale(24),
   },
 });
 

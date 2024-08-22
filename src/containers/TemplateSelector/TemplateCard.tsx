@@ -10,9 +10,10 @@ import {
 import {Template as TemplateState} from 'store/templates/type';
 import {useTheme} from 'theme/ThemeContext';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
-const PADDING = 16;
-const HEIGHT = 100;
+const PADDING = scale(16);
+const HEIGHT = verticalScale(100);
 
 type TemplateCard = {
   currentTime: SharedValue<number>;
@@ -84,7 +85,7 @@ const TemplateCard = ({
 
 const styles = StyleSheet.create({
   wrapper: {
-    borderRadius: 12,
+    borderRadius: scale(12),
     height: HEIGHT,
     margin: 'auto',
   },

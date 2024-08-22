@@ -19,6 +19,7 @@ import {TABS, TabParamList} from 'navigation/HomeTabs';
 import Dialog from 'components/Dialog';
 import Edit from 'screens/Home/components/Edit';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
   setFabVisible: (visible: boolean) => void;
@@ -257,46 +258,46 @@ const style = StyleSheet.create({
   },
 
   selectWrapper: {
-    paddingVertical: 12,
+    paddingVertical: verticalScale(12),
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    paddingHorizontal: 18,
+    paddingHorizontal: scale(18),
   },
 
   listWrapper: {
     flex: 1,
     transform: [
       {
-        translateX: 18,
+        translateX: scale(18),
       },
     ],
   },
 
   itemSeperator: {
-    height: 24,
+    height: verticalScale(24),
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: scale(40),
   },
 
   emptyContainerTextWrapper: {
-    gap: 8,
+    gap: verticalScale(8),
     alignItems: 'center',
   },
 
   info: {
-    width: 300,
+    width: scale(300),
     textAlign: 'center',
   },
 
   animation: {
-    height: 200,
-    width: 200,
-    marginBottom: -20,
+    height: verticalScale(200),
+    width: scale(200),
+    marginBottom: verticalScale(-20),
   },
 });
 

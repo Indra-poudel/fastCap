@@ -8,6 +8,7 @@ import {useAppSelector} from 'hooks/useStore';
 import {selectAllTemplates} from 'store/templates/selector';
 import {Template} from 'store/templates/type';
 import {SkTypefaceFontProvider} from '@shopify/react-native-skia';
+import { verticalScale} from 'react-native-size-matters/extend';
 
 type TemplateSelectorType = {
   onClose: () => void;
@@ -63,8 +64,8 @@ const TemplateSelector = ({
 
 const styles = StyleSheet.create({
   templateCardsWrapper: {
-    paddingVertical: 16,
-    gap: 12,
+    paddingVertical: verticalScale(16),
+    gap: verticalScale(12),
   },
 });
 
