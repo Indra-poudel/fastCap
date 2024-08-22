@@ -20,6 +20,7 @@ import Animated, {
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import {useTheme} from 'theme/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 const {height: SCREEN_HEIGHT} = Dimensions.get('window');
 
@@ -191,21 +192,21 @@ const styles = StyleSheet.create({
     width: '100%',
     position: 'absolute',
     top: SCREEN_HEIGHT, // Start at the bottom of the screen
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderTopLeftRadius: scale(20),
+    borderTopRightRadius: scale(20),
     shadowColor: '#ccc',
     shadowOffset: {width: 0, height: -3},
     shadowOpacity: 0.1,
-    shadowRadius: 3,
+    shadowRadius: scale(3),
     elevation: 6,
   },
   handle: {
-    height: 5,
-    width: 40,
+    height: verticalScale(5),
+    width: scale(40),
     backgroundColor: '#ccc',
-    borderRadius: 2.5,
+    borderRadius: scale(2.5),
     alignSelf: 'center',
-    marginVertical: 10,
+    marginVertical: verticalScale(10),
   },
   content: {
     flex: 1,
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    padding: 8,
+    padding: scale(8),
     borderBottomWidth: StyleSheet.hairlineWidth,
     display: 'flex',
     flexDirection: 'row',
@@ -225,8 +226,8 @@ const styles = StyleSheet.create({
   headerIcon: {
     alignSelf: 'flex-start',
     position: 'absolute',
-    left: 10,
-    bottom: 10,
+    left: scale(10),
+    bottom: verticalScale(10),
     display: 'flex',
     justifyContent: 'center',
     alignContent: 'center',

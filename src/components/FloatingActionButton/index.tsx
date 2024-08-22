@@ -11,10 +11,11 @@ import Animated, {
 import {useTheme} from '@theme/ThemeContext';
 import Button from 'components/Button/Button';
 import {FLOATING_ACTION} from 'containers/FloatingActionButtonContainer';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const ButtonBottom = 180;
+const ButtonBottom = verticalScale(180);
 
 type FloatingActionButtonViewProps = {
   onAction: (action: FLOATING_ACTION) => void;
@@ -90,7 +91,7 @@ const FloatingActionButtonView = ({
             icon={
               <Icon
                 name={'image-outline'}
-                size={24}
+                size={scale(24)}
                 color={theme.colors.white}
               />
             }
@@ -98,8 +99,8 @@ const FloatingActionButtonView = ({
             style={[
               Style.buttons,
               {
-                left: width / 2 - 150,
-                bottom: ButtonBottom + 100,
+                left: width / 2 - scale(150),
+                bottom: ButtonBottom + verticalScale(100),
               },
             ]}
           />
@@ -109,7 +110,7 @@ const FloatingActionButtonView = ({
             icon={
               <Icon
                 name={'video-outline'}
-                size={24}
+                size={scale(24)}
                 color={theme.colors.white}
               />
             }
@@ -117,7 +118,7 @@ const FloatingActionButtonView = ({
             style={[
               Style.buttons,
               {
-                left: width / 2 - 150,
+                left: width / 2 - scale(150),
                 bottom: ButtonBottom,
               },
             ]}
@@ -135,7 +136,7 @@ const FloatingActionButtonView = ({
         ]}
         onPress={handlePress}>
         <Animated.View style={iconAnimatedStyle}>
-          <Icon name={'plus'} size={42} color={theme.colors.white} />
+          <Icon name={'plus'} size={scale(42)} color={theme.colors.white} />
         </Animated.View>
       </AnimatedPressable>
     </>
@@ -149,7 +150,7 @@ const Style = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
-    bottom: 40,
+    bottom: verticalScale(40),
   },
   backdoor: {
     position: 'absolute',

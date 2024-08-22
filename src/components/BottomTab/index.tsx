@@ -10,6 +10,7 @@ import {
 import {BottomTabBarProps} from '@react-navigation/bottom-tabs';
 import {BottomTabDescriptor} from '@react-navigation/bottom-tabs/lib/typescript/src/types';
 import {useTheme} from '@theme/ThemeContext';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 const BottomTab = ({state, descriptors, navigation}: BottomTabBarProps) => {
   const {theme} = useTheme();
@@ -74,7 +75,7 @@ const BottomTab = ({state, descriptors, navigation}: BottomTabBarProps) => {
                   color: isFocused
                     ? options.tabBarActiveTintColor || theme.colors.primary
                     : theme.colors.grey2,
-                  size: 36,
+                  size: scale(36),
                 })}
             </View>
 
@@ -101,18 +102,18 @@ const Style = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'flex-start',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: {width: 0, height: verticalScale(2)},
   },
   tabButton: {
     display: 'flex',
     flexDirection: 'column',
     borderTopWidth: 2,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    columnGap: 4,
+    paddingHorizontal: scale(16),
+    paddingTop: verticalScale(12),
+    columnGap: scale(4),
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 24,
+    paddingBottom: verticalScale(24),
   },
 });
 

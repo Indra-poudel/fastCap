@@ -2,10 +2,10 @@ import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {
   Canvas,
   Fill,
-  FontWeight,
   ImageShader,
   Skia,
-  TextAlign,
+  useCanvasRef,
+  useFonts,
   useVideo,
 } from '@shopify/react-native-skia';
 import BottomSheet from 'components/BottomSheet';
@@ -45,41 +45,42 @@ import {useSelector} from 'react-redux';
 import {selectSelectedVideo} from 'store/videos/selector';
 import {Video} from 'store/videos/type';
 import Template from 'components/Template';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import TemplateSelector from 'containers/TemplateSelector';
-import {store} from 'store';
-import {PURGE} from 'redux-persist';
 import {selectTemplateForSelectedVideo} from 'store/templates/selector';
 import {Template as TemplateState} from 'store/templates/type';
+import {DEFAULT_MAX_WORDS} from 'constants/index';
+import ExportVideo from 'components/ExportVideo';
+import {fontSource} from 'constants/fonts';
 
-export const TEMPLATE_DETAILS = {
-  color: '#ffffff',
-  activeWord: {
-    // background: '#5966EC',
-    //color: '#5966EC
-    // inactive: '#708090'
-
-    // '#FF69B4' '#FFB6C1'
-    background: 'transparent',
-    color: '#c6fd78',
-  },
-  fontFamily: 'EuclidCircularA',
-};
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type EditScreenProps = NativeStackScreenProps<RootStackParamList, SCREENS.EDIT>;
 
-const TEMPLATE_PADDING = 16;
-const SNAP = 32;
+const TEMPLATE_PADDING = scale(16);
+// scale is used in implmentaion
+const SNAP = {
+  v: verticalScale(16),
+  h: scale(16),
+};
 const CANVAS_BUTTONS_FULL_OPACITY = 0.8;
-const BACKGROUND_PADDING = 8;
+const TIMELINE_HEIGHT = verticalScale(100);
+const WITHOUT_TIMELINE_HEIGHT = verticalScale(85);
 
 const EditScreen = ({route, navigation}: EditScreenProps) => {
   const {theme} = useTheme();
 
+  const customFontMgr = useFonts(fontSource);
+
   const {width, height} = useWindowDimensions();
+
+  const inset = useSafeAreaInsets();
+
+  const ref = useCanvasRef();
+  const canvasSize = useSharedValue({width: 0, height: 0});
 
   // Video
   const videoURL = route.params.videoURL;
@@ -88,6 +89,10 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const volume = useSharedValue(0);
   const isAlreadyPlayedAfterScreenMount = useSharedValue(false);
   //
+
+  // Export
+  const [isExporting, setExporting] = useState(false);
+  const isAllFramePushed = useSharedValue<boolean>(false);
 
   const canvasButtonOpacity = useSharedValue(CANVAS_BUTTONS_FULL_OPACITY);
   const playButtonOpacity = useSharedValue(CANVAS_BUTTONS_FULL_OPACITY);
@@ -112,7 +117,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   const dispatch = useAppDispatch();
 
-  const {currentFrame, currentTime, framerate, duration, size} = useVideo(
+  const {currentFrame, currentTime, framerate, duration, video} = useVideo(
     videoURL,
     {
       paused: paused,
@@ -144,9 +149,13 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     latestTime => {
       if (latestTime + frameDurationMs * 2 >= duration) {
         paused.value = true;
+
+        if (isExporting) {
+          isAllFramePushed.value = true;
+        }
       }
     },
-    [currentTime, duration, framerate],
+    [currentTime, duration, framerate, isExporting],
   );
 
   const assignThumbnailImageToCurrentFrame = (url: string) => {
@@ -160,7 +169,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     return () => {
       paused.value = true;
     };
-  }, []);
+  }, [paused]);
+
+  const updateVideoObjectToStore = (_video: Video) => {
+    dispatch(updateVideo(_video));
+  };
 
   useEffect(() => {
     if (selectedVideo && !selectedVideo?.thumbnailUrl) {
@@ -180,11 +193,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     } else if (selectedVideo && selectedVideo.thumbnailUrl) {
       assignThumbnailImageToCurrentFrame(selectedVideo.thumbnailUrl);
     }
-  }, [selectedVideo]);
-
-  const updateVideoObjectToStore = (video: Video) => {
-    dispatch(updateVideo(video));
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVideo, videoURL]);
 
   const handlePlayPause = () => {
     'worklet';
@@ -279,11 +289,15 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         volume.value = 0;
         playButtonOpacity.value = withTiming(CANVAS_BUTTONS_FULL_OPACITY);
       } else {
-        volume.value = 1;
+        if (isExporting) {
+          volume.value = 0;
+        } else {
+          volume.value = 1;
+        }
         playButtonOpacity.value = withTiming(0);
       }
     },
-    [paused],
+    [paused, isExporting],
   );
 
   useAnimatedReaction(
@@ -307,30 +321,109 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     navigation.goBack();
   };
 
-  const imageShaderHeight = useDerivedValue(() => {
-    return height - (selectedVideo?.sentences.length ? 150 : 85);
-  }, [selectedVideo, height]);
+  const heightOtherThanCanvas = useDerivedValue(() => {
+    if (selectedVideo && selectedVideo?.sentences?.length > 0) {
+      return TIMELINE_HEIGHT + inset.top + inset.bottom;
+    }
+    return WITHOUT_TIMELINE_HEIGHT + inset.top + inset.bottom;
+  }, [inset, selectedVideo]);
 
-  const templateTotalAvailableWidth = useDerivedValue(() => {
-    const occupiedWidth = calculateFrameOccupiedWidth(
-      size.width,
-      size.height,
-      width,
-      imageShaderHeight.value,
-    );
+  const imageShaderHeight = useDerivedValue(() => {
+    return height - heightOtherThanCanvas.value;
+  }, [heightOtherThanCanvas, height]);
+
+  const scaleWidth = useDerivedValue(() => {
+    const targetWidth = width;
+    const originalWidth = route.params.width;
+
+    const _scaleWidth = targetWidth / originalWidth;
+
+    return _scaleWidth;
+  }, [isExporting]);
+
+  const scaleHeight = useDerivedValue(() => {
+    const targetHeight = imageShaderHeight.value;
+    const originalHeight = route.params.height;
+
+    const _scaleHeight = targetHeight / originalHeight;
+
+    return _scaleHeight;
+  }, [imageShaderHeight]);
+
+  const scaleFactor = useDerivedValue(() => {
+    return Math.min(scaleWidth.value, scaleHeight.value);
+  }, [scaleHeight, scaleWidth]);
+
+  const newWidth = useDerivedValue(() => {
+    return route.params.width * scaleFactor.value;
+  }, [route.params.width, scaleFactor]);
+
+  const newHeight = useDerivedValue(() => {
+    return route.params.height * scaleFactor.value;
+  }, [route.params.height, scaleFactor]);
+
+  const offsetX = useDerivedValue(() => {
+    return (width - newWidth.value) / 2;
+  }, [width, newWidth]);
+
+  const offsetY = useDerivedValue(() => {
+    return (imageShaderHeight.value - newHeight.value) / 2;
+  }, [imageShaderHeight, newHeight]);
+
+  const imageShaderTransform = useDerivedValue(() => {
+    return [
+      {translateX: offsetX.value},
+      {translateY: offsetY.value},
+      {scaleX: scaleFactor.value},
+      {scaleY: scaleFactor.value},
+    ];
+  }, [scaleFactor]);
+
+  const paragraphLayoutWidth = useDerivedValue(() => {
+    const occupiedWidth = route.params.width * scaleFactor.value;
 
     return occupiedWidth - TEMPLATE_PADDING * 2;
-  }, [imageShaderHeight, width, size]);
+  }, [scaleFactor]);
 
-  const horizontalOffset = useDerivedValue(() => {
-    return (width - templateTotalAvailableWidth.value) / 2;
-  }, [width, templateTotalAvailableWidth]);
+  const imageOccupiedWidthRange = useDerivedValue(() => {
+    const occupiedWidth = route.params.width * scaleFactor.value;
+
+    return [offsetX.value, offsetX.value + occupiedWidth];
+  }, [scaleFactor, offsetX]);
+
+  const imageOccupiedHeightRange = useDerivedValue(() => {
+    const occupiedHeight = route.params.height * scaleFactor.value;
+
+    return [offsetY.value, offsetY.value + occupiedHeight];
+  }, [scaleFactor, offsetY]);
+
+  const dragDistanceX = useSharedValue(width / 2);
+  const dragDistanceY = useSharedValue(imageShaderHeight.value / 1.5);
+
+  const dragDistancePercentageX = useDerivedValue(() => {
+    const distanceFromCanvas = dragDistanceX.value - offsetX.value;
+    const occupiedWidth = route.params.width * scaleFactor.value;
+
+    const distanceFromEdgeOfCanvas = (distanceFromCanvas / occupiedWidth) * 100;
+
+    return distanceFromEdgeOfCanvas;
+  }, [dragDistanceX, offsetX]);
+
+  const dragDistancePercentageY = useDerivedValue(() => {
+    const distanceFromCanvas = dragDistanceY.value - offsetY.value;
+    const occupiedHeight = route.params.height * scaleFactor.value;
+
+    const distanceFromEdgeOfCanvas =
+      (distanceFromCanvas / occupiedHeight) * 100;
+
+    return distanceFromEdgeOfCanvas;
+  }, [dragDistanceY, offsetY]);
 
   // Template
   const templateXpos = useSharedValue(0);
   const templateYpos = useSharedValue(height / 2);
-  const dragDistanceX = useSharedValue(width / 2);
-  const dragDistanceY = useSharedValue(imageShaderHeight.value / 1.5);
+  // const dragDistanceX = useSharedValue(width / 2);
+  // const dragDistanceY = useSharedValue(imageShaderHeight.value / 1.5);
 
   const draggableStyle = useAnimatedStyle(() => {
     return {
@@ -355,7 +448,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       width: width,
       height: 1,
       left: 0,
-      top: SNAP,
+      top: SNAP.v + offsetY.value,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
       opacity: isTopSnapLineActive.value ? 1 : 0,
@@ -366,30 +459,30 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     return {
       width: 1,
       height: imageShaderHeight.value,
-      left: SNAP + horizontalOffset.value,
+      left: SNAP.h + offsetX.value,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
       opacity: isLeftSnapLineActive.value ? 1 : 0,
     };
-  }, [isLeftSnapLineActive, horizontalOffset, imageShaderHeight]);
+  }, [isLeftSnapLineActive, offsetX, imageShaderHeight]);
 
   const snapRightVerticalLine = useAnimatedStyle(() => {
     return {
       width: 1,
       height: imageShaderHeight.value,
-      right: SNAP + horizontalOffset.value,
+      right: SNAP.h + offsetX.value,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
       opacity: isRightSnapLineActive.value ? 1 : 0,
     };
-  }, [isRightSnapLineActive, horizontalOffset, imageShaderHeight]);
+  }, [isRightSnapLineActive, offsetX, imageShaderHeight]);
 
   const snapBottomHorizontalLine = useAnimatedStyle(() => {
     return {
       width: width,
       height: 1,
       left: 0,
-      top: imageShaderHeight.value - SNAP,
+      top: imageShaderHeight.value + offsetY.value - SNAP.v,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
       opacity: isBottomSnapLineActive.value ? 1 : 0,
@@ -405,7 +498,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       position: 'absolute',
       opacity: isCenterSnapLineActive.value ? 1 : 0,
     };
-  }, [isCenterSnapLineActive, horizontalOffset, imageShaderHeight]);
+  }, [isCenterSnapLineActive, offsetX, imageShaderHeight]);
 
   const dragGesture = Gesture.Pan()
     .onStart(() => {
@@ -417,26 +510,26 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
       dragDistanceX.value = clamp(
         dragDistanceX.value + e.changeX,
-        0,
-        templateTotalAvailableWidth.value,
+        imageOccupiedWidthRange.value[0],
+        imageOccupiedWidthRange.value[1],
       );
       dragDistanceY.value = clamp(
         dragDistanceY.value + e.changeY,
-        0,
-        imageShaderHeight.value - templateCurrentHeight.value,
+        imageOccupiedHeightRange.value[0],
+        imageOccupiedHeightRange.value[1] - templateCurrentHeight.value,
       );
 
       // Top snap
-      if (Math.abs(dragDistanceY.value + e.changeY - SNAP) <= 30) {
+      if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) <= 30) {
         isTopSnapLineActive.value = true;
       }
 
-      if (Math.abs(dragDistanceY.value + e.changeY - SNAP) <= 5) {
+      if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) <= 5) {
         // dragDistanceY.value = withTiming(SNAP, {
         //   duration: 10,
         // });
       }
-      if (Math.abs(dragDistanceY.value + e.changeY - SNAP) >= 30) {
+      if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) >= 30) {
         isTopSnapLineActive.value = false;
       }
       // end of top snap
@@ -447,7 +540,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) <= 30
       ) {
         isLeftSnapLineActive.value = true;
@@ -458,11 +551,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) <= 5
       ) {
         dragDistanceX.value = withTiming(
-          templateCurrentWidth.value / 2 + SNAP,
+          templateCurrentWidth.value / 2 + SNAP.h,
           {
             duration: 10,
           },
@@ -473,7 +566,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) >= 30
       ) {
         isLeftSnapLineActive.value = false;
@@ -486,7 +579,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) <= 30
       ) {
         isLeftSnapLineActive.value = true;
@@ -497,11 +590,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) <= 5
       ) {
         dragDistanceX.value = withTiming(
-          templateCurrentWidth.value / 2 + SNAP,
+          templateCurrentWidth.value / 2 + SNAP.h,
           {
             duration: 10,
           },
@@ -512,7 +605,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) >= 30
       ) {
         isLeftSnapLineActive.value = false;
@@ -523,8 +616,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       if (
         Math.abs(
           width -
-            horizontalOffset.value -
-            SNAP -
+            offsetX.value -
+            SNAP.h -
             (dragDistanceX.value + templateCurrentWidth.value / 2 + e.changeX),
         ) <= 30
       ) {
@@ -534,16 +627,13 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       if (
         Math.abs(
           width -
-            horizontalOffset.value -
-            SNAP -
+            offsetX.value -
+            SNAP.h -
             (dragDistanceX.value + templateCurrentWidth.value / 2 + e.changeX),
         ) <= 5
       ) {
         dragDistanceX.value = withTiming(
-          width -
-            horizontalOffset.value -
-            SNAP -
-            templateCurrentWidth.value / 2,
+          width - offsetX.value - SNAP.h - templateCurrentWidth.value / 2,
           {
             duration: 10,
           },
@@ -554,9 +644,9 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value +
             templateCurrentWidth.value / 2 +
             e.changeX +
-            SNAP,
+            SNAP.h,
         ) <=
-        width - horizontalOffset.value - 30
+        width - offsetX.value - 30
       ) {
         isRightSnapLineActive.value = false;
       }
@@ -566,7 +656,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       if (
         Math.abs(
           imageShaderHeight.value -
-            SNAP -
+            SNAP.v -
             (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
         ) <= 30
       ) {
@@ -576,12 +666,12 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       if (
         Math.abs(
           imageShaderHeight.value -
-            SNAP -
+            SNAP.v -
             (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
         ) <= 5
       ) {
         dragDistanceY.value = withTiming(
-          imageShaderHeight.value - SNAP - templateCurrentHeight.value,
+          imageShaderHeight.value - SNAP.v - templateCurrentHeight.value,
           {
             duration: 10,
           },
@@ -590,7 +680,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       if (
         Math.abs(
           imageShaderHeight.value -
-            SNAP -
+            SNAP.v -
             (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
         ) >= 30
       ) {
@@ -639,6 +729,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     if (duration !== 0 && renderTimeLine === false) {
       setRenderTimeline(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration]);
 
   const toggleTemplateSelector = () => {
@@ -649,6 +740,18 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     setTemplateSelector(false);
   };
 
+  const onClickExport = async () => {
+    paused.value = true;
+    setExporting(true);
+  };
+  const handleCancelVideoExport = () => {
+    setExporting(false);
+  };
+
+  const offScreenParagraphLayoutWidth = useDerivedValue(() => {
+    return route.params.width - TEMPLATE_PADDING * 2;
+  }, [route.params.width]);
+
   return (
     <SafeAreaView
       style={[
@@ -658,13 +761,13 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         },
       ]}>
       <Pressable onPress={handlePlayPause} style={[Styles.playerWrapper]}>
-        <Canvas style={[Styles.canvas]}>
+        <Canvas style={[Styles.canvas]} ref={ref} onSize={canvasSize}>
           <Fill>
             <ImageShader
               image={currentFrame}
-              fit={'contain'}
-              height={imageShaderHeight}
-              width={width}
+              transform={imageShaderTransform}
+              height={route.params.height}
+              width={route.params.width}
             />
           </Fill>
 
@@ -672,21 +775,18 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
             <Template
               currentTime={currentTime}
               sentences={selectedVideo?.sentences}
-              paragraphLayoutWidth={templateTotalAvailableWidth}
+              paragraphLayoutWidth={paragraphLayoutWidth}
               x={dragDistanceX}
               y={dragDistanceY}
               setTemplateHeight={templateCurrentHeight}
               setTemplateWidth={templateCurrentWidth}
               setX={templateXpos}
               setY={templateYpos}
+              customFontMgr={customFontMgr}
               {...selectedTemplate}
             />
           )}
         </Canvas>
-
-        <GestureDetector gesture={composed}>
-          <Animated.View style={[draggableStyle]} />
-        </GestureDetector>
 
         <Animated.View style={[snapTopHorizontalLine]} />
         <Animated.View style={[snapLeftVerticalLine]} />
@@ -703,46 +803,56 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
                 backgroundColor: theme.colors.grey2,
               },
             ]}>
-            <Icon name={'chevron-left'} size={24} color={theme.colors.white} />
+            <Icon
+              name={'chevron-left'}
+              size={scale(24)}
+              color={theme.colors.white}
+            />
           </Pressable>
 
-          <View style={[Styles.rightIconsWrapperToolBar]}>
-            <AnimatedPressable
-              onPress={() => {}}
-              style={[
-                Styles.exportWrapper,
-                canvasButtonsAnimatedStyle,
-                {
-                  backgroundColor: theme.colors.grey2,
-                },
-              ]}>
-              <Icon name={'upload'} size={24} color={theme.colors.white} />
-              <Text
+          {selectedVideo && selectedVideo?.sentences?.length > 0 && (
+            <View style={[Styles.rightIconsWrapperToolBar]}>
+              <AnimatedPressable
+                onPress={onClickExport}
                 style={[
-                  theme.typography.subheader.small,
+                  Styles.exportWrapper,
+                  canvasButtonsAnimatedStyle,
                   {
-                    color: theme.colors.white,
+                    backgroundColor: theme.colors.grey2,
                   },
                 ]}>
-                Export
-              </Text>
-            </AnimatedPressable>
-            <AnimatedPressable
-              onPress={toggleTemplateSelector}
-              style={[
-                Styles.templateIconWrapper,
-                canvasButtonsAnimatedStyle,
-                {
-                  backgroundColor: theme.colors.grey2,
-                },
-              ]}>
-              <MaterialIcon
-                name={'style'}
-                size={24}
-                color={theme.colors.white}
-              />
-            </AnimatedPressable>
-          </View>
+                <Icon
+                  name={'upload'}
+                  size={scale(24)}
+                  color={theme.colors.white}
+                />
+                <Text
+                  style={[
+                    theme.typography.subheader.small,
+                    {
+                      color: theme.colors.white,
+                    },
+                  ]}>
+                  Export
+                </Text>
+              </AnimatedPressable>
+              <AnimatedPressable
+                onPress={toggleTemplateSelector}
+                style={[
+                  Styles.templateIconWrapper,
+                  canvasButtonsAnimatedStyle,
+                  {
+                    backgroundColor: theme.colors.grey2,
+                  },
+                ]}>
+                <MaterialIcon
+                  name={'style'}
+                  size={scale(24)}
+                  color={theme.colors.white}
+                />
+              </AnimatedPressable>
+            </View>
+          )}
         </View>
 
         <AnimatedPressable
@@ -752,12 +862,16 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
             playButtonsAnimatedStyle,
             {
               backgroundColor: theme.colors.black4,
-              left: width / 2 - 40,
-              top: height / 2 - 40,
+              left: width / 2 - scale(40),
+              top: height / 2 - verticalScale(40),
             },
           ]}>
-          <Icon name={'play'} size={52} color={theme.colors.primary} />
+          <Icon name={'play'} size={scale(52)} color={theme.colors.primary} />
         </AnimatedPressable>
+
+        <GestureDetector gesture={composed}>
+          <Animated.View style={[draggableStyle]} />
+        </GestureDetector>
       </Pressable>
 
       {/* later optimized sentence to shared value and use display none or something like that */}
@@ -768,7 +882,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           frameRate={framerate}
           totalDuration={duration}
           seek={seek}
-          height={100}
+          height={TIMELINE_HEIGHT}
         />
       )}
 
@@ -782,7 +896,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           icon={
             <Icon
               name={'closed-caption-outline'}
-              size={24}
+              size={scale(24)}
               color={theme.colors.white}
             />
           }
@@ -801,7 +915,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
               label="Language"
               buttonType={'secondary'}
               icon={
-                <Icon name={'translate'} size={24} color={theme.colors.white} />
+                <Icon
+                  name={'translate'}
+                  size={scale(24)}
+                  color={theme.colors.white}
+                />
               }
               rightSlot={
                 <View style={[Styles.iconLabelContainer]}>
@@ -818,7 +936,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
                   <Icon
                     name={'chevron-right'}
-                    size={24}
+                    size={scale(24)}
                     color={theme.colors.white}
                   />
                 </View>
@@ -831,7 +949,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
               icon={
                 <Icon
                   name={'closed-caption-outline'}
-                  size={24}
+                  size={scale(24)}
                   color={theme.colors.white}
                 />
               }
@@ -850,17 +968,39 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       {isCaptionsGenerating && (
         <CaptionServiceStatus
           videoUrl={videoURL}
+          duration={duration}
           onCancel={handleCaptionServiceCancel}
           onSuccess={handleCaptionServiceSuccess}
           language={selectedLanguage}
+          maxWords={selectedTemplate?.maxWords || DEFAULT_MAX_WORDS}
         />
       )}
 
       {isTemplateSelectorOpen && selectedVideo && (
         <TemplateSelector
+          customFontMgr={customFontMgr}
           onSelect={handleSelectTemplate}
           onClose={handleCloseTemplateSelector}
           selectedTemplateId={selectedVideo.templateId}
+        />
+      )}
+
+      {isExporting && selectedTemplate && selectedVideo?.audioUrl && (
+        <ExportVideo
+          video={video}
+          onCancel={handleCancelVideoExport}
+          width={route.params.width}
+          height={route.params.height}
+          audioURL={selectedVideo?.audioUrl}
+          template={selectedTemplate}
+          paragraphLayoutWidth={offScreenParagraphLayoutWidth}
+          sentences={selectedVideo?.sentences || []}
+          dragPercentageX={dragDistancePercentageX.value}
+          dragPercentageY={dragDistancePercentageY.value}
+          customFontManager={customFontMgr}
+          scaleFactor={scaleFactor}
+          quality={selectedVideo.exportQuality}
+          videoURL={route.params.videoURL}
         />
       )}
     </SafeAreaView>
@@ -872,9 +1012,9 @@ const Styles = StyleSheet.create({
     flex: 1,
   },
   playButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: scale(80),
+    height: scale(80),
+    borderRadius: scale(40),
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
@@ -889,52 +1029,52 @@ const Styles = StyleSheet.create({
   },
   button: {
     alignSelf: 'center',
-    marginVertical: 8,
+    marginVertical: verticalScale(8),
   },
   bottomSheetContent: {
-    padding: 24,
+    padding: scale(24),
     display: 'flex',
     flexDirection: 'column',
-    gap: 24,
+    gap: verticalScale(24),
   },
   iconLabelContainer: {
     display: 'flex',
     flexDirection: 'row',
-    gap: 10,
+    gap: verticalScale(10),
     alignItems: 'center',
   },
   languageButton: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
+    paddingHorizontal: scale(12),
   },
 
   back: {
-    height: 32,
-    width: 32,
-    borderRadius: 16,
+    height: scale(32),
+    width: scale(32),
+    borderRadius: scale(16),
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   templateIconWrapper: {
-    height: 48,
-    width: 48,
-    borderRadius: 24,
+    height: scale(48),
+    width: scale(48),
+    borderRadius: scale(24),
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   exportWrapper: {
-    borderRadius: 12,
+    borderRadius: scale(12),
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: verticalScale(8),
+    paddingHorizontal: scale(16),
     flexDirection: 'row',
-    gap: 8,
+    gap: verticalScale(8),
   },
 
   toolBar: {
@@ -943,7 +1083,7 @@ const Styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     alignItems: 'flex-start',
-    padding: 16,
+    padding: scale(16),
     flexDirection: 'row',
   },
 
@@ -951,29 +1091,8 @@ const Styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
-    gap: 24,
+    gap: verticalScale(24),
   },
 });
 
 export default EditScreen;
-
-function calculateFrameOccupiedWidth(
-  imageWidth: number,
-  imageHeight: number,
-  rectWidth: number,
-  rectHeight: number,
-) {
-  'worklet';
-  const aspectRatio = imageWidth / imageHeight;
-  let occupiedWidth, occupiedHeight;
-
-  if (rectWidth / rectHeight > aspectRatio) {
-    occupiedHeight = rectHeight;
-    occupiedWidth = occupiedHeight * aspectRatio;
-  } else {
-    occupiedWidth = rectWidth;
-    occupiedHeight = occupiedWidth / aspectRatio;
-  }
-
-  return occupiedWidth;
-}

@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Paragraph,
   Skia,
-  useFonts,
   TextAlign,
   SkParagraphStyle,
   FontWeight,
@@ -13,8 +12,8 @@ import {
   Paint,
   Shadow,
   PaintStyle,
+  SkTypefaceFontProvider,
 } from '@shopify/react-native-skia';
-import {fontSource} from 'constants/fonts';
 import {
   SharedValue,
   useAnimatedReaction,
@@ -24,6 +23,7 @@ import {
 import {GeneratedSentence} from 'utils/sentencesBuilder';
 import KaraokeEffect from 'components/Effects/KaraokeEffect';
 import ClipEffect from 'components/Effects/ClipEffect';
+import {useOption} from 'hooks/useOption';
 
 const defaultColor = 'transparent';
 const defaultShadow: SkTextShadow = {
@@ -40,12 +40,12 @@ type RequireIf<T, K extends keyof T, U extends keyof T> = T &
   (undefined extends T[K] ? {} : {[P in U]-?: NonNullable<T[P]>});
 
 type BaseParagraphProps = {
-  currentTime: SharedValue<number>;
+  currentTime: SharedValue<number> | number;
   sentences: GeneratedSentence[];
 
   paragraphLayoutWidth: SharedValue<number>;
-  x: SharedValue<number>;
-  y: SharedValue<number>;
+  x: SharedValue<number> | number;
+  y: SharedValue<number> | number;
 
   setTemplateHeight?: SharedValue<number>;
   setTemplateWidth?: SharedValue<number>;
@@ -111,10 +111,13 @@ type BaseParagraphProps = {
   fillColor?: string;
 
   paused?: SharedValue<boolean>;
+  id: string;
+
+  customFontMgr: SkTypefaceFontProvider | null;
 };
 
 // Use the utility type to enforce essential dependencies only
-type CustomParagraphProps = RequireIf<
+export type CustomParagraphProps = RequireIf<
   RequireIf<BaseParagraphProps, 'strokeWidth', 'strokeColor'>,
   'effect',
   'fillColor'
@@ -128,12 +131,12 @@ const EMPTY_SENTENCE = {
 };
 
 const Template = ({
-  currentTime,
+  currentTime: _currentTime,
   sentences,
 
   paragraphLayoutWidth,
-  x,
-  y,
+  x: _x,
+  y: _y,
 
   setTemplateHeight,
   setTemplateWidth,
@@ -191,6 +194,8 @@ const Template = ({
   fillColor,
 
   paused,
+  id,
+  customFontMgr,
 }: CustomParagraphProps) => {
   // Default logic implementation
   const activeColorValue = activeColor || color;
@@ -222,9 +227,13 @@ const Template = ({
   const shadowBeforeValue = shadowBefore || shadow || [defaultShadow];
   const shadowAfterValue = shadowAfter || shadow || [defaultShadow];
 
-  const customFontMgr = useFonts(fontSource);
-
   const currentSentence = useSharedValue<GeneratedSentence>(EMPTY_SENTENCE);
+
+  const x = useOption(_x);
+
+  const y = useOption(_y);
+
+  const currentTime = useOption(_currentTime);
 
   const paragraph = useDerivedValue(() => {
     // Are the font loaded already?
@@ -286,7 +295,7 @@ const Template = ({
     paragraph.layout(paragraphLayoutWidth.value);
 
     return paragraph;
-  }, [customFontMgr, currentSentence, paragraphLayoutWidth, fontFamily]);
+  }, [customFontMgr, currentSentence, id]);
 
   const outlineParagraph = useDerivedValue(() => {
     // Are the font loaded already?
@@ -347,7 +356,7 @@ const Template = ({
     paragraph.layout(paragraphLayoutWidth.value);
 
     return paragraph;
-  }, [customFontMgr, currentSentence, paragraphLayoutWidth, fontFamily]);
+  }, [customFontMgr, currentSentence, id]);
 
   useAnimatedReaction(
     () => currentTime.value,
@@ -408,11 +417,11 @@ const Template = ({
     } else {
       return 0;
     }
-  }, [paragraphWidth]);
+  }, [paragraphWidth, sentenceBackgroundPadding]);
 
   const backgroundHeight = useDerivedValue(() => {
     return paragraphHeight.value + sentenceBackgroundPadding * 2;
-  }, [paragraphHeight]);
+  }, [paragraphHeight, sentenceBackgroundPadding]);
 
   const backgroundX = useDerivedValue(() => {
     if (alignment === TextAlign.Left) {
@@ -430,15 +439,15 @@ const Template = ({
         sentenceBackgroundPadding
       );
     }
-  }, [minX, paragraphWidth, paragraphLayoutWidth]);
+  }, [minX, paragraphWidth, paragraphLayoutWidth, id]);
 
   const backgroundY = useDerivedValue(() => {
     return y.value;
-  }, [y, sentenceBackgroundPadding]);
+  }, [y]);
 
   const minY = useDerivedValue(() => {
     return y.value + sentenceBackgroundPadding;
-  }, [y]);
+  }, [y, sentenceBackgroundPadding]);
 
   useAnimatedReaction(
     () => backgroundY.value,

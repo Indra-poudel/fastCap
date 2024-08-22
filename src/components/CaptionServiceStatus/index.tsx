@@ -10,19 +10,27 @@ import {StyleSheet, Text, View} from 'react-native';
 import {useTheme} from 'theme/ThemeContext';
 import {languageType} from 'components/LanguageSelector';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
+import {useAppDispatch, useAppSelector} from 'hooks/useStore';
+import {selectSelectedVideo} from 'store/videos/selector';
+import {updateVideo} from 'store/videos/slice';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 type CaptionServiceStatusProps = {
   videoUrl: string;
   onCancel: () => void;
   onSuccess: (data: GeneratedSentence[]) => void;
   language: languageType;
+  maxWords: number;
+  duration: number;
 };
 
 const CaptionServiceStatus = ({
   videoUrl,
   onCancel,
   onSuccess,
+  maxWords,
   language,
+  duration,
 }: CaptionServiceStatusProps) => {
   const {
     currentStep,
@@ -30,20 +38,33 @@ const CaptionServiceStatus = ({
     overallStatus,
     sentences,
     error,
+    audioUrl,
     startTranscriptionProcess,
   } = useTranscriptionService({
-    isMock: true,
+    isMock: false,
+    maxWords,
   });
 
   const {theme} = useTheme();
+  const selectedVideo = useAppSelector(selectSelectedVideo);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (videoUrl && language) {
-      startTranscriptionProcess(videoUrl, language);
+    if (videoUrl && language && duration) {
+      startTranscriptionProcess(videoUrl, language, duration);
     }
-  }, [videoUrl, startTranscriptionProcess, language]);
+  }, [videoUrl, startTranscriptionProcess, language, duration]);
 
-  console.log(overallStatus);
+  useEffect(() => {
+    if (audioUrl && selectedVideo && !selectedVideo.audioUrl) {
+      const newVideoObjectWithAudioURL = {
+        ...selectedVideo,
+        audioUrl: audioUrl,
+      };
+
+      dispatch(updateVideo(newVideoObjectWithAudioURL));
+    }
+  }, [audioUrl, dispatch, selectedVideo]);
 
   useEffect(() => {
     if (overallStatus === OverallProcessStatus.COMPLETED) {
@@ -76,10 +97,10 @@ const CaptionServiceStatus = ({
             progress={stepProgress / 100}
             color={theme.colors.white}
             unfilledColor="rgba(29, 29, 29, 0.30))"
-            height={6}
-            borderRadius={12}
+            height={verticalScale(6)}
+            borderRadius={scale(12)}
             borderWidth={0}
-            width={60}
+            width={scale(60)}
             useNativeDriver={true}
           />
         </View>
@@ -112,26 +133,26 @@ const CaptionServiceStatus = ({
 
 const Style = StyleSheet.create({
   wrapper: {
-    padding: 24,
+    padding: scale(24),
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 32,
+    gap: verticalScale(32),
   },
   textWrapper: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    gap: verticalScale(12),
   },
   ccWrapper: {
-    padding: 12,
+    padding: scale(12),
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    borderRadius: 8,
-    width: 84,
-    height: 68,
+    gap: verticalScale(8),
+    borderRadius: scale(8),
+    width: scale(84),
+    height: verticalScale(68),
   },
 });
 

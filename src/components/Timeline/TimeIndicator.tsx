@@ -1,6 +1,7 @@
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import {useTheme} from 'theme/ThemeContext';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 type TimeIndicatorProps = {
   x: number;
@@ -26,9 +27,9 @@ const TimeIndicator = ({x, lineWidth}: TimeIndicatorProps) => {
 const Style = StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    width: 2,
-    height: 150,
-    borderRadius: 10,
+    width: scale(2),
+    height: verticalScale(150),
+    borderRadius: scale(10),
   },
 });
 

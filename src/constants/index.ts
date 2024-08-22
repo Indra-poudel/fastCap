@@ -1,6 +1,8 @@
 export const VIDEO_NAME_PREFIX = 'Video';
 export const APP_NAME = 'FastCap';
 
+export const DEFAULT_MAX_WORDS = 5;
+
 export const TEMPLATE_SENTENCE = [
   {
     text: "Hi guys, it's me, Indra.",

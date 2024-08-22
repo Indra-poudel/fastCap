@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import {useTheme} from 'theme/ThemeContext';
 
+import {scale, verticalScale} from 'react-native-size-matters/extend';
+
 type DialogProps = {
   title: string;
   children: React.ReactNode;
@@ -127,7 +129,7 @@ const styles = StyleSheet.create({
   backDrop: {
     flex: 1,
     position: 'absolute',
-    padding: 48,
+    padding: verticalScale(48),
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     display: 'flex',
     justifyContent: 'center',
@@ -135,48 +137,48 @@ const styles = StyleSheet.create({
   },
   dialog: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    maxWidth: 350,
-    minWidth: 310,
+    borderRadius: scale(8),
+    maxWidth: scale(350),
+    minWidth: scale(310),
 
     shadowColor: 'rgba(0, 0, 0)',
     shadowOpacity: 0.18,
-    shadowRadius: 36,
+    shadowRadius: scale(36),
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: verticalScale(2),
     },
     elevation: 5,
     opacity: 0.9,
   },
   header: {
-    padding: 16,
+    padding: scale(16),
   },
   body: {
-    padding: 24,
+    padding: scale(24),
   },
 
   line: {
-    height: 0.5,
+    height: verticalScale(0.5),
   },
 
   footer: {
     display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderRadius: 8,
+    borderRadius: scale(8),
   },
 
   button: {
     display: 'flex',
     flexGrow: 1,
-    padding: 16,
+    padding: scale(16),
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   verticalLine: {
-    width: 0.5,
+    width: scale(0.5),
   },
 });
 

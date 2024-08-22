@@ -41,26 +41,17 @@ const KaraokeEffect = ({
         latestTime >= currentSentence.value.start &&
         latestTime <= currentSentence.value.end
       ) {
-        if (paused && paused.value) {
-          cancelAnimation(animatedFillWidth);
-        } else {
-          animatedFillWidth.value = withTiming(width.value, {
-            duration: currentSentence.value.end - currentSentence.value.start,
-          });
-        }
+        const duration =
+          currentSentence.value.end - currentSentence.value.start;
+        animatedFillWidth.value = withTiming(width.value, {
+          duration,
+        });
+      } else {
+        cancelAnimation(animatedFillWidth);
+        animatedFillWidth.modify(() => 0, true);
       }
     },
-    [paused, currentSentence],
-  );
-
-  useAnimatedReaction(
-    () => animatedFillWidth.value,
-    value => {
-      if (value === width.value) {
-        animatedFillWidth.value = 0;
-      }
-    },
-    [animatedFillWidth],
+    [paused, currentTime, width],
   );
 
   return (

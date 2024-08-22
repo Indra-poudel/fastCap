@@ -1,8 +1,6 @@
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import React from 'react';
 import EditScreen from '@screens/Edit/EditScreen';
-import EditSettingsScreen from '@screens/Edit/EditSettingScreen';
-import EditDetailsScreen from '@screens/Edit/EditSettingScreen';
 import HomeTab from './HomeTabs';
 
 export enum SCREENS {
@@ -16,6 +14,8 @@ export type RootStackParamList = {
   home: undefined;
   edit: {
     videoURL: string;
+    width: number;
+    height: number;
   };
   editDetails: undefined;
   editSettings: undefined;
@@ -34,16 +34,6 @@ function AppNavigator() {
       <Stack.Screen
         name={SCREENS.EDIT}
         component={EditScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name={SCREENS.EDIT_DETAILS}
-        component={EditDetailsScreen}
-        options={{headerShown: false}}
-      />
-      <Stack.Screen
-        name={SCREENS.EDIT_SETTINGS}
-        component={EditSettingsScreen}
         options={{headerShown: false}}
       />
     </Stack.Navigator>

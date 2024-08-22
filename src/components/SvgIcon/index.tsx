@@ -1,5 +1,6 @@
 import React from 'react';
 import {Pressable, StyleProp, ViewStyle} from 'react-native';
+import {scale} from 'react-native-size-matters/extend';
 
 type SvgIconProps = {
   size?: number;
@@ -12,7 +13,7 @@ type SvgIconProps = {
 
 function SvgIcon({
   style,
-  size = 24,
+  size = scale(24),
   children,
   color,
   onPress,
