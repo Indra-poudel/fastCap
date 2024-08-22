@@ -8,6 +8,7 @@ import CountryFlag from 'react-native-country-flag';
 import {TextInput} from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/AntDesign';
 import {useTheme} from 'theme/ThemeContext';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 type LanguageSelectorProps = {
   onClose: () => void;
@@ -118,18 +119,18 @@ const LanguageSelector = ({onClose, onSelect}: LanguageSelectorProps) => {
 
 const Style = StyleSheet.create({
   wrapper: {
-    padding: 24,
+    padding: scale(24),
   },
   textInputContainer: {
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderRadius: 12,
+    paddingHorizontal: scale(12),
+    borderWidth: scale(1),
+    borderRadius: scale(12),
     width: '100%',
     display: 'flex',
     flexDirection: 'row',
     alignContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    gap: verticalScale(12),
   },
 
   input: {
@@ -137,18 +138,18 @@ const Style = StyleSheet.create({
   },
 
   item: {
-    height: 50,
+    height: verticalScale(50),
     width: '100%',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 12,
+    paddingHorizontal: scale(12),
   },
 
   flashListWrapper: {
     flex: 1,
     width: '100%',
-    paddingBottom: 115,
+    paddingBottom: verticalScale(115),
   },
 });
 

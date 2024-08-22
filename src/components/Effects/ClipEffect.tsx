@@ -1,4 +1,5 @@
 import {Group, rect} from '@shopify/react-native-skia';
+import {useOption} from 'hooks/useOption';
 import React from 'react';
 import {
   SharedValue,
@@ -23,7 +24,7 @@ type ClipEffectProps = {
 
 const ClipEffect = ({
   children,
-  currentTime,
+  currentTime: _currentTime,
   currentSentence,
   paused,
   x,
@@ -33,8 +34,10 @@ const ClipEffect = ({
 }: ClipEffectProps) => {
   const animatedWidth = useSharedValue(0);
 
+  const currenTime = useOption(_currentTime);
+
   useAnimatedReaction(
-    () => currentTime.value,
+    () => currenTime.value,
     latestTime => {
       if (
         latestTime >= currentSentence.value.start &&
@@ -50,7 +53,7 @@ const ClipEffect = ({
         animatedWidth.modify(() => 0, true);
       }
     },
-    [paused, currentTime, width],
+    [paused, _currentTime, width],
   );
 
   const clipRect = useDerivedValue(() => {

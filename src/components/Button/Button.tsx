@@ -9,6 +9,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import {useTheme} from '@theme/ThemeContext';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 type ButtonProps = {
   icon?: React.ReactNode;
@@ -80,11 +81,11 @@ const Button = ({
 
 const Style = StyleSheet.create({
   buttonContainer: {
-    width: 300,
-    paddingVertical: 20,
+    width: scale(300),
+    paddingVertical: verticalScale(20),
     display: 'flex',
     alignItems: 'center',
-    borderRadius: 12,
+    borderRadius: scale(12),
     borderWidth: 1,
   },
 
@@ -93,7 +94,7 @@ const Style = StyleSheet.create({
   iconLabelContainer: {
     display: 'flex',
     flexDirection: 'row',
-    gap: 10,
+    gap: verticalScale(10),
     alignItems: 'center',
   },
 });

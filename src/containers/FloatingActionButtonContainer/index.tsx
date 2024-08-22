@@ -17,6 +17,7 @@ import {useNavigation} from '@react-navigation/native';
 import {VIDEO_NAME_PREFIX} from 'constants/index';
 import {useAppDispatch} from 'hooks/useStore';
 import {addVideo, setSelectedVideo} from 'store/videos/slice';
+import {ExportQuality} from 'store/videos/type';
 import uuid from 'react-native-uuid';
 
 export enum FLOATING_ACTION {
@@ -90,6 +91,8 @@ const FloatingActionButton = () => {
           templateId: '1',
           width: response.assets[0].width,
           height: response.assets[0].height,
+          audioUrl: '',
+          exportQuality: ExportQuality.STANDARD,
         }),
       );
 
@@ -111,8 +114,12 @@ const FloatingActionButton = () => {
 
         response.assets &&
           response?.assets[0].uri &&
+          response.assets[0].width &&
+          response.assets[0].height &&
           navigation.navigate('edit', {
             videoURL: response.assets[0].uri,
+            height: response.assets[0].height,
+            width: response.assets[0].width,
           });
       })
       .catch(error => {
@@ -134,8 +141,12 @@ const FloatingActionButton = () => {
 
         response.assets &&
           response?.assets[0].uri &&
+          response.assets[0].width &&
+          response.assets[0].height &&
           navigation.navigate('edit', {
             videoURL: response.assets[0].uri,
+            height: response.assets[0].height,
+            width: response.assets[0].width,
           });
       })
       .catch(error => {
