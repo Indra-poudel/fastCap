@@ -966,6 +966,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
       {isTemplateSelectorOpen && selectedVideo && (
         <TemplateSelector
+          customFontMgr={customFontMgr}
           onSelect={handleSelectTemplate}
           onClose={handleCloseTemplateSelector}
           selectedTemplateId={selectedVideo.templateId}

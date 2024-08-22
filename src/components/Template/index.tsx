@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Paragraph,
   Skia,
-  useFonts,
   TextAlign,
   SkParagraphStyle,
   FontWeight,
@@ -15,10 +14,8 @@ import {
   PaintStyle,
   SkTypefaceFontProvider,
 } from '@shopify/react-native-skia';
-import {fontSource} from 'constants/fonts';
 import {
   SharedValue,
-  isSharedValue,
   useAnimatedReaction,
   useDerivedValue,
   useSharedValue,
@@ -26,6 +23,7 @@ import {
 import {GeneratedSentence} from 'utils/sentencesBuilder';
 import KaraokeEffect from 'components/Effects/KaraokeEffect';
 import ClipEffect from 'components/Effects/ClipEffect';
+import {useOption} from 'hooks/useOption';
 
 const defaultColor = 'transparent';
 const defaultShadow: SkTextShadow = {
@@ -115,7 +113,7 @@ type BaseParagraphProps = {
   paused?: SharedValue<boolean>;
   id: string;
 
-  customFontMgr?: SkTypefaceFontProvider | null;
+  customFontMgr: SkTypefaceFontProvider | null;
 };
 
 // Use the utility type to enforce essential dependencies only
@@ -231,23 +229,11 @@ const Template = ({
 
   const currentSentence = useSharedValue<GeneratedSentence>(EMPTY_SENTENCE);
 
-  const x = isSharedValue(_x)
-    ? _x
-    : {
-        value: _x,
-      };
+  const x = useOption(_x);
 
-  const y = isSharedValue(_y)
-    ? _y
-    : {
-        value: _y,
-      };
+  const y = useOption(_y);
 
-  const currentTime = isSharedValue(_currentTime)
-    ? _currentTime
-    : {
-        value: _currentTime,
-      };
+  const currentTime = useOption(_currentTime);
 
   const paragraph = useDerivedValue(() => {
     // Are the font loaded already?

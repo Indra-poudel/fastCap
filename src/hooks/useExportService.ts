@@ -70,7 +70,6 @@ export const useExportService = ({
 
   useEffect(() => {
     return () => {
-      video.dispose();
       isMounted.current = false;
     };
   }, []);

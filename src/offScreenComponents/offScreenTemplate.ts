@@ -12,6 +12,7 @@ import {
   rrect,
   StrokeCap,
   StrokeJoin,
+  ClipOp,
 } from '@shopify/react-native-skia';
 import {CustomParagraphProps} from 'components/Template';
 import {isSharedValue} from 'react-native-reanimated';
@@ -384,6 +385,11 @@ export const renderOffScreenTemplate = (
   backgroundPaint.setColor(Skia.Color(sentenceBackgroundColor));
   backgroundPaint.setAlphaf(sentenceBackgroundOpacity);
 
+  // const clipPaint = Skia.Paint();
+  // clipPaint.setAntiAlias(true);
+  // clipPaint.setDither(true);
+  // clipPaint.setColor(Skia.Color('transparent'));
+
   const rec = rect(
     layoutData.backgroundX,
     layoutData.backgroundY,
@@ -395,4 +401,13 @@ export const renderOffScreenTemplate = (
   canvas.drawRRect(rrec, backgroundPaint);
   outlineParagraph?.paint(canvas, layoutData.minX, layoutData.minY);
   paragraph?.paint(canvas, layoutData.minX, layoutData.minY);
+
+  // const clipRect = rect(
+  //   layoutData.backgroundX,
+  //   layoutData.backgroundY,
+  //   100,
+  //   layoutData.backgroundHeight,
+  // );
+
+  // canvas.clipRect(clipRect, ClipOp.Difference, true);
 };

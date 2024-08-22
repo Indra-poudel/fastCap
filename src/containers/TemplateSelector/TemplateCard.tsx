@@ -1,4 +1,4 @@
-import {Canvas} from '@shopify/react-native-skia';
+import {Canvas, SkTypefaceFontProvider} from '@shopify/react-native-skia';
 import Template from 'components/Template';
 import React from 'react';
 import {Pressable, StyleSheet, useWindowDimensions} from 'react-native';
@@ -19,6 +19,7 @@ type TemplateCard = {
   sentences: GeneratedSentence[];
   selectedTemplateId: string;
   onPress: (template: TemplateState) => void;
+  customFontMgr: SkTypefaceFontProvider | null;
 } & TemplateState;
 
 const TemplateCard = ({
@@ -26,6 +27,7 @@ const TemplateCard = ({
   sentences,
   selectedTemplateId,
   onPress,
+  customFontMgr,
   ...templateState
 }: TemplateCard) => {
   const {theme} = useTheme();
@@ -64,6 +66,7 @@ const TemplateCard = ({
           width: width - PADDING * 2,
         }}>
         <Template
+          customFontMgr={customFontMgr}
           currentTime={currentTime}
           sentences={sentences}
           paragraphLayoutWidth={paragraphLayoutWidth}
