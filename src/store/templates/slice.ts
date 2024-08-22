@@ -41,8 +41,31 @@ const initialTemplatesState: TemplatesSliceState = {
       sentenceBackgroundPadding: 8,
       maxWords: 3,
     },
+
+    ['3']: {
+      id: '3',
+      name: 'Extra',
+      alignment: TextAlign.Center,
+      color: 'white',
+      activeColor: '#FFD700',
+      fontSize: 28,
+      fontFamily: FONT_FAMILY.Montserrat,
+      weight: FontWeight.ExtraBold,
+      strokeColor: '#000000',
+      strokeWidth: 3,
+      sentenceShadow: {
+        dx: 3,
+        dy: 3,
+        blur: 0,
+        color: '#000000',
+      },
+      // this font goes little up and cut the top so to fix that giving padding
+      sentenceBackgroundOpacity: 0,
+      sentenceBackgroundPadding: 0,
+      maxWords: 4,
+    },
   },
-  allIds: ['1', '2'],
+  allIds: ['1', '2', '3'],
 };
 
 const templatesSlice = createSlice({
