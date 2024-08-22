@@ -62,6 +62,8 @@ import ExportVideo from 'components/ExportVideo';
 import {renderOffScreenTemplate} from 'offScreenComponents/offScreenTemplate';
 import {fontSource} from 'constants/fonts';
 
+import {scale, verticalScale} from 'react-native-size-matters/extend';
+
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type EditScreenProps = NativeStackScreenProps<RootStackParamList, SCREENS.EDIT>;
@@ -803,7 +805,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
                 backgroundColor: theme.colors.grey2,
               },
             ]}>
-            <Icon name={'chevron-left'} size={24} color={theme.colors.white} />
+            <Icon
+              name={'chevron-left'}
+              size={scale(24)}
+              color={theme.colors.white}
+            />
           </Pressable>
 
           {selectedVideo && selectedVideo?.sentences?.length > 0 && (
@@ -817,7 +823,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
                     backgroundColor: theme.colors.grey2,
                   },
                 ]}>
-                <Icon name={'upload'} size={24} color={theme.colors.white} />
+                <Icon
+                  name={'upload'}
+                  size={scale(24)}
+                  color={theme.colors.white}
+                />
                 <Text
                   style={[
                     theme.typography.subheader.small,
@@ -839,7 +849,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
                 ]}>
                 <MaterialIcon
                   name={'style'}
-                  size={24}
+                  size={scale(24)}
                   color={theme.colors.white}
                 />
               </AnimatedPressable>
@@ -854,11 +864,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
             playButtonsAnimatedStyle,
             {
               backgroundColor: theme.colors.black4,
-              left: width / 2 - 40,
-              top: height / 2 - 40,
+              left: width / 2 - scale(40),
+              top: height / 2 - verticalScale(40),
             },
           ]}>
-          <Icon name={'play'} size={52} color={theme.colors.primary} />
+          <Icon name={'play'} size={scale(52)} color={theme.colors.primary} />
         </AnimatedPressable>
 
         <GestureDetector gesture={composed}>
@@ -888,7 +898,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           icon={
             <Icon
               name={'closed-caption-outline'}
-              size={24}
+              size={scale(24)}
               color={theme.colors.white}
             />
           }
@@ -907,7 +917,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
               label="Language"
               buttonType={'secondary'}
               icon={
-                <Icon name={'translate'} size={24} color={theme.colors.white} />
+                <Icon
+                  name={'translate'}
+                  size={scale(24)}
+                  color={theme.colors.white}
+                />
               }
               rightSlot={
                 <View style={[Styles.iconLabelContainer]}>
@@ -924,7 +938,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
                   <Icon
                     name={'chevron-right'}
-                    size={24}
+                    size={scale(24)}
                     color={theme.colors.white}
                   />
                 </View>
@@ -937,7 +951,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
               icon={
                 <Icon
                   name={'closed-caption-outline'}
-                  size={24}
+                  size={scale(24)}
                   color={theme.colors.white}
                 />
               }
@@ -998,9 +1012,9 @@ const Styles = StyleSheet.create({
     flex: 1,
   },
   playButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: scale(80),
+    height: scale(80),
+    borderRadius: scale(40),
     justifyContent: 'center',
     alignItems: 'center',
     position: 'absolute',
@@ -1015,52 +1029,52 @@ const Styles = StyleSheet.create({
   },
   button: {
     alignSelf: 'center',
-    marginVertical: 8,
+    marginVertical: verticalScale(8),
   },
   bottomSheetContent: {
-    padding: 24,
+    padding: scale(24),
     display: 'flex',
     flexDirection: 'column',
-    gap: 24,
+    gap: verticalScale(24),
   },
   iconLabelContainer: {
     display: 'flex',
     flexDirection: 'row',
-    gap: 10,
+    gap: verticalScale(10),
     alignItems: 'center',
   },
   languageButton: {
     flexDirection: 'row',
-    paddingHorizontal: 12,
+    paddingHorizontal: scale(12),
   },
 
   back: {
-    height: 32,
-    width: 32,
-    borderRadius: 16,
+    height: scale(32),
+    width: scale(32),
+    borderRadius: scale(16),
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   templateIconWrapper: {
-    height: 48,
-    width: 48,
-    borderRadius: 24,
+    height: scale(48),
+    width: scale(48),
+    borderRadius: scale(24),
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   exportWrapper: {
-    borderRadius: 12,
+    borderRadius: scale(12),
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: verticalScale(8),
+    paddingHorizontal: scale(16),
     flexDirection: 'row',
-    gap: 8,
+    gap: verticalScale(8),
   },
 
   toolBar: {
@@ -1069,7 +1083,7 @@ const Styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     alignItems: 'flex-start',
-    padding: 16,
+    padding: scale(16),
     flexDirection: 'row',
   },
 
@@ -1077,7 +1091,7 @@ const Styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
-    gap: 24,
+    gap: verticalScale(24),
   },
 });
 

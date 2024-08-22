@@ -6,6 +6,8 @@ import * as Progress from 'react-native-progress';
 import {ExportServiceProps, useExportService} from 'hooks/useExportService';
 import Button from 'components/Button/Button';
 
+import {verticalScale, scale} from 'react-native-size-matters/extend';
+
 type ExportVideoProps = {
   onCancel: () => void;
 } & ExportServiceProps;
@@ -33,7 +35,9 @@ const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
   }, []);
 
   return (
-    <BottomSheet label="Let's Make It Viral!🚀🔥" initialHeightPercentage={50}>
+    <BottomSheet
+      label="Let's Make It Viral!🚀🔥"
+      initialHeightPercentage={scale(45)}>
       <Progress.Bar
         animated
         progress={stepProgress / 100}
@@ -41,8 +45,8 @@ const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
           stepProgress === 100 ? theme.colors.success : theme.colors.primary
         }
         unfilledColor="rgba(29, 29, 29, 0.30))"
-        height={6}
-        borderRadius={12}
+        height={verticalScale(6)}
+        borderRadius={scale(12)}
         borderWidth={0}
         width={width}
         useNativeDriver={true}
@@ -91,21 +95,21 @@ const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
 
 const Style = StyleSheet.create({
   percentage: {
-    marginTop: 12,
+    marginTop: verticalScale(12),
   },
   wrapperTextSection: {
     alignItems: 'center',
-    gap: 12,
+    gap: verticalScale(12),
   },
   container: {
-    gap: 24,
+    gap: verticalScale(24),
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   textWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    gap: verticalScale(12),
     textAlign: 'center',
   },
 

@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import {StyleSheet, TextInput, View, Keyboard, Text} from 'react-native';
 import Dialog from 'components/Dialog';
 import {useTheme} from 'theme/ThemeContext';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 type EditProps = {
   handleClose: () => void;
@@ -82,9 +83,9 @@ export default Edit;
 
 const styles = StyleSheet.create({
   textInputContainer: {
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderRadius: 12,
+    paddingHorizontal: scale(12),
+    borderWidth: scale(1),
+    borderRadius: scale(12),
     width: '100%',
     flexDirection: 'column',
     alignItems: 'center',
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   errorContainer: {
-    paddingTop: 12,
+    paddingTop: verticalScale(12),
   },
   errorText: {
     display: 'flex',

@@ -11,6 +11,8 @@ import {
 import {useTheme} from 'theme/ThemeContext';
 import {formatDuration} from 'utils/time';
 
+import {scale, verticalScale} from 'react-native-size-matters/extend';
+
 type CardType = {
   imageURL: string;
   name: string;
@@ -96,8 +98,8 @@ const Card = ({
 
 const style = StyleSheet.create({
   image: {
-    borderRadius: 8,
-    marginBottom: 8,
+    borderRadius: scale(8),
+    marginBottom: verticalScale(8),
     position: 'relative',
   },
 
@@ -105,15 +107,15 @@ const style = StyleSheet.create({
     display: 'flex',
   },
   title: {
-    marginBottom: 4,
+    marginBottom: verticalScale(4),
   },
 
   durationWrapper: {
     opacity: 0.7,
     position: 'absolute',
-    left: 10,
-    bottom: 60,
-    padding: 4,
+    left: scale(10),
+    bottom: verticalScale(60),
+    padding: scale(4),
   },
 });
 
