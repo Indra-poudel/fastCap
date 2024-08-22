@@ -3,7 +3,6 @@ import {
   Canvas,
   Fill,
   ImageShader,
-  SkImage,
   Skia,
   useCanvasRef,
   useFonts,
@@ -15,9 +14,8 @@ import CaptionServiceStatus from 'components/CaptionServiceStatus';
 import LanguageSelector, {languageType} from 'components/LanguageSelector';
 import {languages_best} from 'constants/languages';
 import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-  InteractionManager,
   Pressable,
   StyleSheet,
   Text,
@@ -35,11 +33,7 @@ import Animated, {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import {useTheme} from 'theme/ThemeContext';
-import {
-  generateThumbnail,
-  generateVideoFromFrames,
-  saveFrame,
-} from 'utils/video';
+import {generateThumbnail} from 'utils/video';
 import {
   GeneratedSentence,
   transformWordsToSentences,
@@ -57,9 +51,7 @@ import TemplateSelector from 'containers/TemplateSelector';
 import {selectTemplateForSelectedVideo} from 'store/templates/selector';
 import {Template as TemplateState} from 'store/templates/type';
 import {DEFAULT_MAX_WORDS} from 'constants/index';
-import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import ExportVideo from 'components/ExportVideo';
-import {renderOffScreenTemplate} from 'offScreenComponents/offScreenTemplate';
 import {fontSource} from 'constants/fonts';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -171,7 +163,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     return () => {
       paused.value = true;
     };
-  }, []);
+  }, [paused]);
+
+  const updateVideoObjectToStore = (_video: Video) => {
+    dispatch(updateVideo(_video));
+  };
 
   useEffect(() => {
     if (selectedVideo && !selectedVideo?.thumbnailUrl) {
@@ -191,11 +187,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     } else if (selectedVideo && selectedVideo.thumbnailUrl) {
       assignThumbnailImageToCurrentFrame(selectedVideo.thumbnailUrl);
     }
-  }, [selectedVideo]);
-
-  const updateVideoObjectToStore = (video: Video) => {
-    dispatch(updateVideo(video));
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedVideo, videoURL]);
 
   const handlePlayPause = () => {
     'worklet';
@@ -730,6 +723,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     if (duration !== 0 && renderTimeLine === false) {
       setRenderTimeline(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [duration]);
 
   const toggleTemplateSelector = () => {
