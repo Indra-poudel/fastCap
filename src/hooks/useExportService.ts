@@ -128,8 +128,6 @@ export const useExportService = ({
       );
       setStepProgress(100);
 
-      console.log('VIDEO_PATH', videoPath);
-
       CameraRoll.saveAsset(videoPath, {
         type: 'video',
       }).then(photoIdentifier => {

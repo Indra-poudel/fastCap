@@ -1,4 +1,4 @@
-import {SkImage} from '@shopify/react-native-skia';
+import {ImageFormat, SkImage} from '@shopify/react-native-skia';
 import {FFmpegKit, FFmpegKitConfig, Level} from 'ffmpeg-kit-react-native';
 import RNFetchBlob from 'rn-fetch-blob';
 
@@ -210,7 +210,7 @@ export const saveFrame = (image: SkImage, index: number): Promise<string> => {
       const _index = index + 1;
       const filename = `frame_${String(_index).padStart(6, '0')}.png`; // Zero-padded index
       const path = `${RNFetchBlob.fs.dirs.CacheDir}/${filename}`;
-      const base64Image = image.encodeToBase64();
+      const base64Image = image.encodeToBase64(ImageFormat.PNG, 100);
 
       return RNFetchBlob.fs
         .writeFile(path, base64Image, 'base64')
