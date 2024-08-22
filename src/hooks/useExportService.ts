@@ -2,12 +2,7 @@ import {
   CameraRoll,
   PhotoIdentifier,
 } from '@react-native-camera-roll/camera-roll';
-import {
-  SkImage,
-  SkTypefaceFontProvider,
-  Skia,
-  Video,
-} from '@shopify/react-native-skia';
+import {SkTypefaceFontProvider, Skia, Video} from '@shopify/react-native-skia';
 import {useState, useRef, useEffect} from 'react';
 import {InteractionManager} from 'react-native';
 import uuid from 'react-native-uuid';
@@ -15,7 +10,8 @@ import {generateVideoFromFrames, saveFrame} from 'utils/video';
 import {Template as TemplateState} from 'store/templates/type';
 import {renderOffScreenTemplate} from 'offScreenComponents/offScreenTemplate';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
-import {SharedValue} from 'react-native-reanimated';
+import {SharedValue, useDerivedValue} from 'react-native-reanimated';
+import {ExportQuality} from 'store/videos/type';
 
 export enum EXPORT_STEPS {
   RENDER_FRAMES = '🖼️ Rendering Frames',
@@ -34,6 +30,7 @@ export type ExportServiceProps = {
   width: number;
   height: number;
   audioURL: string;
+  videoURL: string;
   template: TemplateState;
   paragraphLayoutWidth: SharedValue<number>;
   sentences: GeneratedSentence[];
@@ -42,20 +39,22 @@ export type ExportServiceProps = {
   customFontManager: SkTypefaceFontProvider | null;
   scaleFactor: SharedValue<number>;
   video: Video;
+  quality: ExportQuality;
 };
 
 export const useExportService = ({
-  width,
-  height,
-  audioURL,
+  width: _width,
+  height: _height,
   template,
   sentences,
-  paragraphLayoutWidth,
+  paragraphLayoutWidth: _paragraphLayoutWidth,
   dragPercentageX,
   dragPercentageY,
   customFontManager,
   scaleFactor,
   video,
+  quality,
+  videoURL,
 }: ExportServiceProps) => {
   const [currentStep, setCurrentStep] = useState(EXPORT_STEPS.RENDER_FRAMES);
   const [overallStatus, setOverallStatus] = useState(
@@ -67,6 +66,18 @@ export const useExportService = ({
   >(undefined);
 
   const isMounted = useRef(true);
+
+  const width = useDerivedValue(() => {
+    return _width * quality;
+  }, []);
+
+  const height = useDerivedValue(() => {
+    return _height * quality;
+  }, []);
+
+  const paragraphLayoutWidth = useDerivedValue(() => {
+    return _paragraphLayoutWidth.value * quality;
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -94,17 +105,11 @@ export const useExportService = ({
 
         const seekValue = i * seekInterval;
 
-        video.seek(seekValue);
+        await drawOffScreen(i, seekValue);
 
-        const currentImage = video.nextImage();
+        const renderingProgress = ((i + 1) / totalFrames) * 100;
 
-        if (currentImage) {
-          await drawOffScreen(i, currentImage, seekValue);
-
-          const renderingProgress = ((i + 1) / totalFrames) * 100;
-
-          setStepProgress(renderingProgress);
-        }
+        setStepProgress(renderingProgress);
       }
 
       if (isMounted.current) {
@@ -121,7 +126,7 @@ export const useExportService = ({
     try {
       setCurrentStep(EXPORT_STEPS.EXPORTING);
       const videoPath = await generateVideoFromFrames(
-        audioURL,
+        videoURL,
         duration,
         uuid.v4().toString(),
         onProgress,
@@ -131,6 +136,7 @@ export const useExportService = ({
       CameraRoll.saveAsset(videoPath, {
         type: 'video',
       }).then(photoIdentifier => {
+        console.log('Video path', videoPath);
         setGeneratedVideoInfo(photoIdentifier);
         setCurrentStep(EXPORT_STEPS.COMPLETE);
         setOverallStatus(OVER_ALL_PROCESS.COMPLETED);
@@ -140,12 +146,8 @@ export const useExportService = ({
     }
   };
 
-  const drawOffScreen = async (
-    index: number,
-    imageToDraw: SkImage,
-    seekValue: number,
-  ) => {
-    const offScreen = Skia.Surface.MakeOffscreen(width, height);
+  const drawOffScreen = async (index: number, seekValue: number) => {
+    const offScreen = Skia.Surface.MakeOffscreen(width.value, height.value);
 
     if (!offScreen) {
       return;
@@ -153,30 +155,32 @@ export const useExportService = ({
 
     const canvas = offScreen.getCanvas();
 
-    const image = imageToDraw.makeNonTextureImage();
+    // const image = imageToDraw.makeNonTextureImage();
 
     const imagePaint = Skia.Paint();
     imagePaint.setAntiAlias(true);
     imagePaint.setDither(true);
 
-    canvas.drawImage(image, 0, 0, imagePaint);
+    // canvas.drawImage(image, 0, 0, imagePaint);
 
     if (template) {
       renderOffScreenTemplate(canvas, {
         currentTime: seekValue,
         sentences: sentences,
         paragraphLayoutWidth: paragraphLayoutWidth,
-        x: width * (dragPercentageX / 100),
-        y: height * (dragPercentageY / 100),
+        x: width.value * (dragPercentageX / 100),
+        y: height.value * (dragPercentageY / 100),
         customFontMgr: customFontManager,
         ...template,
-        fontSize: template.fontSize * (width / (width * scaleFactor.value)),
+        fontSize:
+          template.fontSize * (width.value / (width.value * scaleFactor.value)),
       });
     }
 
     offScreen.flush();
 
     const img = offScreen.makeImageSnapshot();
+
     await saveFrame(img, index).catch(errr => {
       console.log(errr);
     });

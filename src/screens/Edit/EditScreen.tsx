@@ -981,6 +981,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragPercentageY={dragDistancePercentageY.value}
           customFontManager={customFontMgr}
           scaleFactor={scaleFactor}
+          quality={selectedVideo.exportQuality}
+          videoURL={route.params.videoURL}
         />
       )}
     </SafeAreaView>

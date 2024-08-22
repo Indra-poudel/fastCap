@@ -10,6 +10,14 @@ export type VideosSliceState = {
 
 export type VideoId = string;
 
+export enum ExportQuality {
+  VERY_HIGH = 4,
+  HIGH = 3,
+  MEDIUM = 2,
+  LOW = 0.5,
+  STANDARD = 1,
+}
+
 export type Video = {
   id: VideoId;
   title: string;
@@ -24,4 +32,5 @@ export type Video = {
   height: number;
   width: number;
   audioUrl: string;
+  exportQuality: ExportQuality;
 };

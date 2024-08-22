@@ -32,7 +32,6 @@ export const convertVideoToMp3 = (
           console.log(completedSession.getAllLogs());
 
           if (returnCode.isValueSuccess()) {
-            console.log(`Video converted successfully: ${outputUri}`);
             resolve(outputUri); // Resolve the promise with the output URI
           } else {
             console.error(
@@ -133,7 +132,7 @@ export const saveFrames = (promiseFrames: Promise<SkImage>[]) => {
 };
 
 export const generateVideoFromFrames = async (
-  audioUrl: string,
+  videoUrl: string,
   totalDurationInMilliSeconds: number,
   videoId: string,
   onProgress: (value: number) => void,
@@ -152,14 +151,17 @@ export const generateVideoFromFrames = async (
       const inputPattern = `${RNFetchBlob.fs.dirs.CacheDir}/frame_%06d.png`; // Matches frame_000001.png, frame_000002.png, etc.
       const outputVideoPath = `${RNFetchBlob.fs.dirs.CacheDir}/${videoId}.mp4`;
 
+      // FFmpeg command to merge the video and frames with proper scaling
       const ffmpegCommand = [
         '-y', // Overwrite existing files
+        '-i',
+        videoUrl, // Input video with audio
         '-framerate',
         '30', // Frame rate for images
         '-i',
-        inputPattern, // Input image pattern
-        '-i',
-        audioUrl, // Input audio
+        inputPattern, // Input image pattern for subtitles
+        '-filter_complex',
+        '[1:v][0:v]scale2ref=iw:ih[scaled_subtitles][video];[video][scaled_subtitles]overlay=0:0', // Dynamically scale subtitle frames to video size
         '-c:v',
         'libx264', // H.264 codec for high-quality video
         '-preset',
@@ -170,14 +172,8 @@ export const generateVideoFromFrames = async (
         '15M', // High video bitrate to preserve text quality
         '-pix_fmt',
         'yuv420p', // Ensures wide compatibility across platforms
-        '-vf',
-        'scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p', // Scaling to ensure even dimensions
-        '-tune',
-        'animation', // Tune for text/graphics to preserve sharpness
         '-c:a',
-        'aac', // Audio codec
-        '-b:a',
-        '320k', // High-quality audio bitrate
+        'copy', // Keep the original audio
         '-movflags',
         '+faststart', // Optimized for web playback
         outputVideoPath, // Output video file path
