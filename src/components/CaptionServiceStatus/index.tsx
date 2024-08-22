@@ -13,6 +13,7 @@ import {GeneratedSentence} from 'utils/sentencesBuilder';
 import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {selectSelectedVideo} from 'store/videos/selector';
 import {updateVideo} from 'store/videos/slice';
+import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 type CaptionServiceStatusProps = {
   videoUrl: string;
@@ -132,26 +133,26 @@ const CaptionServiceStatus = ({
 
 const Style = StyleSheet.create({
   wrapper: {
-    padding: 24,
+    padding: scale(24),
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 32,
+    gap: verticalScale(32),
   },
   textWrapper: {
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
+    gap: verticalScale(12),
   },
   ccWrapper: {
-    padding: 12,
+    padding: scale(12),
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    borderRadius: 8,
-    width: 84,
-    height: 68,
+    gap: verticalScale(8),
+    borderRadius: scale(8),
+    width: scale(84),
+    height: verticalScale(68),
   },
 });
 

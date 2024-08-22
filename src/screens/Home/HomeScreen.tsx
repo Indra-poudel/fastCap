@@ -1,10 +1,9 @@
 import React, {useState} from 'react';
-import {StyleSheet, Text, TextInput, View} from 'react-native';
+import {StyleSheet, Text, View} from 'react-native';
 import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {selectAllVideos, selectSelectedVideo} from 'store/videos/selector';
 import Header from 'screens/Home/components/Header';
 import {useTheme} from 'theme/ThemeContext';
-import Label from 'components/label';
 import Card from 'screens/Home/components/Card';
 import {Video} from 'store/videos/type';
 import {FlashList, ListRenderItem} from '@shopify/flash-list';

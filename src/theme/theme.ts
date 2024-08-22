@@ -1,3 +1,5 @@
+import {verticalScale} from 'react-native-size-matters';
+import {scale} from 'react-native-size-matters/extend';
 import {FontWeightsType} from 'theme/type';
 
 // Centralized typography settings
@@ -41,75 +43,105 @@ const darkTheme = {
     header: {
       large: {
         fontFamily: FONTS_FAMILY.BOLD,
-        fontSize: 32,
+        fontSize: scale(32),
         fontWeight: fontWeights.bold,
-        lineHeight: 40,
+        lineHeight: verticalScale(40),
       },
       medium: {
         fontFamily: FONTS_FAMILY.BOLD,
-        fontSize: 24,
+        fontSize: scale(24),
         fontWeight: fontWeights.bold,
-        lineHeight: 32,
+        lineHeight: verticalScale(32),
       },
       small: {
         fontFamily: FONTS_FAMILY.BOLD,
-        fontSize: 18,
+        fontSize: scale(18),
         fontWeight: fontWeights.bold,
-        lineHeight: 24,
+        lineHeight: verticalScale(24),
       },
     },
     subheader: {
       large: {
         fontFamily: FONTS_FAMILY.SEMI_BOLD,
-        fontSize: 16,
+        fontSize: scale(16),
         fontWeight: fontWeights.semiBold,
-        lineHeight: 24,
+        lineHeight: verticalScale(24),
       },
       small: {
         fontFamily: FONTS_FAMILY.SEMI_BOLD,
-        fontSize: 14,
+        fontSize: scale(14),
         fontWeight: fontWeights.semiBold,
-        lineHeight: 20,
+        lineHeight: verticalScale(20),
       },
     },
     body: {
       large: {
         fontFamily: FONTS_FAMILY.REGULAR,
-        fontSize: 16,
+        fontSize: scale(16),
         fontWeight: fontWeights.regular,
-        lineHeight: 24,
+        lineHeight: verticalScale(24),
       },
       medium: {
         fontFamily: FONTS_FAMILY.REGULAR,
-        fontSize: 14,
+        fontSize: scale(14),
         fontWeight: fontWeights.regular,
-        lineHeight: 20,
+        lineHeight: verticalScale(20),
       },
       small: {
         fontFamily: FONTS_FAMILY.REGULAR,
-        fontSize: 12,
+        fontSize: scale(12),
         fontWeight: fontWeights.regular,
-        lineHeight: 16,
+        lineHeight: verticalScale(16),
       },
     },
     caption: {
       fontFamily: FONTS_FAMILY.REGULAR,
-      fontSize: 10,
+      fontSize: scale(10),
       fontWeight: fontWeights.regular,
-      lineHeight: 12,
+      lineHeight: verticalScale(12),
     },
   },
   spacing: {
-    xsmall: 4,
-    small: 8,
-    medium: 16,
-    large: 24,
-    xlarge: 32,
-    xxlarge: 48,
-    xxxlarge: 64,
-    huge: 80,
-    xhuge: 96,
-    xxhuge: 128,
+    xsmall: {
+      v: verticalScale(4),
+      h: scale(4),
+    },
+    small: {
+      v: verticalScale(8),
+      h: scale(8),
+    },
+    medium: {
+      v: verticalScale(16),
+      h: scale(16),
+    },
+    large: {
+      v: verticalScale(24),
+      h: scale(24),
+    },
+    xlarge: {
+      v: verticalScale(32),
+      h: scale(32),
+    },
+    xxlarge: {
+      v: verticalScale(48),
+      h: scale(48),
+    },
+    xxxlarge: {
+      v: verticalScale(64),
+      h: scale(64),
+    },
+    huge: {
+      v: verticalScale(80),
+      h: scale(80),
+    },
+    xhuge: {
+      v: verticalScale(96),
+      h: scale(96),
+    },
+    xxhuge: {
+      v: verticalScale(128),
+      h: scale(128),
+    },
   },
 };
 
