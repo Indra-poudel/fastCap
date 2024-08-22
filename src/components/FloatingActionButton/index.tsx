@@ -15,7 +15,7 @@ import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const ButtonBottom = 180;
+const ButtonBottom = verticalScale(180);
 
 type FloatingActionButtonViewProps = {
   onAction: (action: FLOATING_ACTION) => void;

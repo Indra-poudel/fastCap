@@ -60,11 +60,15 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type EditScreenProps = NativeStackScreenProps<RootStackParamList, SCREENS.EDIT>;
 
-const TEMPLATE_PADDING = 16;
-const SNAP = 32;
+const TEMPLATE_PADDING = scale(16);
+// scale is used in implmentaion
+const SNAP = {
+  v: verticalScale(16),
+  h: scale(16),
+};
 const CANVAS_BUTTONS_FULL_OPACITY = 0.8;
-const TIMELINE_HEIGHT = 100;
-const WITHOUT_TIMELINE_HEIGHT = 85;
+const TIMELINE_HEIGHT = verticalScale(100);
+const WITHOUT_TIMELINE_HEIGHT = verticalScale(85);
 
 const EditScreen = ({route, navigation}: EditScreenProps) => {
   const {theme} = useTheme();
@@ -444,7 +448,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       width: width,
       height: 1,
       left: 0,
-      top: SNAP + offsetY.value,
+      top: SNAP.v + offsetY.value,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
       opacity: isTopSnapLineActive.value ? 1 : 0,
@@ -455,7 +459,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     return {
       width: 1,
       height: imageShaderHeight.value,
-      left: SNAP + offsetX.value,
+      left: SNAP.h + offsetX.value,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
       opacity: isLeftSnapLineActive.value ? 1 : 0,
@@ -466,7 +470,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     return {
       width: 1,
       height: imageShaderHeight.value,
-      right: SNAP + offsetX.value,
+      right: SNAP.h + offsetX.value,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
       opacity: isRightSnapLineActive.value ? 1 : 0,
@@ -478,7 +482,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       width: width,
       height: 1,
       left: 0,
-      top: imageShaderHeight.value + offsetY.value - SNAP,
+      top: imageShaderHeight.value + offsetY.value - SNAP.v,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
       opacity: isBottomSnapLineActive.value ? 1 : 0,
@@ -516,16 +520,16 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       );
 
       // Top snap
-      if (Math.abs(dragDistanceY.value + e.changeY - SNAP) <= 30) {
+      if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) <= 30) {
         isTopSnapLineActive.value = true;
       }
 
-      if (Math.abs(dragDistanceY.value + e.changeY - SNAP) <= 5) {
+      if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) <= 5) {
         // dragDistanceY.value = withTiming(SNAP, {
         //   duration: 10,
         // });
       }
-      if (Math.abs(dragDistanceY.value + e.changeY - SNAP) >= 30) {
+      if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) >= 30) {
         isTopSnapLineActive.value = false;
       }
       // end of top snap
@@ -536,7 +540,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) <= 30
       ) {
         isLeftSnapLineActive.value = true;
@@ -547,11 +551,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) <= 5
       ) {
         dragDistanceX.value = withTiming(
-          templateCurrentWidth.value / 2 + SNAP,
+          templateCurrentWidth.value / 2 + SNAP.h,
           {
             duration: 10,
           },
@@ -562,7 +566,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) >= 30
       ) {
         isLeftSnapLineActive.value = false;
@@ -575,7 +579,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) <= 30
       ) {
         isLeftSnapLineActive.value = true;
@@ -586,11 +590,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) <= 5
       ) {
         dragDistanceX.value = withTiming(
-          templateCurrentWidth.value / 2 + SNAP,
+          templateCurrentWidth.value / 2 + SNAP.h,
           {
             duration: 10,
           },
@@ -601,7 +605,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value -
             templateCurrentWidth.value / 2 +
             e.changeX -
-            SNAP,
+            SNAP.h,
         ) >= 30
       ) {
         isLeftSnapLineActive.value = false;
@@ -613,7 +617,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         Math.abs(
           width -
             offsetX.value -
-            SNAP -
+            SNAP.h -
             (dragDistanceX.value + templateCurrentWidth.value / 2 + e.changeX),
         ) <= 30
       ) {
@@ -624,12 +628,12 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         Math.abs(
           width -
             offsetX.value -
-            SNAP -
+            SNAP.h -
             (dragDistanceX.value + templateCurrentWidth.value / 2 + e.changeX),
         ) <= 5
       ) {
         dragDistanceX.value = withTiming(
-          width - offsetX.value - SNAP - templateCurrentWidth.value / 2,
+          width - offsetX.value - SNAP.h - templateCurrentWidth.value / 2,
           {
             duration: 10,
           },
@@ -640,7 +644,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           dragDistanceX.value +
             templateCurrentWidth.value / 2 +
             e.changeX +
-            SNAP,
+            SNAP.h,
         ) <=
         width - offsetX.value - 30
       ) {
@@ -652,7 +656,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       if (
         Math.abs(
           imageShaderHeight.value -
-            SNAP -
+            SNAP.v -
             (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
         ) <= 30
       ) {
@@ -662,12 +666,12 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       if (
         Math.abs(
           imageShaderHeight.value -
-            SNAP -
+            SNAP.v -
             (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
         ) <= 5
       ) {
         dragDistanceY.value = withTiming(
-          imageShaderHeight.value - SNAP - templateCurrentHeight.value,
+          imageShaderHeight.value - SNAP.v - templateCurrentHeight.value,
           {
             duration: 10,
           },
@@ -676,7 +680,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       if (
         Math.abs(
           imageShaderHeight.value -
-            SNAP -
+            SNAP.v -
             (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
         ) >= 30
       ) {
