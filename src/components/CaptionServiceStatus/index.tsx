@@ -41,7 +41,7 @@ const CaptionServiceStatus = ({
     audioUrl,
     startTranscriptionProcess,
   } = useTranscriptionService({
-    isMock: true,
+    isMock: false,
     maxWords,
   });
 

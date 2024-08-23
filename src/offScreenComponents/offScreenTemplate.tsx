@@ -1,5 +1,5 @@
+/* eslint-disable react/react-in-jsx-scope */
 import {
-  SkCanvas,
   SkTextShadow,
   TextDirection,
   Skia,
@@ -8,11 +8,14 @@ import {
   TextAlign,
   PaintStyle,
   SkParagraph,
-  rect,
-  rrect,
   StrokeCap,
   StrokeJoin,
-  ClipOp,
+  Group,
+  drawAsImage,
+  Paragraph,
+  Paint,
+  Shadow,
+  RoundedRect,
 } from '@shopify/react-native-skia';
 import {CustomParagraphProps} from 'components/Template';
 import {isSharedValue} from 'react-native-reanimated';
@@ -35,7 +38,8 @@ const defaultShadow: SkTextShadow = {
 };
 
 export const renderOffScreenTemplate = (
-  canvas: SkCanvas,
+  width: number,
+  height: number,
   {
     currentTime: _currentTime,
     sentences,
@@ -43,13 +47,6 @@ export const renderOffScreenTemplate = (
     paragraphLayoutWidth,
     x: _x,
     y: _y,
-
-    setTemplateHeight,
-    setTemplateWidth,
-    setX,
-    setY,
-
-    notHideSentenceBetweenSentenceInterval,
 
     // THEME
     color,
@@ -366,48 +363,69 @@ export const renderOffScreenTemplate = (
     },
   };
 
-  //   x={backgroundX}
-  //   y={backgroundY}
-  //   width={backgroundWidth}
-  //   height={backgroundHeight}
-  //   r={sentenceBackgroundRadius}
-  //   color={sentenceBackgroundColor}
-  //   opacity={sentenceBackgroundOpacity}
-  //   origin={{
-  //     x: 0,
-  //     y: 0,
-  //   }
-  // }
+  const image = drawAsImage(
+    <>
+      {sentenceBackgroundColor && (
+        <RoundedRect
+          antiAlias={true}
+          dither={true}
+          x={layoutData.backgroundX}
+          y={layoutData.backgroundY}
+          width={layoutData.backgroundWidth}
+          height={layoutData.backgroundHeight}
+          r={sentenceBackgroundRadius}
+          color={sentenceBackgroundColor}
+          opacity={sentenceBackgroundOpacity}
+          origin={{
+            x: 0,
+            y: 0,
+          }}
+        />
+      )}
 
-  const backgroundPaint = Skia.Paint();
-  backgroundPaint.setAntiAlias(true);
-  backgroundPaint.setDither(true);
-  backgroundPaint.setColor(Skia.Color(sentenceBackgroundColor));
-  backgroundPaint.setAlphaf(sentenceBackgroundOpacity);
-
-  // const clipPaint = Skia.Paint();
-  // clipPaint.setAntiAlias(true);
-  // clipPaint.setDither(true);
-  // clipPaint.setColor(Skia.Color('transparent'));
-
-  const rec = rect(
-    layoutData.backgroundX,
-    layoutData.backgroundY,
-    layoutData.backgroundWidth,
-    layoutData.backgroundHeight,
+      <Group
+        antiAlias={true}
+        layer={
+          <Paint antiAlias={true} dither={true}>
+            {sentenceShadow && (
+              <Shadow
+                blur={sentenceShadow.blur}
+                dx={sentenceShadow.dx}
+                dy={sentenceShadow.dy}
+                color={Skia.Color(sentenceShadow.color)}
+              />
+            )}
+          </Paint>
+        }>
+        {strokeWidth !== 0 && (
+          <Paragraph
+            paragraph={outlineParagraph}
+            x={layoutData.minX}
+            y={layoutData.minY}
+            width={paragraphLayoutWidth.value}
+            style={'stroke'}
+            strokeWidth={strokeWidth}
+            antiAlias={true}
+            dither={true}
+          />
+        )}
+        <Paragraph
+          paragraph={paragraph}
+          x={layoutData.minX}
+          y={layoutData.minY}
+          width={paragraphLayoutWidth.value}
+          antiAlias={true}
+          dither={true}
+        />
+      </Group>
+    </>,
+    {
+      // x: 0,
+      // y: 0,
+      width: width,
+      height: height,
+    },
   );
-  const rrec = rrect(rec, sentenceBackgroundRadius, sentenceBackgroundRadius);
 
-  canvas.drawRRect(rrec, backgroundPaint);
-  outlineParagraph?.paint(canvas, layoutData.minX, layoutData.minY);
-  paragraph?.paint(canvas, layoutData.minX, layoutData.minY);
-
-  // const clipRect = rect(
-  //   layoutData.backgroundX,
-  //   layoutData.backgroundY,
-  //   100,
-  //   layoutData.backgroundHeight,
-  // );
-
-  // canvas.clipRect(clipRect, ClipOp.Difference, true);
+  return image;
 };

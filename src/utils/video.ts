@@ -20,9 +20,9 @@ export const convertVideoToMp3 = (
         onProgress(progress);
       });
 
-      const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/${outputFileName}.aac`;
+      const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/${outputFileName}.mp3`;
 
-      const ffmpegCommand = `-y -i ${videoUri} -codec:a aac -b:a 320k -map a ${outputUri}`;
+      const ffmpegCommand = `-y -i ${videoUri} -codec:a libmp3lame -map a ${outputUri}`;
 
       // Start the FFmpeg command asynchronously
       const sessionPromise = FFmpegKit.executeAsync(
@@ -161,7 +161,7 @@ export const generateVideoFromFrames = async (
         '-i',
         inputPattern, // Input image pattern for subtitles
         '-filter_complex',
-        '[1:v][0:v]scale2ref=iw:ih[scaled_subtitles][video];[video][scaled_subtitles]overlay=0:0', // Dynamically scale subtitle frames to video size
+        '[1:v]scale=iw:ih:flags=lanczos[scaled_subtitles];[0:v][scaled_subtitles]overlay=0:0', // Dynamically scale subtitle frames to video size
         '-c:v',
         'libx264', // H.264 codec for high-quality video
         '-preset',

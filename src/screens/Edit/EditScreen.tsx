@@ -987,7 +987,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
       {isExporting && selectedTemplate && selectedVideo?.audioUrl && (
         <ExportVideo
-          video={video}
+          duration={duration}
+          frameRate={framerate}
           onCancel={handleCancelVideoExport}
           width={route.params.width}
           height={route.params.height}

@@ -18,6 +18,12 @@ const initialTemplatesState: TemplatesSliceState = {
       sentenceBackgroundPadding: 8,
       maxWords: 5,
       activeColor: '#c6fd78',
+      sentenceShadow: {
+        dx: 0,
+        dy: 0,
+        blur: 5,
+        color: '#000000',
+      },
     },
     ['2']: {
       id: '2',

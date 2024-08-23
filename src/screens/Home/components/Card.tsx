@@ -48,8 +48,8 @@ const Card = ({
       onLongPress={onLongPress}>
       <Image
         resizeMode="cover"
-        width={172}
-        height={163}
+        width={scale(172)}
+        height={verticalScale(163)}
         source={{
           uri: imageURL,
         }}
@@ -114,7 +114,7 @@ const style = StyleSheet.create({
     opacity: 0.7,
     position: 'absolute',
     left: scale(10),
-    bottom: verticalScale(60),
+    bottom: verticalScale(80),
     padding: scale(4),
   },
 });

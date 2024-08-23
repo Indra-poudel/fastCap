@@ -105,6 +105,7 @@ const FloatingActionButton = () => {
       mediaType: 'video',
       videoQuality: 'high',
       selectionLimit: 1,
+      assetRepresentationMode: 'compatible',
     })
       .then(response => {
         handleAddVideoObjectToStore(response);
