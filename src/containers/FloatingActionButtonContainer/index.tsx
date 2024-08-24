@@ -93,6 +93,7 @@ const FloatingActionButton = () => {
           height: response.assets[0].height,
           audioUrl: '',
           exportQuality: ExportQuality.STANDARD,
+          rotation: 0,
         }),
       );
 
@@ -100,19 +101,16 @@ const FloatingActionButton = () => {
     }
   };
 
-  const handleSelectVideoFromGallery = () => {
+  const handleSelectVideoFromGallery = async () => {
     launchImageLibrary({
       mediaType: 'video',
       videoQuality: 'high',
       selectionLimit: 1,
-      assetRepresentationMode: 'compatible',
+      assetRepresentationMode: 'current',
     })
       .then(response => {
         handleAddVideoObjectToStore(response);
-        console.log('Response', response);
-
         setOpen(prev => !prev);
-
         response.assets &&
           response?.assets[0].uri &&
           response.assets[0].width &&

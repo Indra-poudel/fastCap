@@ -1,5 +1,10 @@
 import {ImageFormat, SkImage} from '@shopify/react-native-skia';
-import {FFmpegKit, FFmpegKitConfig, Level} from 'ffmpeg-kit-react-native';
+import {
+  FFmpegKit,
+  FFmpegKitConfig,
+  FFprobeKit,
+  Level,
+} from 'ffmpeg-kit-react-native';
 import RNFetchBlob from 'rn-fetch-blob';
 
 FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
@@ -53,42 +58,62 @@ export const convertVideoToMp3 = (
   });
 };
 
-export const generateThumbnail = (
+export const generateThumbnail = async (
   videoUri: string,
   id: string,
-): Promise<string> => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/${id}.jpg`;
+): Promise<{
+  thumbnailURL: string;
+  videoInfo: VideoInfo;
+}> => {
+  try {
+    const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/${id}.png`;
 
-      // Remove the existing file if it exists
-      try {
-        await RNFetchBlob.fs.unlink(outputUri);
-      } catch (error) {
-        // Ignore the error if the file does not exist
+    // Remove the existing file if it exists
+    try {
+      await RNFetchBlob.fs.unlink(outputUri);
+    } catch (error) {
+      // Ignore the error if the file does not exist
+    }
+
+    // Get correct video dimensions and rotation
+    const videoInfo = await getCorrectVideoDimensions(videoUri);
+
+    if (videoInfo) {
+      const {rotation} = videoInfo;
+
+      // Adjust the rotation for FFmpeg thumbnail generation
+      let rotateFilter = '';
+      if (rotation === 90) {
+        rotateFilter = 'transpose=1';
+      } else if (rotation === 180) {
+        rotateFilter = 'transpose=2,transpose=2'; // Rotate 180 degrees
+      } else if (rotation === 270 || rotation === -90) {
+        rotateFilter = 'transpose=2';
       }
 
-      const command = `-y -i ${videoUri} -ss 00:00:00 -vframes 1 ${outputUri}`;
+      const command = `-y -i ${videoUri} -ss 00:00:00 -vframes 1 ${
+        rotateFilter ? `-vf "${rotateFilter}"` : ''
+      } ${outputUri}`;
 
       // Execute FFmpeg command to generate the thumbnail
-      FFmpegKit.execute(command)
-        .then(async session => {
-          const returnCode = await session.getReturnCode();
+      const session = await FFmpegKit.execute(command);
+      const returnCode = await session.getReturnCode();
 
-          if (returnCode.isValueSuccess()) {
-            resolve(`file://${outputUri}`);
-          } else {
-            reject(new Error('FFmpeg command failed'));
-          }
-        })
-        .catch(error => {
-          reject(error);
-        });
-    } catch (error) {
-      console.error('Error generating thumbnail:', error);
-      reject(error); // Reject the promise with the caught error
+      if (returnCode.isValueSuccess()) {
+        return {
+          thumbnailURL: `file://${outputUri}`,
+          videoInfo: videoInfo,
+        };
+      } else {
+        throw new Error('FFmpeg command failed');
+      }
+    } else {
+      throw new Error('Failed to get video dimensions');
     }
-  });
+  } catch (error) {
+    console.error('Error generating thumbnail:', error);
+    throw error;
+  }
 };
 
 export const saveFrames = (promiseFrames: Promise<SkImage>[]) => {
@@ -222,4 +247,46 @@ export const saveFrame = (image: SkImage, index: number): Promise<string> => {
       reject(error); // Reject with the caught error
     }
   });
+};
+
+type VideoInfo = {
+  width: number;
+  height: number;
+  rotation: number;
+};
+
+const getCorrectVideoDimensions = async (
+  videoUrl: string,
+): Promise<{width: number; height: number; rotation: number} | null> => {
+  try {
+    const session = await FFprobeKit.getMediaInformation(videoUrl);
+    const information = await session.getMediaInformation();
+
+    if (information !== undefined) {
+      const videoStreams = information.getStreams();
+
+      for (const stream of videoStreams) {
+        if (stream.getType() === 'video') {
+          const width = stream.getWidth();
+          const height = stream.getHeight();
+          const properties = stream.getAllProperties();
+
+          // Extract rotation from side_data_list if available
+          const rotation =
+            properties.side_data_list?.find(
+              (sideData: {side_data_type: string; rotation?: number}) =>
+                sideData.side_data_type === 'Display Matrix',
+            )?.rotation || 0;
+
+          return {width, height, rotation};
+        }
+      }
+    } else {
+      console.error('Unable to retrieve media information.');
+    }
+  } catch (error) {
+    console.error('Error retrieving video dimensions and rotation:', error);
+  }
+
+  return null;
 };

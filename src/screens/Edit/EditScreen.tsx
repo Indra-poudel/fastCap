@@ -4,6 +4,8 @@ import {
   Fill,
   ImageShader,
   Skia,
+  fitbox,
+  rect,
   useCanvasRef,
   useFonts,
   useVideo,
@@ -16,6 +18,7 @@ import {languages_best} from 'constants/languages';
 import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
 import React, {useEffect, useState} from 'react';
 import {
+  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
@@ -82,6 +85,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const ref = useCanvasRef();
   const canvasSize = useSharedValue({width: 0, height: 0});
 
+  const [isThumbnailGenerating, setThumbnailGenerate] = useState(true);
+
   // Video
   const videoURL = route.params.videoURL;
   const paused = useSharedValue(true);
@@ -117,15 +122,12 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   const dispatch = useAppDispatch();
 
-  const {currentFrame, currentTime, framerate, duration, video} = useVideo(
-    videoURL,
-    {
-      paused: paused,
-      volume: volume,
-      looping: true,
-      seek: seek,
-    },
-  );
+  const {currentFrame, currentTime, framerate, duration} = useVideo(videoURL, {
+    paused: paused,
+    volume: volume,
+    looping: true,
+    seek: seek,
+  });
 
   const frameDurationMs = 1000 / framerate;
 
@@ -161,6 +163,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const assignThumbnailImageToCurrentFrame = (url: string) => {
     Skia.Data.fromURI(url).then(data => {
       const image = Skia.Image.MakeImageFromEncoded(data);
+
+      console.log('Thumbnail', image?.getImageInfo());
       currentFrame.value = image;
     });
   };
@@ -175,23 +179,29 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     dispatch(updateVideo(_video));
   };
 
+  console.log(selectedVideo?.rotation);
+
   useEffect(() => {
+    seek.value = 10;
     if (selectedVideo && !selectedVideo?.thumbnailUrl) {
       generateThumbnail(videoURL, selectedVideo.id)
-        .then(async url => {
-          assignThumbnailImageToCurrentFrame(url);
+        .then(async thumbnailInfo => {
+          assignThumbnailImageToCurrentFrame(thumbnailInfo.thumbnailURL);
 
           const updatedVideo: Video = {
             ...selectedVideo,
-            thumbnailUrl: url,
+            thumbnailUrl: thumbnailInfo.thumbnailURL,
+            rotation: thumbnailInfo.videoInfo.rotation,
           };
           updateVideoObjectToStore(updatedVideo);
+          setThumbnailGenerate(false);
         })
         .catch(error => {
           console.log(error);
         });
     } else if (selectedVideo && selectedVideo.thumbnailUrl) {
       assignThumbnailImageToCurrentFrame(selectedVideo.thumbnailUrl);
+      setThumbnailGenerate(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedVideo, videoURL]);
@@ -332,35 +342,73 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     return height - heightOtherThanCanvas.value;
   }, [heightOtherThanCanvas, height]);
 
+  // Normalize rotation to be between 0 and 360 degrees
+  const normalizedRotation = useDerivedValue(() => {
+    return (((selectedVideo?.rotation || 0) % 360) + 360) % 360;
+  }, [selectedVideo]);
+
+  // Adjust the scale calculations based on rotation
   const scaleWidth = useDerivedValue(() => {
+    const isRotated =
+      normalizedRotation.value === 90 || normalizedRotation.value === 270;
+
+    // Swap width and height if the video is rotated by 90 or 270 degrees
     const targetWidth = width;
-    const originalWidth = route.params.width;
+    const originalWidth = isRotated ? route.params.height : route.params.width;
 
     const _scaleWidth = targetWidth / originalWidth;
 
     return _scaleWidth;
-  }, [isExporting]);
+  }, [
+    isExporting,
+    imageShaderHeight,
+    width,
+    route.params.width,
+    route.params.height,
+    normalizedRotation,
+  ]);
 
   const scaleHeight = useDerivedValue(() => {
+    const isRotated =
+      normalizedRotation.value === 90 || normalizedRotation.value === 270;
+
     const targetHeight = imageShaderHeight.value;
-    const originalHeight = route.params.height;
+    const originalHeight = isRotated ? route.params.width : route.params.height;
 
     const _scaleHeight = targetHeight / originalHeight;
 
     return _scaleHeight;
-  }, [imageShaderHeight]);
+  }, [
+    imageShaderHeight,
+    width,
+    route.params.width,
+    route.params.height,
+    normalizedRotation,
+  ]);
 
   const scaleFactor = useDerivedValue(() => {
     return Math.min(scaleWidth.value, scaleHeight.value);
   }, [scaleHeight, scaleWidth]);
 
   const newWidth = useDerivedValue(() => {
-    return route.params.width * scaleFactor.value;
-  }, [route.params.width, scaleFactor]);
+    const normalizedRotation =
+      (((selectedVideo?.rotation || 0) % 360) + 360) % 360;
+
+    const isRotated = normalizedRotation === 90 || normalizedRotation === 270;
+    const adjustedWidth = isRotated ? route.params.height : route.params.width;
+
+    return adjustedWidth * scaleFactor.value;
+  }, [scaleFactor, selectedVideo]);
 
   const newHeight = useDerivedValue(() => {
-    return route.params.height * scaleFactor.value;
-  }, [route.params.height, scaleFactor]);
+    const normalizedRotation =
+      (((selectedVideo?.rotation || 0) % 360) + 360) % 360;
+
+    const isRotated = normalizedRotation === 90 || normalizedRotation === 270;
+    const adjustedHeight = isRotated ? route.params.width : route.params.height;
+
+    return adjustedHeight * scaleFactor.value;
+  }, [scaleFactor, selectedVideo]);
 
   const offsetX = useDerivedValue(() => {
     return (width - newWidth.value) / 2;
@@ -369,15 +417,6 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const offsetY = useDerivedValue(() => {
     return (imageShaderHeight.value - newHeight.value) / 2;
   }, [imageShaderHeight, newHeight]);
-
-  const imageShaderTransform = useDerivedValue(() => {
-    return [
-      {translateX: offsetX.value},
-      {translateY: offsetY.value},
-      {scaleX: scaleFactor.value},
-      {scaleY: scaleFactor.value},
-    ];
-  }, [scaleFactor]);
 
   const paragraphLayoutWidth = useDerivedValue(() => {
     const occupiedWidth = route.params.width * scaleFactor.value;
@@ -752,6 +791,22 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     return route.params.width - TEMPLATE_PADDING * 2;
   }, [route.params.width]);
 
+  const transform = useDerivedValue(() => {
+    const src = rect(0, 0, route.params.width, route.params.height);
+    const dst = rect(
+      offsetX.value,
+      offsetY.value,
+      newWidth.value,
+      newHeight.value,
+    );
+
+    const rotation =
+      !!selectedVideo && selectedVideo.rotation ? -selectedVideo.rotation : 0;
+
+    // @ts-ignore
+    return fitbox('contain', src, dst, rotation);
+  }, [newWidth, newHeight, selectedVideo?.rotation]);
+
   return (
     <SafeAreaView
       style={[
@@ -765,7 +820,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           <Fill>
             <ImageShader
               image={currentFrame}
-              transform={imageShaderTransform}
+              transform={transform}
+              // transform={imageShaderTransform}
               height={route.params.height}
               width={route.params.width}
             />
@@ -855,19 +911,21 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           )}
         </View>
 
-        <AnimatedPressable
-          onPress={handlePlayPause}
-          style={[
-            Styles.playButton,
-            playButtonsAnimatedStyle,
-            {
-              backgroundColor: theme.colors.black4,
-              left: width / 2 - scale(40),
-              top: height / 2 - verticalScale(40),
-            },
-          ]}>
-          <Icon name={'play'} size={scale(52)} color={theme.colors.primary} />
-        </AnimatedPressable>
+        {!isThumbnailGenerating && (
+          <AnimatedPressable
+            onPress={handlePlayPause}
+            style={[
+              Styles.playButton,
+              playButtonsAnimatedStyle,
+              {
+                backgroundColor: theme.colors.black4,
+                left: width / 2 - scale(40),
+                top: height / 2 - verticalScale(40),
+              },
+            ]}>
+            <Icon name={'play'} size={scale(52)} color={theme.colors.primary} />
+          </AnimatedPressable>
+        )}
 
         <GestureDetector gesture={composed}>
           <Animated.View style={[draggableStyle]} />
@@ -1004,11 +1062,26 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           videoURL={route.params.videoURL}
         />
       )}
+
+      {isThumbnailGenerating && (
+        <View style={Styles.flexCenter}>
+          <ActivityIndicator shouldRasterizeIOS />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
 
 const Styles = StyleSheet.create({
+  flexCenter: {
+    flex: 1,
+    position: 'absolute',
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
   container: {
     flex: 1,
   },

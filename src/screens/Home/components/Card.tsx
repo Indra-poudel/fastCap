@@ -20,6 +20,7 @@ type CardType = {
   onLongPress?: ((event: GestureResponderEvent) => void) | null | undefined;
   duration: number;
   createdAt: string;
+  rotation: number;
 };
 
 const Card = ({
@@ -29,6 +30,7 @@ const Card = ({
   duration,
   createdAt,
   name,
+  rotation,
 }: CardType) => {
   const {theme} = useTheme();
 
@@ -46,15 +48,32 @@ const Card = ({
       style={[style.wrapper]}
       onPress={onPress}
       onLongPress={onLongPress}>
-      <Image
-        resizeMode="cover"
-        width={scale(172)}
-        height={verticalScale(163)}
-        source={{
-          uri: imageURL,
-        }}
-        style={[style.image]}
-      />
+      <View
+        style={[
+          {
+            width: scale(172),
+            height: verticalScale(163),
+            backgroundColor: theme.colors.grey5,
+          },
+          style.overflowHidden,
+          style.imageWrapper,
+        ]}>
+        <Image
+          width={scale(172)}
+          height={verticalScale(163)}
+          resizeMode="center"
+          source={{
+            uri: imageURL,
+          }}
+          style={[
+            style.image,
+            {
+              transform: [{rotate: `${-rotation}deg`}],
+            },
+          ]}
+        />
+      </View>
+
       <View
         style={[
           {
@@ -97,6 +116,14 @@ const Card = ({
 };
 
 const style = StyleSheet.create({
+  overflowHidden: {
+    overflow: 'hidden',
+  },
+
+  imageWrapper: {
+    borderRadius: scale(8),
+  },
+
   image: {
     borderRadius: scale(8),
     marginBottom: verticalScale(8),

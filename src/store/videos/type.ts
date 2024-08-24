@@ -31,6 +31,7 @@ export type Video = {
   thumbnailUrl?: string;
   height: number;
   width: number;
+  rotation: number;
   audioUrl: string;
   exportQuality: ExportQuality;
 };
