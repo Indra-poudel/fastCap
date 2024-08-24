@@ -62,7 +62,7 @@ const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
               },
               Style.percentage,
             ]}>
-            {`${stepProgress.toFixed(0)}%`}
+            {`${stepProgress.toFixed(2)}%`}
           </Text>
 
           <View style={[Style.textWrapper]}>

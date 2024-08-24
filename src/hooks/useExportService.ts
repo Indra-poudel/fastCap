@@ -2,7 +2,11 @@ import {
   CameraRoll,
   PhotoIdentifier,
 } from '@react-native-camera-roll/camera-roll';
-import {SkTypefaceFontProvider, Skia, Video} from '@shopify/react-native-skia';
+import {
+  BlendMode,
+  SkTypefaceFontProvider,
+  Skia,
+} from '@shopify/react-native-skia';
 import {useState, useRef, useEffect} from 'react';
 import {InteractionManager} from 'react-native';
 import uuid from 'react-native-uuid';
@@ -10,7 +14,7 @@ import {generateVideoFromFrames, saveFrame} from 'utils/video';
 import {Template as TemplateState} from 'store/templates/type';
 import {renderOffScreenTemplate} from 'offScreenComponents/offScreenTemplate';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
-import {SharedValue, useDerivedValue} from 'react-native-reanimated';
+import {SharedValue} from 'react-native-reanimated';
 import {ExportQuality} from 'store/videos/type';
 
 export enum EXPORT_STEPS {
@@ -38,8 +42,9 @@ export type ExportServiceProps = {
   dragPercentageY: number;
   customFontManager: SkTypefaceFontProvider | null;
   scaleFactor: SharedValue<number>;
-  video: Video;
   quality: ExportQuality;
+  duration: number;
+  frameRate: number;
 };
 
 export const useExportService = ({
@@ -52,8 +57,9 @@ export const useExportService = ({
   dragPercentageY,
   customFontManager,
   scaleFactor,
-  video,
   quality,
+  frameRate,
+  duration,
   videoURL,
 }: ExportServiceProps) => {
   const [currentStep, setCurrentStep] = useState(EXPORT_STEPS.RENDER_FRAMES);
@@ -67,18 +73,6 @@ export const useExportService = ({
 
   const isMounted = useRef(true);
 
-  const width = useDerivedValue(() => {
-    return _width * quality;
-  }, []);
-
-  const height = useDerivedValue(() => {
-    return _height * quality;
-  }, []);
-
-  const paragraphLayoutWidth = useDerivedValue(() => {
-    return _paragraphLayoutWidth.value * quality;
-  }, []);
-
   useEffect(() => {
     return () => {
       isMounted.current = false;
@@ -86,15 +80,9 @@ export const useExportService = ({
   }, []);
 
   const startExportProcess = async () => {
-    video.setVolume(0);
-
-    const duration = video.duration();
-
-    const frameRate = video.framerate();
     const seekInterval = 1000 / frameRate;
-    const totalDuration = video.duration();
 
-    const totalFrames = Math.floor(totalDuration / seekInterval);
+    const totalFrames = Math.floor(duration / seekInterval);
 
     // Using InteractionManager to optimize the process
     InteractionManager.runAfterInteractions(async () => {
@@ -113,7 +101,7 @@ export const useExportService = ({
       }
 
       if (isMounted.current) {
-        await generateAndSave(duration);
+        await generateAndSave();
       }
     });
   };
@@ -122,13 +110,14 @@ export const useExportService = ({
     setStepProgress(value);
   };
 
-  const generateAndSave = async (duration: number) => {
+  const generateAndSave = async () => {
     try {
       setCurrentStep(EXPORT_STEPS.EXPORTING);
       const videoPath = await generateVideoFromFrames(
         videoURL,
         duration,
         uuid.v4().toString(),
+        frameRate.toString(),
         onProgress,
       );
       setStepProgress(100);
@@ -147,46 +136,30 @@ export const useExportService = ({
   };
 
   const drawOffScreen = async (index: number, seekValue: number) => {
-    const offScreen = Skia.Surface.MakeOffscreen(width.value, height.value);
-
-    if (!offScreen) {
-      return;
-    }
-
-    const canvas = offScreen.getCanvas();
-
-    // const image = imageToDraw.makeNonTextureImage();
-
     const imagePaint = Skia.Paint();
     imagePaint.setAntiAlias(true);
     imagePaint.setDither(true);
-
-    // canvas.drawImage(image, 0, 0, imagePaint);
+    imagePaint.setBlendMode(BlendMode.SrcOut);
 
     if (template) {
-      renderOffScreenTemplate(canvas, {
+      const image = renderOffScreenTemplate(_width, _height, {
         currentTime: seekValue,
         sentences: sentences,
-        paragraphLayoutWidth: paragraphLayoutWidth,
-        x: width.value * (dragPercentageX / 100),
-        y: height.value * (dragPercentageY / 100),
+        paragraphLayoutWidth: _paragraphLayoutWidth,
+        x: _width * (dragPercentageX / 100),
+        y: _height * (dragPercentageY / 100),
         customFontMgr: customFontManager,
         ...template,
-        fontSize:
-          template.fontSize * (width.value / (width.value * scaleFactor.value)),
+        fontSize: (template.fontSize * _width) / (_width * scaleFactor.value),
       });
+
+      if (image) {
+        await saveFrame(image, index).catch(errr => {
+          console.log(errr);
+        });
+        image.dispose();
+      }
     }
-
-    offScreen.flush();
-
-    const img = offScreen.makeImageSnapshot();
-
-    await saveFrame(img, index).catch(errr => {
-      console.log(errr);
-    });
-    canvas.clear(Skia.Color('transparent'));
-    img.dispose();
-    offScreen.dispose();
   };
 
   return {

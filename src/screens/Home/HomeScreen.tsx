@@ -92,6 +92,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         createdAt={item.createdAt}
         onPress={() => handleClickVideoCard(item)}
         onLongPress={() => onLongPress(item)}
+        rotation={item.rotation}
       />
     );
   };
