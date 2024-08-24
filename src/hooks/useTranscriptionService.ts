@@ -99,7 +99,6 @@ export const useTranscriptionService = ({
             totalDurationInMilliSeconds,
             setStepProgress,
           );
-          console.log('mp3 uri', mp3Uri);
           if (!isMounted.current) {
             return;
           }

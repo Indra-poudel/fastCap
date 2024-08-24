@@ -117,6 +117,7 @@ export const useExportService = ({
         videoURL,
         duration,
         uuid.v4().toString(),
+        frameRate.toString(),
         onProgress,
       );
       setStepProgress(100);

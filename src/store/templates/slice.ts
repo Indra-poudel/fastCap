@@ -81,7 +81,6 @@ const templatesSlice = createSlice({
     addTemplate: (state, action: PayloadAction<Template>) => {
       const template = action.payload;
       state.byId[template.id] = template;
-      console.log('id');
       state.allIds.unshift(template.id);
     },
     removeTemplate: (state, action: PayloadAction<TemplateId>) => {

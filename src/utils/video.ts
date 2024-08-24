@@ -160,6 +160,7 @@ export const generateVideoFromFrames = async (
   videoUrl: string,
   totalDurationInMilliSeconds: number,
   videoId: string,
+  framerate: string,
   onProgress: (value: number) => void,
 ) => {
   return new Promise<string>((resolve, reject) => {
@@ -182,7 +183,7 @@ export const generateVideoFromFrames = async (
         '-i',
         videoUrl, // Input video with audio
         '-framerate',
-        '30', // Frame rate for images
+        framerate, // Frame rate for images
         '-i',
         inputPattern, // Input image pattern for subtitles
         '-filter_complex',

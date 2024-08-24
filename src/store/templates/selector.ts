@@ -16,7 +16,6 @@ export const selectTemplateForSelectedVideo = createSelector(
 export const selectAllTemplates = createSelector(
   selectTemplatesState,
   templateState => {
-    console.log(templateState);
     return templateState.allIds.map(id => templateState.byId[id]);
   },
 );

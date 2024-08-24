@@ -1,5 +1,5 @@
 import Interval from 'components/Timeline/Interval';
-import React, {useEffect, useMemo} from 'react';
+import React, {useMemo} from 'react';
 import {View, useWindowDimensions} from 'react-native';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
@@ -7,7 +7,6 @@ import Animated, {
   SlideInRight,
   useAnimatedReaction,
   useAnimatedStyle,
-  useDerivedValue,
   useSharedValue,
 } from 'react-native-reanimated';
 import {useTheme} from 'theme/ThemeContext';
@@ -24,24 +23,28 @@ type TimelineProps = {
   sentences: GeneratedSentence[];
 };
 
-const frameRate = 30;
 const framesPerInterval = 10;
-const frameDurationMs = 1000 / frameRate;
-const intervalDurationMs = frameDurationMs * framesPerInterval;
 const widthPerMs = 0.5;
-const widthPerInterval = intervalDurationMs * widthPerMs;
-const widthPerFrame = widthPerInterval / framesPerInterval;
 
 const Timeline = ({
   currentTime,
   seek,
   totalDuration: totalVideoDuration,
   height,
+  frameRate,
 }: TimelineProps) => {
+  const frameDurationMs = useMemo(() => {
+    return 1000 / frameRate;
+  }, [frameRate]);
+
+  const intervalDurationMs = frameDurationMs * framesPerInterval;
+  const widthPerInterval = intervalDurationMs * widthPerMs;
+  const widthPerFrame = widthPerInterval / framesPerInterval;
+
   // Hacky way to fix gesture handler while reach at last.
   const totalDuration = useMemo(() => {
     return totalVideoDuration - frameDurationMs * 2;
-  }, [totalVideoDuration]);
+  }, [frameDurationMs, totalVideoDuration]);
 
   const totalWidth = useMemo(() => {
     return totalDuration * widthPerMs;
@@ -49,17 +52,17 @@ const Timeline = ({
 
   const numberOfIntervals = useMemo(() => {
     return Math.floor(totalDuration / intervalDurationMs);
-  }, [totalDuration]);
+  }, [intervalDurationMs, totalDuration]);
 
   const partialIntervalWidth = useMemo(() => {
     return (totalDuration % intervalDurationMs) * widthPerMs;
-  }, [totalDuration]);
+  }, [intervalDurationMs, totalDuration]);
 
   // Calculate frames in the last partial interval
 
   const lastIntervalFrames = useMemo(() => {
     return Math.floor((totalDuration % intervalDurationMs) / frameDurationMs);
-  }, [totalDuration]);
+  }, [frameDurationMs, intervalDurationMs, totalDuration]);
 
   const {width} = useWindowDimensions();
   const {theme} = useTheme();
