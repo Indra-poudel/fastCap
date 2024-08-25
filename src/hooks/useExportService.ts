@@ -6,6 +6,7 @@ import {
   BlendMode,
   SkTypefaceFontProvider,
   Skia,
+  rect,
 } from '@shopify/react-native-skia';
 import {useState, useRef, useEffect} from 'react';
 import {InteractionManager} from 'react-native';
@@ -40,7 +41,7 @@ export type ExportServiceProps = {
   sentences: GeneratedSentence[];
   dragPercentageX: number;
   dragPercentageY: number;
-  customFontManager: SkTypefaceFontProvider | null;
+  customFontManager: SkTypefaceFontProvider;
   scaleFactor: SharedValue<number>;
   quality: ExportQuality;
   duration: number;
@@ -81,27 +82,41 @@ export const useExportService = ({
 
   const startExportProcess = async () => {
     const seekInterval = 1000 / frameRate;
-
     const totalFrames = Math.floor(duration / seekInterval);
+    const bulkSize = 5; // Number of frames processed concurrently, you can adjust this value
+
+    let position = {
+      x: 0,
+      y: 0,
+    };
 
     // Using InteractionManager to optimize the process
     InteractionManager.runAfterInteractions(async () => {
-      for (let i = 0; i < totalFrames; i++) {
+      for (let i = 0; i < totalFrames; i += bulkSize) {
         if (!isMounted.current) {
           break;
         }
 
-        const seekValue = i * seekInterval;
+        const bulkPromises = [];
+        for (let j = 0; j < bulkSize && i + j < totalFrames; j++) {
+          const seekValue = (i + j) * seekInterval;
+          bulkPromises.push(drawOffScreen(i + j, seekValue));
+        }
 
-        await drawOffScreen(i, seekValue);
+        // Wait for all promises in the bulk to complete
+        const [pos] = await Promise.all(bulkPromises);
 
-        const renderingProgress = ((i + 1) / totalFrames) * 100;
+        position = {
+          x: 0,
+          y: pos?.y || 0,
+        };
 
+        const renderingProgress = ((i + bulkSize) / totalFrames) * 100;
         setStepProgress(renderingProgress);
       }
 
       if (isMounted.current) {
-        await generateAndSave();
+        await generateAndSave(position.x, position.y);
       }
     });
   };
@@ -110,7 +125,7 @@ export const useExportService = ({
     setStepProgress(value);
   };
 
-  const generateAndSave = async () => {
+  const generateAndSave = async (x: number, y: number) => {
     try {
       setCurrentStep(EXPORT_STEPS.EXPORTING);
       const videoPath = await generateVideoFromFrames(
@@ -118,6 +133,8 @@ export const useExportService = ({
         duration,
         uuid.v4().toString(),
         frameRate.toString(),
+        x,
+        y,
         onProgress,
       );
       setStepProgress(100);
@@ -136,30 +153,49 @@ export const useExportService = ({
   };
 
   const drawOffScreen = async (index: number, seekValue: number) => {
+    const {image, x, y, height} = renderOffScreenTemplate(_width, _height, {
+      currentTime: seekValue,
+      sentences: sentences,
+      paragraphLayoutWidth: _paragraphLayoutWidth,
+      x: _width * (dragPercentageX / 100),
+      y: _height * (dragPercentageY / 100),
+      customFontMgr: customFontManager,
+      ...template,
+      fontSize: (template.fontSize * _width) / (_width * scaleFactor.value),
+    });
+
+    console.log(y);
+
     const imagePaint = Skia.Paint();
     imagePaint.setAntiAlias(true);
     imagePaint.setDither(true);
     imagePaint.setBlendMode(BlendMode.SrcOut);
 
-    if (template) {
-      const image = renderOffScreenTemplate(_width, _height, {
-        currentTime: seekValue,
-        sentences: sentences,
-        paragraphLayoutWidth: _paragraphLayoutWidth,
-        x: _width * (dragPercentageX / 100),
-        y: _height * (dragPercentageY / 100),
-        customFontMgr: customFontManager,
-        ...template,
-        fontSize: (template.fontSize * _width) / (_width * scaleFactor.value),
-      });
+    const offScreen = Skia.Surface.MakeOffscreen(_width, height);
 
-      if (image) {
-        await saveFrame(image, index).catch(errr => {
-          console.log(errr);
-        });
-        image.dispose();
-      }
+    if (!offScreen) {
+      return;
     }
+
+    const canvas = offScreen.getCanvas();
+
+    const src = rect(0, y, _width, height);
+    const dst = rect(0, 0, _width, height);
+
+    if (image) {
+      canvas.drawImageRect(image, src, dst, imagePaint, false);
+
+      offScreen.flush();
+
+      const canvaImage = offScreen.makeImageSnapshot();
+
+      await saveFrame(canvaImage, index).catch(errr => {
+        console.log(errr);
+      });
+      image.dispose();
+    }
+
+    return {x, y};
   };
 
   return {

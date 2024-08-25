@@ -113,7 +113,7 @@ type BaseParagraphProps = {
   paused?: SharedValue<boolean>;
   id: string;
 
-  customFontMgr: SkTypefaceFontProvider | null;
+  customFontMgr: SkTypefaceFontProvider;
 };
 
 // Use the utility type to enforce essential dependencies only

@@ -161,6 +161,8 @@ export const generateVideoFromFrames = async (
   totalDurationInMilliSeconds: number,
   videoId: string,
   framerate: string,
+  x: number,
+  y: number,
   onProgress: (value: number) => void,
 ) => {
   return new Promise<string>((resolve, reject) => {
@@ -177,7 +179,6 @@ export const generateVideoFromFrames = async (
       const inputPattern = `${RNFetchBlob.fs.dirs.CacheDir}/frame_%06d.png`; // Matches frame_000001.png, frame_000002.png, etc.
       const outputVideoPath = `${RNFetchBlob.fs.dirs.CacheDir}/${videoId}.mp4`;
 
-      // FFmpeg command to merge the video and frames with proper scaling
       const ffmpegCommand = [
         '-y', // Overwrite existing files
         '-i',
@@ -187,11 +188,11 @@ export const generateVideoFromFrames = async (
         '-i',
         inputPattern, // Input image pattern for subtitles
         '-filter_complex',
-        '[1:v]scale=iw:ih:flags=lanczos[scaled_subtitles];[0:v][scaled_subtitles]overlay=0:0', // Dynamically scale subtitle frames to video size
+        `[0:v][1:v]overlay=${x}:${y}`,
         '-c:v',
         'libx264', // H.264 codec for high-quality video
         '-preset',
-        'slow', // Balance encoding speed and quality
+        'ultrafast', // Balance encoding speed and quality
         '-crf',
         '16', // Very high quality (lower CRF means better quality)
         '-b:v',
@@ -202,6 +203,8 @@ export const generateVideoFromFrames = async (
         'copy', // Keep the original audio
         '-movflags',
         '+faststart', // Optimized for web playback
+        '-threads',
+        'auto',
         outputVideoPath, // Output video file path
       ].join(' ');
 

@@ -16,6 +16,7 @@ import {
   Paint,
   Shadow,
   RoundedRect,
+  SkImage,
 } from '@shopify/react-native-skia';
 import {CustomParagraphProps} from 'components/Template';
 import {isSharedValue} from 'react-native-reanimated';
@@ -98,7 +99,13 @@ export const renderOffScreenTemplate = (
 
     customFontMgr,
   }: CustomParagraphProps,
-) => {
+): {
+  image: SkImage;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+} => {
   // Default logic implementation
   const activeColorValue = activeColor || color;
   const colorBeforeValue = colorBefore || color;
@@ -164,10 +171,6 @@ export const renderOffScreenTemplate = (
     currentSentence = activeSentence;
   } else {
     currentSentence = EMPTY_SENTENCE;
-  }
-
-  if (!customFontMgr) {
-    return null;
   }
 
   const paragraphStyle: SkParagraphStyle = {
@@ -420,12 +423,16 @@ export const renderOffScreenTemplate = (
       </Group>
     </>,
     {
-      // x: 0,
-      // y: 0,
       width: width,
       height: height,
     },
   );
 
-  return image;
+  return {
+    image,
+    x: layoutData.backgroundX || 0,
+    y: layoutData.backgroundY || 0,
+    width: layoutData.backgroundWidth || 10,
+    height: layoutData.backgroundHeight || 10,
+  };
 };
