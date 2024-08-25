@@ -19,6 +19,7 @@ import {useAppDispatch} from 'hooks/useStore';
 import {addVideo, setSelectedVideo} from 'store/videos/slice';
 import {ExportQuality} from 'store/videos/type';
 import uuid from 'react-native-uuid';
+import {createVideoDirectory, moveFileToVideoDirectory} from 'utils/directory';
 
 export enum FLOATING_ACTION {
   RECORD = 'record',
@@ -29,6 +30,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const FloatingActionButton = () => {
   const [open, setOpen] = useState(false);
+  const [isSelecting, setSelecting] = useState(false);
 
   const dispatch = useAppDispatch();
   const navigation = useNavigation<NavigationProp>();
@@ -65,7 +67,7 @@ const FloatingActionButton = () => {
     }
   };
 
-  const handleAddVideoObjectToStore = (response: ImagePickerResponse) => {
+  const handleAddVideoObjectToStore = async (response: ImagePickerResponse) => {
     if (
       response.assets &&
       response?.assets[0].uri &&
@@ -74,15 +76,30 @@ const FloatingActionButton = () => {
     ) {
       const date = new Date(Date.now());
       const isoString = date.toISOString();
-      const title = VIDEO_NAME_PREFIX + '-' + Date.now();
+      const title = VIDEO_NAME_PREFIX + '_' + Date.now();
+
+      const originalUri = decodeURIComponent(response?.assets[0].uri);
+
+      const fileExtension =
+        originalUri?.substring(originalUri.lastIndexOf('.')) || '';
 
       const id = uuid.v4().toString();
+      const videoDirectory = await createVideoDirectory(id);
+
+      const finalVideoPath = await moveFileToVideoDirectory(
+        originalUri,
+        title,
+        videoDirectory,
+        fileExtension,
+      );
+
+      console.log('Final url', finalVideoPath);
 
       dispatch(
         addVideo({
           id: id,
           title: title,
-          url: response?.assets[0].uri,
+          url: finalVideoPath,
           language: undefined,
           sentences: [],
           createdAt: isoString,
@@ -98,32 +115,40 @@ const FloatingActionButton = () => {
       );
 
       dispatch(setSelectedVideo(id));
+
+      setOpen(prev => !prev);
+      setSelecting(false);
+
+      navigation.navigate('edit', {
+        videoURL: finalVideoPath,
+        height: response.assets[0].height,
+        width: response.assets[0].width,
+      });
     }
   };
 
   const handleSelectVideoFromGallery = async () => {
-    launchImageLibrary({
-      mediaType: 'video',
-      videoQuality: 'high',
-      selectionLimit: 1,
-      assetRepresentationMode: 'current',
-    })
-      .then(response => {
-        handleAddVideoObjectToStore(response);
-        setOpen(prev => !prev);
-        response.assets &&
-          response?.assets[0].uri &&
-          response.assets[0].width &&
-          response.assets[0].height &&
-          navigation.navigate('edit', {
-            videoURL: response.assets[0].uri,
-            height: response.assets[0].height,
-            width: response.assets[0].width,
-          });
-      })
-      .catch(error => {
-        console.log('error', error);
+    try {
+      setSelecting(true);
+      const response = await launchImageLibrary({
+        mediaType: 'video',
+        videoQuality: 'high',
+        selectionLimit: 1,
+        assetRepresentationMode: 'current',
       });
+
+      if (!response.didCancel) {
+        console.log(response);
+
+        await handleAddVideoObjectToStore(response);
+      } else {
+        setSelecting(false);
+        setOpen(false);
+      }
+    } catch {
+      setSelecting(false);
+      console.error('error while selecting video from gallery');
+    }
   };
 
   const handleRecordVideo = () => {
@@ -156,6 +181,7 @@ const FloatingActionButton = () => {
   return (
     <FloatingActionButtonView
       open={open}
+      isSelecting={isSelecting}
       setOpen={setOpen}
       onAction={handlePermission}
     />

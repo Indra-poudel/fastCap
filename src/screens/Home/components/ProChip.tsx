@@ -1,19 +1,13 @@
 import React from 'react';
 import {Pressable, StyleSheet, Text} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {storage} from 'store/mmkvStorage';
 import {useTheme} from 'theme/ThemeContext';
 import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 const ProChip = () => {
   const {theme} = useTheme();
   return (
-    <Pressable
-      style={[styles.wrapper]}
-      onPress={() => {
-        storage.clearAll();
-        console.log('Persisted state cleared');
-      }}>
+    <Pressable style={[styles.wrapper]} onPress={() => {}}>
       <Icon name={'diamond'} size={16} color={theme.colors.black1} />
       <Text style={[theme.typography.subheader.small]}>Try Pro</Text>
     </Pressable>

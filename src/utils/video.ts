@@ -11,7 +11,7 @@ FFmpegKitConfig.setLogLevel(Level.AV_LOG_ERROR);
 
 export const convertVideoToMp3 = (
   videoUri: string,
-  outputFileName: string,
+  videoId: string,
   totalDurationInMilliSeconds: number,
   onProgress: (progress: number) => void,
 ): Promise<string> => {
@@ -25,7 +25,7 @@ export const convertVideoToMp3 = (
         onProgress(progress);
       });
 
-      const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/${outputFileName}.mp3`;
+      const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/videos/${videoId}/exacted_audio_${videoId}.mp3`;
 
       const ffmpegCommand = `-y -i ${videoUri} -codec:a libmp3lame -map a ${outputUri}`;
 
@@ -66,7 +66,7 @@ export const generateThumbnail = async (
   videoInfo: VideoInfo;
 }> => {
   try {
-    const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/${id}.png`;
+    const outputUri = `${RNFetchBlob.fs.dirs.DocumentDir}/videos/${id}/thumbnail_${id}.png`;
 
     // Remove the existing file if it exists
     try {
@@ -176,8 +176,8 @@ export const generateVideoFromFrames = async (
       });
 
       // Define the input path pattern and output video path
-      const inputPattern = `${RNFetchBlob.fs.dirs.CacheDir}/frame_%06d.png`; // Matches frame_000001.png, frame_000002.png, etc.
-      const outputVideoPath = `${RNFetchBlob.fs.dirs.CacheDir}/${videoId}.mp4`;
+      const inputPattern = `${RNFetchBlob.fs.dirs.DocumentDir}/videos/${videoId}/frames/frame_%06d.png`;
+      const outputVideoPath = `${RNFetchBlob.fs.dirs.DocumentDir}/videos/${videoId}/frames/output_${videoId}.mp4`;
 
       const ffmpegCommand = [
         '-y', // Overwrite existing files
@@ -229,12 +229,16 @@ export const generateVideoFromFrames = async (
   });
 };
 
-export const saveFrame = (image: SkImage, index: number): Promise<string> => {
+export const saveFrame = (
+  image: SkImage,
+  index: number,
+  videoId: string,
+): Promise<string> => {
   return new Promise((resolve, reject) => {
     try {
       const _index = index + 1;
       const filename = `frame_${String(_index).padStart(6, '0')}.png`; // Zero-padded index
-      const path = `${RNFetchBlob.fs.dirs.CacheDir}/${filename}`;
+      const path = `${RNFetchBlob.fs.dirs.DocumentDir}/videos/${videoId}/frames/${filename}`;
       const base64Image = image.encodeToBase64(ImageFormat.PNG, 100);
 
       return RNFetchBlob.fs

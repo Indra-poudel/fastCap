@@ -796,7 +796,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
             />
           </Fill>
 
-          {selectedVideo?.sentences && selectedTemplate && (
+          {selectedVideo?.sentences && selectedTemplate && customFontMgr && (
             <Template
               currentTime={currentTime}
               sentences={selectedVideo?.sentences}
@@ -1012,29 +1012,37 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         />
       )}
 
-      {isExporting && selectedTemplate && selectedVideo?.audioUrl && (
-        <ExportVideo
-          duration={duration}
-          frameRate={framerate}
-          onCancel={handleCancelVideoExport}
-          width={originalWidth.value}
-          height={originalHeight.value}
-          audioURL={selectedVideo?.audioUrl}
-          template={selectedTemplate}
-          paragraphLayoutWidth={offScreenParagraphLayoutWidth}
-          sentences={selectedVideo?.sentences || []}
-          dragPercentageX={dragDistancePercentageX.value}
-          dragPercentageY={dragDistancePercentageY.value}
-          customFontManager={customFontMgr}
-          scaleFactor={scaleFactor}
-          quality={selectedVideo.exportQuality}
-          videoURL={route.params.videoURL}
-        />
-      )}
+      {isExporting &&
+        selectedTemplate &&
+        selectedVideo?.audioUrl &&
+        customFontMgr && (
+          <ExportVideo
+            duration={duration}
+            frameRate={framerate}
+            onCancel={handleCancelVideoExport}
+            width={originalWidth.value}
+            height={originalHeight.value}
+            audioURL={selectedVideo?.audioUrl}
+            template={selectedTemplate}
+            paragraphLayoutWidth={offScreenParagraphLayoutWidth}
+            sentences={selectedVideo?.sentences || []}
+            dragPercentageX={dragDistancePercentageX.value}
+            dragPercentageY={dragDistancePercentageY.value}
+            customFontManager={customFontMgr}
+            scaleFactor={scaleFactor}
+            quality={selectedVideo.exportQuality}
+            videoURL={route.params.videoURL}
+            videoId={selectedVideo.id}
+          />
+        )}
 
       {isThumbnailGenerating && (
         <View style={Styles.flexCenter}>
-          <ActivityIndicator shouldRasterizeIOS />
+          <ActivityIndicator
+            shouldRasterizeIOS
+            color={theme.colors.primary}
+            size={'large'}
+          />
         </View>
       )}
     </SafeAreaView>

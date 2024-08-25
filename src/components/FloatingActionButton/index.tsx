@@ -1,5 +1,11 @@
 import React, {useEffect} from 'react';
-import {Pressable, StyleSheet, useWindowDimensions} from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Animated, {
   useSharedValue,
@@ -21,12 +27,14 @@ type FloatingActionButtonViewProps = {
   onAction: (action: FLOATING_ACTION) => void;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;
   open: boolean;
+  isSelecting: boolean;
 };
 
 const FloatingActionButtonView = ({
   onAction,
   setOpen,
   open,
+  isSelecting,
 }: FloatingActionButtonViewProps) => {
   const {theme} = useTheme();
   const {width, height} = useWindowDimensions();
@@ -139,11 +147,29 @@ const FloatingActionButtonView = ({
           <Icon name={'plus'} size={scale(42)} color={theme.colors.white} />
         </Animated.View>
       </AnimatedPressable>
+
+      {isSelecting && (
+        <View style={Style.flexCenter}>
+          <ActivityIndicator
+            shouldRasterizeIOS
+            color={theme.colors.primary}
+            size={'large'}
+          />
+        </View>
+      )}
     </>
   );
 };
 
 const Style = StyleSheet.create({
+  flexCenter: {
+    flex: 1,
+    position: 'absolute',
+    justifyContent: 'center',
+    alignContent: 'center',
+    width: '100%',
+    height: '100%',
+  },
   container: {
     borderRadius: 45,
     display: 'flex',
