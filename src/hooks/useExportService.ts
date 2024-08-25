@@ -17,6 +17,8 @@ import {renderOffScreenTemplate} from 'offScreenComponents/offScreenTemplate';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
 import {SharedValue} from 'react-native-reanimated';
 import {ExportQuality} from 'store/videos/type';
+import {output} from 'mocks/output';
+import {deleteVideoFramesDirectory} from 'utils/directory';
 
 export enum EXPORT_STEPS {
   RENDER_FRAMES = '🖼️ Rendering Frames',
@@ -46,6 +48,7 @@ export type ExportServiceProps = {
   quality: ExportQuality;
   duration: number;
   frameRate: number;
+  videoId: string;
 };
 
 export const useExportService = ({
@@ -62,6 +65,7 @@ export const useExportService = ({
   frameRate,
   duration,
   videoURL,
+  videoId,
 }: ExportServiceProps) => {
   const [currentStep, setCurrentStep] = useState(EXPORT_STEPS.RENDER_FRAMES);
   const [overallStatus, setOverallStatus] = useState(
@@ -131,7 +135,7 @@ export const useExportService = ({
       const videoPath = await generateVideoFromFrames(
         videoURL,
         duration,
-        uuid.v4().toString(),
+        videoId,
         frameRate.toString(),
         x,
         y,
@@ -139,9 +143,13 @@ export const useExportService = ({
       );
       setStepProgress(100);
 
+      console.log('output', videoPath);
+
       CameraRoll.saveAsset(videoPath, {
         type: 'video',
-      }).then(photoIdentifier => {
+        album: 'FastCap',
+      }).then(async photoIdentifier => {
+        await deleteVideoFramesDirectory(videoId);
         console.log('Video path', videoPath);
         setGeneratedVideoInfo(photoIdentifier);
         setCurrentStep(EXPORT_STEPS.COMPLETE);
@@ -163,8 +171,6 @@ export const useExportService = ({
       ...template,
       fontSize: (template.fontSize * _width) / (_width * scaleFactor.value),
     });
-
-    console.log(y);
 
     const imagePaint = Skia.Paint();
     imagePaint.setAntiAlias(true);
@@ -189,7 +195,7 @@ export const useExportService = ({
 
       const canvaImage = offScreen.makeImageSnapshot();
 
-      await saveFrame(canvaImage, index).catch(errr => {
+      await saveFrame(canvaImage, index, videoId).catch(errr => {
         console.log(errr);
       });
       image.dispose();

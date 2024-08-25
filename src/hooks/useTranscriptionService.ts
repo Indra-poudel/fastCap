@@ -61,12 +61,12 @@ export const useTranscriptionService = ({
       videoUri: string,
       language: languageType,
       totalDurationInMilliSeconds: number,
+      videoId: string,
     ) => {
       if (isMock) {
-        const audioName = 'transcriptionAudio' + uuid.v4();
         const mp3Uri = await convertVideoToMp3(
           videoUri,
-          audioName,
+          videoId,
           totalDurationInMilliSeconds,
           setStepProgress,
         );
@@ -92,10 +92,9 @@ export const useTranscriptionService = ({
           // Step 1: Convert video to MP3
           setCurrentStep(TranscriptionSteps.CONVERT_VIDEO_TO_MP3);
           setStepProgress(0);
-          const audioName = 'transcriptionAudio' + uuid.v4();
           const mp3Uri = await convertVideoToMp3(
             videoUri,
-            audioName,
+            videoId,
             totalDurationInMilliSeconds,
             setStepProgress,
           );
@@ -183,7 +182,7 @@ export const useTranscriptionService = ({
         }
       }
     },
-    [isMock],
+    [isMock, maxWords],
   );
 
   return {

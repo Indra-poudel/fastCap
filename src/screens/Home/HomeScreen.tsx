@@ -1,5 +1,5 @@
-import React, {useState} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {ActivityIndicator, StyleSheet, Text, View} from 'react-native';
 import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {selectAllVideos, selectSelectedVideo} from 'store/videos/selector';
 import Header from 'screens/Home/components/Header';
@@ -20,6 +20,7 @@ import Dialog from 'components/Dialog';
 import Edit from 'screens/Home/components/Edit';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {scale, verticalScale} from 'react-native-size-matters/extend';
+import {deleteVideoDirectory} from 'utils/directory';
 
 type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
   setFabVisible: (visible: boolean) => void;
@@ -40,8 +41,26 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const [isEditDialogEnable, setEditDialog] = useState(false);
   const [isDeleteDialogEnable, setDeleteDialog] = useState(false);
+  const [isDeleting, setDeleting] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
+
+  useEffect(() => {
+    if (isDeleting && selectedVideo?.id) {
+      deleteVideoDirectory(selectedVideo?.id)
+        .then(() => {
+          handleVisibleBottomTab();
+          selectedVideo && dispatch(removeVideo(selectedVideo.id));
+        })
+        .catch(() => {
+          console.error('error while deleting');
+        })
+        .finally(() => {
+          setDeleting(false);
+        });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDeleting, selectedVideo]);
 
   const handleHideBottomTab = () => {
     setFabVisible(false);
@@ -122,9 +141,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const handleRemoveVideo = () => {
     setDeleteDialog(false);
-    handleVisibleBottomTab();
-    // TODO: remove associated video from cache too
-    selectedVideo && dispatch(removeVideo(selectedVideo.id));
+    setDeleting(true);
   };
 
   const handleRename = (newTitle: string) => {
@@ -249,11 +266,26 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           </Text>
         </Dialog>
       )}
+
+      {isDeleting && (
+        <View style={style.flexCenter}>
+          <ActivityIndicator size={'large'} color={theme.colors.primary} />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
 
 const style = StyleSheet.create({
+  flexCenter: {
+    flex: 1,
+    position: 'absolute',
+    justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    height: '100%',
+  },
   wrapper: {
     flex: 1,
   },

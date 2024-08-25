@@ -50,10 +50,16 @@ const CaptionServiceStatus = ({
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    if (videoUrl && language && duration) {
-      startTranscriptionProcess(videoUrl, language, duration);
+    if (videoUrl && language && duration && selectedVideo?.id) {
+      startTranscriptionProcess(videoUrl, language, duration, selectedVideo.id);
     }
-  }, [videoUrl, startTranscriptionProcess, language, duration]);
+  }, [
+    videoUrl,
+    startTranscriptionProcess,
+    language,
+    duration,
+    selectedVideo?.id,
+  ]);
 
   useEffect(() => {
     if (audioUrl && selectedVideo && !selectedVideo.audioUrl) {
