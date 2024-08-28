@@ -1,7 +1,10 @@
 import {AutoHighlightResult, TranscriptWord} from 'assemblyai';
+import uuid from 'react-native-uuid';
 
 export type SentenceWord = TranscriptWord & {
   highlighted?: boolean;
+  uuid: string;
+  sentenceUuid?: string;
   // later add type for styling individual word
 };
 
@@ -10,6 +13,7 @@ export type GeneratedSentence = {
   words: SentenceWord[];
   start: number;
   end: number;
+  uuid: string;
 };
 
 export const transformWordsToSentences = (
@@ -31,6 +35,7 @@ export const transformWordsToSentences = (
   let previousWord: SentenceWord | null = null;
 
   words.forEach(word => {
+    word.uuid = word.uuid || uuid.v4().toString();
     const isHighlighted = highlightedTimestamps.has(word.start);
     word.highlighted = word.highlighted || isHighlighted;
 
@@ -43,21 +48,29 @@ export const transformWordsToSentences = (
       if (currentSentence.length > 0) {
         currentSentence.push(word);
       } else {
+        const sentenceUuid = uuid.v4().toString();
+        word.sentenceUuid = sentenceUuid;
+
         sentences.push({
           text: word.text,
           words: [word],
           start: word.start,
           end: word.end,
+          uuid: sentenceUuid,
         });
       }
     } else {
       if (previousWord && isSentenceEnding(previousWord.text)) {
         if (currentSentence.length > 0) {
+          const sentenceUuid = uuid.v4().toString();
+          currentSentence.forEach(w => (w.sentenceUuid = sentenceUuid));
+
           sentences.push({
             text: currentSentence.map(w => w.text).join(' '),
             words: currentSentence,
             start: currentSentence[0].start,
             end: currentSentence[currentSentence.length - 1].end,
+            uuid: uuid.v4().toString(),
           });
         }
         currentSentence = [word];
@@ -67,25 +80,31 @@ export const transformWordsToSentences = (
 
       // If the current sentence reaches the max word limit or ends with a sentence-ending punctuation
       if (currentSentence.length >= maxWords || endsWithPunctuation) {
+        const sentenceUuid = uuid.v4().toString();
         if (currentSentence.length > 1 && endsWithPunctuation) {
           const lastWord = currentSentence.pop();
+          currentSentence.forEach(w => (w.sentenceUuid = sentenceUuid));
           if (currentSentence.length > 0) {
             sentences.push({
               text: currentSentence.map(w => w.text).join(' '),
               words: currentSentence,
               start: currentSentence[0].start,
               end: currentSentence[currentSentence.length - 1].end,
+              uuid: sentenceUuid,
             });
           }
           if (lastWord) {
+            lastWord.sentenceUuid = uuid.v4().toString();
             currentSentence = [lastWord];
           }
         } else {
+          currentSentence.forEach(w => (w.sentenceUuid = sentenceUuid));
           sentences.push({
             text: currentSentence.map(w => w.text).join(' '),
             words: currentSentence,
             start: currentSentence[0].start,
             end: currentSentence[currentSentence.length - 1].end,
+            uuid: sentenceUuid,
           });
           currentSentence = [];
         }
@@ -97,11 +116,14 @@ export const transformWordsToSentences = (
 
   // Add any remaining words as the last sentence
   if (currentSentence.length > 0) {
+    const sentenceUuid = uuid.v4().toString();
+    currentSentence.forEach(w => (w.sentenceUuid = sentenceUuid));
     sentences.push({
       text: currentSentence.map(w => w.text).join(' '),
       words: currentSentence,
       start: currentSentence[0].start,
       end: currentSentence[currentSentence.length - 1].end,
+      uuid: sentenceUuid,
     });
   }
 

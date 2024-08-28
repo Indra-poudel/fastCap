@@ -1,6 +1,6 @@
 import Interval from 'components/Timeline/Interval';
 import React, {useMemo} from 'react';
-import {View, useWindowDimensions} from 'react-native';
+import {StyleSheet, View, useWindowDimensions} from 'react-native';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
   SharedValue,
@@ -13,6 +13,9 @@ import {useTheme} from 'theme/ThemeContext';
 import TimeIndicator from 'components/Timeline/TimeIndicator';
 import SubInterval from 'components/Timeline/SubInterval';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
+import WordChip from 'components/Timeline/WordChip';
+import {scale} from 'react-native-size-matters/extend';
+import {verticalScale} from 'react-native-size-matters';
 
 type TimelineProps = {
   currentTime: SharedValue<number>;
@@ -26,13 +29,20 @@ type TimelineProps = {
 const framesPerInterval = 10;
 const widthPerMs = 0.5;
 
+const wordY = verticalScale(30);
+
 const Timeline = ({
   currentTime,
   seek,
   totalDuration: totalVideoDuration,
   height,
   frameRate,
+  sentences,
 }: TimelineProps) => {
+  const direction = useSharedValue(0);
+
+  const previousTime = useSharedValue(currentTime.value);
+
   const frameDurationMs = useMemo(() => {
     return 1000 / frameRate;
   }, [frameRate]);
@@ -41,7 +51,10 @@ const Timeline = ({
   const widthPerInterval = intervalDurationMs * widthPerMs;
   const widthPerFrame = widthPerInterval / framesPerInterval;
 
-  // Hacky way to fix gesture handler while reach at last.
+  const allWords = useMemo(() => {
+    return sentences.flatMap(value => value.words);
+  }, [sentences]);
+
   const totalDuration = useMemo(() => {
     return totalVideoDuration - frameDurationMs * 2;
   }, [frameDurationMs, totalVideoDuration]);
@@ -58,8 +71,6 @@ const Timeline = ({
     return (totalDuration % intervalDurationMs) * widthPerMs;
   }, [intervalDurationMs, totalDuration]);
 
-  // Calculate frames in the last partial interval
-
   const lastIntervalFrames = useMemo(() => {
     return Math.floor((totalDuration % intervalDurationMs) / frameDurationMs);
   }, [frameDurationMs, intervalDurationMs, totalDuration]);
@@ -68,10 +79,22 @@ const Timeline = ({
   const {theme} = useTheme();
   const x = useSharedValue(0);
 
+  const setWordTimelineX = useSharedValue(0);
+
   useAnimatedReaction(
     () => currentTime.value,
     _currentTime => {
       x.value = -_currentTime * widthPerMs;
+
+      if (_currentTime > previousTime.value) {
+        direction.value = -1;
+      } else if (_currentTime < previousTime.value) {
+        direction.value = 1;
+      } else {
+        direction.value = 0;
+      }
+
+      previousTime.value = _currentTime;
     },
     [currentTime],
   );
@@ -80,23 +103,34 @@ const Timeline = ({
     .onChange(e => {
       x.value += e.changeX;
 
-      // stop moving x less than 0
       if (x.value >= 0) {
         x.value = 0;
       }
 
-      // stop moving x more than total width
       if (x.value <= -totalWidth) {
         x.value = -totalWidth;
       }
 
+      direction.value = e.changeX < 0 ? -1 : 1;
+
       const newSeekValue = -x.value / widthPerMs;
       seek.value = newSeekValue;
     })
-    .onEnd(() => {});
+    .onEnd(() => {
+      direction.value = 0;
+    });
 
   const animatedStyles = useAnimatedStyle(() => ({
     transform: [{translateX: width / 2 + x.value}],
+  }));
+
+  const wordTimelineAnimatedStyles = useAnimatedStyle(() => ({
+    transform: [
+      {translateX: width / 2 + setWordTimelineX.value},
+      {
+        translateY: -wordY,
+      },
+    ],
   }));
 
   return (
@@ -121,7 +155,7 @@ const Timeline = ({
                   2,
                 )}s`}
                 lineColor={theme.colors.grey3}
-                height={28}
+                height={verticalScale(28)}
               />
               {[...Array(framesPerInterval)].map((_, frameIndex) => (
                 <SubInterval
@@ -131,14 +165,14 @@ const Timeline = ({
                     frameIndex * widthPerFrame
                   }
                   y={12}
-                  height={16}
+                  height={verticalScale(16)}
                   lineWidth={1}
                   lineColor={theme.colors.grey3}
                 />
               ))}
             </React.Fragment>
           ))}
-          {/* Handle partial interval if exists */}
+
           {partialIntervalWidth > 0 && (
             <Interval
               x={numberOfIntervals * widthPerInterval}
@@ -148,7 +182,7 @@ const Timeline = ({
                 1000
               ).toFixed(2)}s`}
               lineColor={theme.colors.grey4}
-              height={40}
+              height={verticalScale(40)}
             />
           )}
           {[...Array(lastIntervalFrames)].map((_, frameIndex) => (
@@ -159,16 +193,46 @@ const Timeline = ({
                 frameIndex * widthPerFrame
               }
               y={12}
-              height={16}
+              height={verticalScale(16)}
               lineWidth={1}
               lineColor={theme.colors.grey3}
             />
           ))}
         </Animated.View>
+
+        <Animated.View
+          style={[style.wordTimelineWrapper, wordTimelineAnimatedStyles]}>
+          {allWords.map(word => {
+            return (
+              <WordChip
+                key={word.uuid}
+                end={word.end}
+                label={word.text}
+                uuid={word.uuid}
+                onPress={() => {
+                  console.log('Word pressed', word);
+                }}
+                currentTime={currentTime}
+                start={word.start}
+                setWordTimelineX={setWordTimelineX}
+                direction={direction}
+              />
+            );
+          })}
+        </Animated.View>
+
         <TimeIndicator x={width / 2} lineWidth={2} />
       </View>
     </GestureDetector>
   );
 };
+
+const style = StyleSheet.create({
+  wordTimelineWrapper: {
+    display: 'flex',
+    flexDirection: 'row',
+    gap: 12,
+  },
+});
 
 export default Timeline;

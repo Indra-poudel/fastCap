@@ -92,6 +92,10 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
+    paddingVertical: verticalScale(12),
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorContainer: {
     paddingTop: verticalScale(12),

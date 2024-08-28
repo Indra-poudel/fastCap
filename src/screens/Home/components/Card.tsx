@@ -61,7 +61,7 @@ const Card = ({
         <Image
           width={scale(172)}
           height={verticalScale(163)}
-          resizeMode="center"
+          resizeMode="cover"
           source={{
             uri: imageURL,
           }}

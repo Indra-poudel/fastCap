@@ -71,7 +71,10 @@ export const useTranscriptionService = ({
           setStepProgress,
         );
 
-        const words = mock.words || [];
+        const words = (mock.words || []).map(word => ({
+          ...word,
+          uuid: uuid.v4().toString(),
+        }));
         const highlightedWords = mock.auto_highlights_result?.results || [];
         const generatedSentences = transformWordsToSentences(
           words,
@@ -159,7 +162,10 @@ export const useTranscriptionService = ({
           }
 
           if (newTranscription.data.status === 'completed') {
-            const words = newTranscription.data.words || [];
+            const words = (newTranscription.data.words || []).map(word => ({
+              ...word,
+              uuid: uuid.v4().toString(),
+            }));
             const highlightedWords =
               newTranscription.data.auto_highlights_result?.results || [];
             const generatedSentences = transformWordsToSentences(

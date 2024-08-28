@@ -70,7 +70,7 @@ const SNAP = {
   h: scale(16),
 };
 const CANVAS_BUTTONS_FULL_OPACITY = 0.8;
-const TIMELINE_HEIGHT = verticalScale(100);
+const TIMELINE_HEIGHT = verticalScale(120);
 const WITHOUT_TIMELINE_HEIGHT = verticalScale(85);
 
 const EditScreen = ({route, navigation}: EditScreenProps) => {
@@ -424,9 +424,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   // Template
   const templateXpos = useSharedValue(0);
-  const templateYpos = useDerivedValue(() => {
-    return heightAfterScale.value + offsetX.value / 2;
-  });
+  const templateYpos = useSharedValue(0);
 
   const draggableStyle = useAnimatedStyle(() => {
     return {
@@ -438,13 +436,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       borderColor: isDragTrigger.value ? theme.colors.primary : 'transparent',
       position: 'absolute',
     };
-  }, [
-    templateXpos,
-    templateYpos,
-    templateCurrentHeight,
-    templateCurrentWidth,
-    isDragTrigger,
-  ]);
+  });
 
   const snapTopHorizontalLine = useAnimatedStyle(() => {
     return {
@@ -752,10 +744,6 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     setExporting(false);
   };
 
-  console.log(duration);
-
-  console.log(framerate);
-
   const offScreenParagraphLayoutWidth = useDerivedValue(() => {
     return originalWidth.value - TEMPLATE_PADDING * 2;
   }, [originalWidth.value]);
@@ -796,10 +784,10 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
             />
           </Fill>
 
-          {selectedVideo?.sentences && selectedTemplate && customFontMgr && (
+          {selectedTemplate && customFontMgr && (
             <Template
               currentTime={currentTime}
-              sentences={selectedVideo?.sentences}
+              sentences={selectedVideo?.sentences || []}
               paragraphLayoutWidth={paragraphLayoutWidth}
               x={dragDistanceX}
               y={dragDistanceY}
@@ -1073,7 +1061,6 @@ const Styles = StyleSheet.create({
   thumbnail: {flex: 1, resizeMode: 'cover'},
   playerWrapper: {
     flex: 1,
-    position: 'relative',
   },
   canvas: {
     flex: 1,
