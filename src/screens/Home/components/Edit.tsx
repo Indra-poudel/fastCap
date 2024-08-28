@@ -66,6 +66,7 @@ const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
           value={editValue}
           placeholder="Video name"
           placeholderTextColor={theme.colors.grey4}
+          autoCapitalize="none"
           style={[
             styles.input,
             {...theme.typography.body.large, color: theme.colors.white},
