@@ -59,6 +59,7 @@ const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
           },
         ]}>
         <TextInput
+          editable={editValue.length <= 32}
           autoFocus
           onFocus={handleSetFocus}
           onBlur={handleInputBlurOut}
