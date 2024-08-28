@@ -42,6 +42,9 @@ const Card = ({
     return formatDuration(duration);
   }, [duration]);
 
+  const truncateName = (name: string) =>
+    name.length > 16 ? `${name.substring(0, 16)}...` : name;
+
   return (
     <Pressable
       delayLongPress={300}
@@ -99,7 +102,7 @@ const Card = ({
             color: theme.colors.white,
           },
         ]}>
-        {name}
+        {truncateName(name)}
       </Text>
       <Text
         style={[

@@ -8,9 +8,15 @@ type EditProps = {
   handleClose: () => void;
   handleRename: (newTitle: string) => void;
   value: string;
+  enableEmpty?: boolean;
 };
 
-const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
+const Edit: React.FC<EditProps> = ({
+  handleClose,
+  value,
+  handleRename,
+  enableEmpty,
+}) => {
   const {theme} = useTheme();
 
   const [editValue, setEditValue] = useState<string>(value);
@@ -39,7 +45,7 @@ const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
   const errorMessage =
     editValue.length >= 32
       ? 'Whoa! Keep it under 32 characters 😅'
-      : editValue === ''
+      : !enableEmpty && editValue === ''
       ? 'Oops! You forgot the name 😅'
       : '';
 
