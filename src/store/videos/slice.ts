@@ -1,5 +1,6 @@
 import {PayloadAction, createSlice} from '@reduxjs/toolkit';
 import {Video, VideoId, VideosSliceState} from 'store/videos/type';
+import {SentenceWord} from 'utils/sentencesBuilder';
 
 const initialState: VideosSliceState = {
   byId: {},
@@ -34,6 +35,24 @@ const videosSlice = createSlice({
     setSelectedVideo: (state, action: PayloadAction<VideoId | undefined>) => {
       state.selectedVideoId = action.payload;
     },
+
+    updateWord: (state, action: PayloadAction<SentenceWord>) => {
+      const payload = action.payload;
+      const selectedVideoId = state.selectedVideoId;
+
+      if (selectedVideoId) {
+        const video = state.byId[selectedVideoId];
+        if (video) {
+          for (const sentence of video.sentences) {
+            const word = sentence.words.find(w => w.uuid === payload.uuid);
+            if (word) {
+              Object.assign(word, payload); // Update the word with the new properties
+              break; // Once the word is found and updated, exit the loop
+            }
+          }
+        }
+      }
+    },
   },
 });
 
@@ -43,5 +62,6 @@ export const {
   updateVideo,
   reorderVideos,
   setSelectedVideo,
+  updateWord,
 } = videosSlice.actions;
 export default videosSlice.reducer;

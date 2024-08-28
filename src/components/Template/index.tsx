@@ -128,6 +128,7 @@ const EMPTY_SENTENCE = {
   words: [],
   start: 0,
   end: 0,
+  uuid: '1',
 };
 
 const Template = ({
