@@ -1,5 +1,6 @@
 import React from 'react';
 import {StyleSheet, Text, View} from 'react-native';
+import {scale, verticalScale} from 'react-native-size-matters';
 import {useTheme} from 'theme/ThemeContext';
 
 type TimelineInterval = {
@@ -9,6 +10,8 @@ type TimelineInterval = {
   lineColor: string;
   height: number;
 };
+const textX = scale(20);
+const textY = verticalScale(32);
 
 const Interval = ({
   x,
@@ -40,10 +43,10 @@ const Interval = ({
             left: x || 0,
             transform: [
               {
-                translateY: 32,
+                translateY: textY,
               },
               {
-                translateX: -20,
+                translateX: -textX,
               },
             ],
           },
