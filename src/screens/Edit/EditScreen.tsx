@@ -41,7 +41,6 @@ import {
   GeneratedSentence,
   transformWordsToSentences,
 } from 'utils/sentencesBuilder';
-import Timeline from 'components/Timeline/Timeline';
 import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {updateVideo} from 'store/videos/slice';
 import {useSelector} from 'react-redux';
@@ -58,6 +57,7 @@ import ExportVideo from 'components/ExportVideo';
 import {fontSource} from 'constants/fonts';
 
 import {scale, verticalScale} from 'react-native-size-matters/extend';
+import TimelineContainer from 'containers/TimelineContainer';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -108,7 +108,6 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const [isLanguageBottomSheetOpen, setLanguageBottomSheetOpen] =
     useState(false);
   const [isCaptionsGenerating, setCaptionsGenerating] = useState(false);
-  //
 
   const selectedTemplate = useAppSelector(selectTemplateForSelectedVideo);
 
@@ -891,7 +890,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
       {/* later optimized sentence to shared value and use display none or something like that */}
       {!!selectedVideo?.sentences.length && renderTimeLine && (
-        <Timeline
+        <TimelineContainer
           currentTime={currentTime}
           sentences={selectedVideo.sentences}
           frameRate={framerate}
@@ -958,7 +957,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
               }
             />
             <Button
-              label="Add English captions"
+              label={`Add ${selectedLanguage.short_label} captions`}
               buttonType={'primary'}
               onPress={handleAddSpecificLanguageCaption}
               icon={

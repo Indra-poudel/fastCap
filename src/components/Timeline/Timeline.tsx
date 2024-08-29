@@ -12,9 +12,8 @@ import Animated, {
 import {useTheme} from 'theme/ThemeContext';
 import TimeIndicator from 'components/Timeline/TimeIndicator';
 import SubInterval from 'components/Timeline/SubInterval';
-import {GeneratedSentence} from 'utils/sentencesBuilder';
+import {GeneratedSentence, SentenceWord} from 'utils/sentencesBuilder';
 import WordChip from 'components/Timeline/WordChip';
-import {scale} from 'react-native-size-matters/extend';
 import {verticalScale} from 'react-native-size-matters';
 
 type TimelineProps = {
@@ -24,6 +23,7 @@ type TimelineProps = {
   seek: SharedValue<number>;
   height: number;
   sentences: GeneratedSentence[];
+  onSelect: (word: SentenceWord) => void;
 };
 
 const framesPerInterval = 10;
@@ -38,6 +38,7 @@ const Timeline = ({
   height,
   frameRate,
   sentences,
+  onSelect,
 }: TimelineProps) => {
   const direction = useSharedValue(0);
 
@@ -210,7 +211,7 @@ const Timeline = ({
                 label={word.text}
                 uuid={word.uuid}
                 onPress={() => {
-                  console.log('Word pressed', word);
+                  onSelect(word);
                 }}
                 currentTime={currentTime}
                 start={word.start}
