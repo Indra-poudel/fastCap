@@ -8,16 +8,24 @@ type EditProps = {
   handleClose: () => void;
   handleRename: (newTitle: string) => void;
   value: string;
+  enableEmpty?: boolean;
 };
 
-const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
+const Edit: React.FC<EditProps> = ({
+  handleClose,
+  value,
+  handleRename,
+  enableEmpty,
+}) => {
   const {theme} = useTheme();
 
   const [editValue, setEditValue] = useState<string>(value);
   const [isFocused, setFocused] = useState(false);
 
   const handleChange = (text: string) => {
-    setEditValue(text);
+    if (text.length <= 32) {
+      setEditValue(text);
+    }
   };
 
   const handleInputBlurOut = () => {
@@ -34,6 +42,13 @@ const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
     handleClose();
   };
 
+  const errorMessage =
+    editValue.length >= 32
+      ? 'Whoa! Keep it under 32 characters 😅'
+      : !enableEmpty && editValue === ''
+      ? 'Oops! You forgot the name 😅'
+      : '';
+
   return (
     <Dialog
       title="Rename"
@@ -41,7 +56,7 @@ const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
       onAction={handleSave}
       primaryActionLabel="Save"
       primaryActionColor={theme.colors.primary}
-      disabled={!editValue.trim()}>
+      disabled={errorMessage !== ''}>
       <View
         style={[
           styles.textInputContainer,
@@ -50,6 +65,7 @@ const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
           },
         ]}>
         <TextInput
+          editable={editValue.length <= 32}
           autoFocus
           onFocus={handleSetFocus}
           onBlur={handleInputBlurOut}
@@ -57,6 +73,7 @@ const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
           value={editValue}
           placeholder="Video name"
           placeholderTextColor={theme.colors.grey4}
+          autoCapitalize="none"
           style={[
             styles.input,
             {...theme.typography.body.large, color: theme.colors.white},
@@ -64,14 +81,14 @@ const Edit: React.FC<EditProps> = ({handleClose, value, handleRename}) => {
           cursorColor={theme.colors.primary}
         />
       </View>
-      {editValue === '' && (
+      {errorMessage !== '' && (
         <View style={styles.errorContainer}>
           <Text
             style={
               (styles.errorText,
               {...theme.typography.subheader.small, color: theme.colors.error})
             }>
-            {'Oops! You forgot the name 😅'}
+            {errorMessage}
           </Text>
         </View>
       )}

@@ -111,6 +111,7 @@ const Dialog = ({
             disabled={!!disabled}>
             <Text
               style={[
+                disabled && {opacity: 0.5},
                 theme.typography.subheader.small,
                 {
                   color: primaryActionColor || theme.colors.white,
