@@ -41,7 +41,6 @@ import {
   GeneratedSentence,
   transformWordsToSentences,
 } from 'utils/sentencesBuilder';
-import Timeline from 'components/Timeline/Timeline';
 import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {updateVideo} from 'store/videos/slice';
 import {useSelector} from 'react-redux';
@@ -109,7 +108,6 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const [isLanguageBottomSheetOpen, setLanguageBottomSheetOpen] =
     useState(false);
   const [isCaptionsGenerating, setCaptionsGenerating] = useState(false);
-  //
 
   const selectedTemplate = useAppSelector(selectTemplateForSelectedVideo);
 
@@ -959,7 +957,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
               }
             />
             <Button
-              label="Add English captions"
+              label={`Add ${selectedLanguage.short_label} captions`}
               buttonType={'primary'}
               onPress={handleAddSpecificLanguageCaption}
               icon={
