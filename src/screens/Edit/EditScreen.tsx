@@ -119,6 +119,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const templateCurrentHeight = useSharedValue(0);
   const templateCurrentWidth = useSharedValue(0);
 
+  const templateScale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const rotation = useSharedValue(0);
+  const savedRotation = useSharedValue(0);
+
   const dispatch = useAppDispatch();
 
   const {currentFrame, currentTime, framerate, duration} = useVideo(videoURL, {
@@ -434,6 +439,12 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       borderWidth: templateCurrentWidth.value ? 2 : 0,
       borderColor: isDragTrigger.value ? theme.colors.primary : 'transparent',
       position: 'absolute',
+      transform: [
+        {
+          scale: templateScale.value,
+        },
+        {rotateZ: `${(rotation.value / Math.PI) * 180}deg`},
+      ],
     };
   });
 
@@ -717,7 +728,28 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       isDragTrigger.value = false;
     });
 
-  const composed = Gesture.Simultaneous(dragGesture, tapGesture);
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate(e => {
+      templateScale.value = savedScale.value * e.scale;
+    })
+    .onEnd(() => {
+      savedScale.value = templateScale.value;
+    });
+
+  const rotationGesture = Gesture.Rotation()
+    .onUpdate(e => {
+      rotation.value = savedRotation.value + e.rotation;
+    })
+    .onEnd(() => {
+      savedRotation.value = rotation.value;
+    });
+
+  const composed = Gesture.Simultaneous(
+    dragGesture,
+    tapGesture,
+    pinchGesture,
+    rotationGesture,
+  );
 
   useEffect(() => {
     if (duration !== 0 && renderTimeLine === false) {
@@ -785,6 +817,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
           {selectedTemplate && customFontMgr && (
             <Template
+              scale={templateScale}
               currentTime={currentTime}
               sentences={selectedVideo?.sentences || []}
               paragraphLayoutWidth={paragraphLayoutWidth}

@@ -114,6 +114,8 @@ type BaseParagraphProps = {
   id: string;
 
   customFontMgr: SkTypefaceFontProvider;
+
+  scale: SharedValue<number> | number;
 };
 
 // Use the utility type to enforce essential dependencies only
@@ -197,6 +199,8 @@ const Template = ({
   paused,
   id,
   customFontMgr,
+
+  scale: _scale,
 }: CustomParagraphProps) => {
   // Default logic implementation
   const activeColorValue = activeColor || color;
@@ -235,6 +239,8 @@ const Template = ({
   const y = useOption(_y);
 
   const currentTime = useOption(_currentTime);
+
+  const scale = useOption(_scale);
 
   const paragraph = useDerivedValue(() => {
     // Are the font loaded already?
@@ -490,6 +496,14 @@ const Template = ({
     [backgroundX],
   );
 
+  const derivedScale = useDerivedValue(() => {
+    return [
+      {
+        scale: scale.value,
+      },
+    ];
+  }, []);
+
   if (effect === 'karaoke clip') {
     return (
       <ClipEffect
@@ -615,7 +629,7 @@ const Template = ({
   }
 
   return (
-    <>
+    <Group transform={derivedScale}>
       {sentenceBackgroundColor && (
         <RoundedRect
           x={backgroundX}
@@ -662,7 +676,7 @@ const Template = ({
           width={paragraphLayoutWidth}
         />
       </Group>
-    </>
+    </Group>
   );
 };
 

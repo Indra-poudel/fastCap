@@ -1,7 +1,7 @@
 import {FlashList, ListRenderItem} from '@shopify/flash-list';
 import {SpeechModel} from 'assemblyai';
 import BottomSheet from 'components/BottomSheet';
-import {languages_best, languages_nano} from 'constants/languages';
+import {languages_best} from 'constants/languages';
 import React, {useMemo, useState} from 'react';
 import {Keyboard, Pressable, StyleSheet, Text, View} from 'react-native';
 import CountryFlag from 'react-native-country-flag';
@@ -39,7 +39,7 @@ const LanguageSelector = ({onClose, onSelect}: LanguageSelectorProps) => {
   };
 
   const filterLanguagesMemo = useMemo(() => {
-    return [...languages_best, ...languages_nano].filter(language => {
+    return languages_best.filter(language => {
       return (
         language.label.toLowerCase().includes(inputText.toLowerCase()) ||
         language.country_code.toLowerCase().includes(inputText.toLowerCase())
@@ -135,6 +135,7 @@ const Style = StyleSheet.create({
 
   input: {
     width: '100%',
+    paddingVertical: verticalScale(12),
   },
 
   item: {

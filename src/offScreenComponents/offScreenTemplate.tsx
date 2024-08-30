@@ -1,4 +1,4 @@
-/* eslint-disable react/react-in-jsx-scope */
+import React from 'react';
 import {
   SkTextShadow,
   TextDirection,
@@ -27,6 +27,7 @@ const EMPTY_SENTENCE = {
   words: [],
   start: 0,
   end: 0,
+  uuid: '1',
 };
 const defaultColor = 'transparent';
 const defaultShadow: SkTextShadow = {
@@ -98,6 +99,7 @@ export const renderOffScreenTemplate = (
     fillColor,
 
     customFontMgr,
+    scale: _scale,
   }: CustomParagraphProps,
 ): {
   image: SkImage;
@@ -140,6 +142,12 @@ export const renderOffScreenTemplate = (
     ? _x
     : {
         value: _x,
+      };
+
+  const scale = isSharedValue(_scale)
+    ? _scale
+    : {
+        value: _scale,
       };
 
   const y = isSharedValue(_y)

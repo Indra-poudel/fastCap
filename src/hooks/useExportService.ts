@@ -149,7 +149,7 @@ export const useExportService = ({
         type: 'video',
         album: 'FastCap',
       }).then(async photoIdentifier => {
-        await deleteVideoFramesDirectory(videoId);
+        // await deleteVideoFramesDirectory(videoId);
         console.log('Video path', videoPath);
         setGeneratedVideoInfo(photoIdentifier);
         setCurrentStep(EXPORT_STEPS.COMPLETE);
@@ -170,6 +170,7 @@ export const useExportService = ({
       customFontMgr: customFontManager,
       ...template,
       fontSize: (template.fontSize * _width) / (_width * scaleFactor.value),
+      scale: 1,
     });
 
     const imagePaint = Skia.Paint();
