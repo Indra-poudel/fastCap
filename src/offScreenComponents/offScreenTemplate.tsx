@@ -100,6 +100,7 @@ export const renderOffScreenTemplate = (
 
     customFontMgr,
     scale: _scale,
+    rotation: _rotation,
   }: CustomParagraphProps,
 ): {
   image: SkImage;
@@ -148,6 +149,12 @@ export const renderOffScreenTemplate = (
     ? _scale
     : {
         value: _scale,
+      };
+
+  const rotation = isSharedValue(_rotation)
+    ? _rotation
+    : {
+        value: _rotation,
       };
 
   const y = isSharedValue(_y)
@@ -372,10 +379,25 @@ export const renderOffScreenTemplate = (
     get backgroundHeight() {
       return this.paragraphHeight + sentenceBackgroundPadding * 2;
     },
+
+    get derivedTransform() {
+      const centerX = layoutData.backgroundX + layoutData.backgroundWidth / 2;
+      const centerY = layoutData.backgroundY + layoutData.backgroundHeight / 2;
+      const rotateInRadians = rotation.value;
+
+      return [
+        {translateX: centerX},
+        {translateY: centerY},
+        {scale: scale.value},
+        {rotateZ: rotateInRadians}, // Skia expects rotation in radians
+        {translateX: -centerX},
+        {translateY: -centerY},
+      ];
+    },
   };
 
   const image = drawAsImage(
-    <>
+    <Group transform={layoutData.derivedTransform}>
       {sentenceBackgroundColor && (
         <RoundedRect
           antiAlias={true}
@@ -429,7 +451,7 @@ export const renderOffScreenTemplate = (
           dither={true}
         />
       </Group>
-    </>,
+    </Group>,
     {
       width: width,
       height: height,

@@ -116,6 +116,8 @@ type BaseParagraphProps = {
   customFontMgr: SkTypefaceFontProvider;
 
   scale: SharedValue<number> | number;
+
+  rotation: SharedValue<number> | number;
 };
 
 // Use the utility type to enforce essential dependencies only
@@ -201,6 +203,7 @@ const Template = ({
   customFontMgr,
 
   scale: _scale,
+  rotation: _rotation,
 }: CustomParagraphProps) => {
   // Default logic implementation
   const activeColorValue = activeColor || color;
@@ -236,11 +239,13 @@ const Template = ({
 
   const x = useOption(_x);
 
+  const rotation = useOption(_rotation || 0);
+
   const y = useOption(_y);
 
   const currentTime = useOption(_currentTime);
 
-  const scale = useOption(_scale);
+  const scale = useOption(_scale || 1);
 
   const paragraph = useDerivedValue(() => {
     // Are the font loaded already?
@@ -496,13 +501,20 @@ const Template = ({
     [backgroundX],
   );
 
-  const derivedScale = useDerivedValue(() => {
+  const derivedTransform = useDerivedValue(() => {
+    const centerX = backgroundX.value + backgroundWidth.value / 2;
+    const centerY = backgroundY.value + backgroundHeight.value / 2;
+    const rotateInRadians = rotation.value;
+
     return [
-      {
-        scale: scale.value,
-      },
+      {translateX: centerX},
+      {translateY: centerY},
+      {scale: scale.value},
+      {rotateZ: rotateInRadians},
+      {translateX: -centerX},
+      {translateY: -centerY},
     ];
-  }, []);
+  }, [backgroundWidth, backgroundHeight, rotation.value, scale.value]);
 
   if (effect === 'karaoke clip') {
     return (
@@ -629,7 +641,7 @@ const Template = ({
   }
 
   return (
-    <Group transform={derivedScale}>
+    <Group transform={derivedTransform}>
       {sentenceBackgroundColor && (
         <RoundedRect
           x={backgroundX}

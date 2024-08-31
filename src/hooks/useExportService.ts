@@ -10,14 +10,12 @@ import {
 } from '@shopify/react-native-skia';
 import {useState, useRef, useEffect} from 'react';
 import {InteractionManager} from 'react-native';
-import uuid from 'react-native-uuid';
 import {generateVideoFromFrames, saveFrame} from 'utils/video';
 import {Template as TemplateState} from 'store/templates/type';
 import {renderOffScreenTemplate} from 'offScreenComponents/offScreenTemplate';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
 import {SharedValue} from 'react-native-reanimated';
 import {ExportQuality} from 'store/videos/type';
-import {output} from 'mocks/output';
 import {deleteVideoFramesDirectory} from 'utils/directory';
 
 export enum EXPORT_STEPS {
@@ -49,6 +47,8 @@ export type ExportServiceProps = {
   duration: number;
   frameRate: number;
   videoId: string;
+  scale: SharedValue<number>;
+  rotation: SharedValue<number>;
 };
 
 export const useExportService = ({
@@ -66,6 +66,8 @@ export const useExportService = ({
   duration,
   videoURL,
   videoId,
+  scale,
+  rotation,
 }: ExportServiceProps) => {
   const [currentStep, setCurrentStep] = useState(EXPORT_STEPS.RENDER_FRAMES);
   const [overallStatus, setOverallStatus] = useState(
@@ -149,8 +151,7 @@ export const useExportService = ({
         type: 'video',
         album: 'FastCap',
       }).then(async photoIdentifier => {
-        // await deleteVideoFramesDirectory(videoId);
-        console.log('Video path', videoPath);
+        await deleteVideoFramesDirectory(videoId);
         setGeneratedVideoInfo(photoIdentifier);
         setCurrentStep(EXPORT_STEPS.COMPLETE);
         setOverallStatus(OVER_ALL_PROCESS.COMPLETED);
@@ -161,7 +162,7 @@ export const useExportService = ({
   };
 
   const drawOffScreen = async (index: number, seekValue: number) => {
-    const {image, x, y, height} = renderOffScreenTemplate(_width, _height, {
+    const {image} = renderOffScreenTemplate(_width, _height, {
       currentTime: seekValue,
       sentences: sentences,
       paragraphLayoutWidth: _paragraphLayoutWidth,
@@ -170,7 +171,8 @@ export const useExportService = ({
       customFontMgr: customFontManager,
       ...template,
       fontSize: (template.fontSize * _width) / (_width * scaleFactor.value),
-      scale: 1,
+      scale: scale,
+      rotation: rotation,
     });
 
     const imagePaint = Skia.Paint();
@@ -178,7 +180,7 @@ export const useExportService = ({
     imagePaint.setDither(true);
     imagePaint.setBlendMode(BlendMode.SrcOut);
 
-    const offScreen = Skia.Surface.MakeOffscreen(_width, height);
+    const offScreen = Skia.Surface.MakeOffscreen(_width, _height);
 
     if (!offScreen) {
       return;
@@ -186,8 +188,8 @@ export const useExportService = ({
 
     const canvas = offScreen.getCanvas();
 
-    const src = rect(0, y, _width, height);
-    const dst = rect(0, 0, _width, height);
+    const src = rect(0, 0, _width, _height);
+    const dst = rect(0, 0, _width, _height);
 
     if (image) {
       canvas.drawImageRect(image, src, dst, imagePaint, false);
@@ -202,7 +204,7 @@ export const useExportService = ({
       image.dispose();
     }
 
-    return {x, y};
+    return {x: 0, y: 0};
   };
 
   return {

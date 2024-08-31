@@ -443,7 +443,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         {
           scale: templateScale.value,
         },
-        {rotateZ: `${(rotation.value / Math.PI) * 180}deg`},
+        {rotateZ: `${rotation.value}rad`},
       ],
     };
   });
@@ -817,6 +817,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
           {selectedTemplate && customFontMgr && (
             <Template
+              rotation={rotation}
               scale={templateScale}
               currentTime={currentTime}
               sentences={selectedVideo?.sentences || []}
@@ -1037,6 +1038,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         selectedVideo?.audioUrl &&
         customFontMgr && (
           <ExportVideo
+            rotation={rotation}
+            scale={templateScale}
             duration={duration}
             frameRate={framerate}
             onCancel={handleCancelVideoExport}
