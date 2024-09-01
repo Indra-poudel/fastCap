@@ -1,6 +1,6 @@
 import {Canvas, SkTypefaceFontProvider} from '@shopify/react-native-skia';
 import Template from 'components/Template';
-import React from 'react';
+import React, {useMemo} from 'react';
 import {Pressable, StyleSheet, useWindowDimensions} from 'react-native';
 import {
   SharedValue,
@@ -9,18 +9,21 @@ import {
 } from 'react-native-reanimated';
 import {Template as TemplateState} from 'store/templates/type';
 import {useTheme} from 'theme/ThemeContext';
-import {GeneratedSentence} from 'utils/sentencesBuilder';
+import {
+  GeneratedSentence,
+  transformWordsToSentences,
+} from 'utils/sentencesBuilder';
 import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 const PADDING = scale(16);
-const HEIGHT = verticalScale(100);
+const HEIGHT = verticalScale(120);
 
 type TemplateCard = {
   currentTime: SharedValue<number>;
   sentences: GeneratedSentence[];
   selectedTemplateId: string;
   onPress: (template: TemplateState) => void;
-  customFontMgr: SkTypefaceFontProvider | null;
+  customFontMgr: SkTypefaceFontProvider;
 } & TemplateState;
 
 const TemplateCard = ({
@@ -45,6 +48,12 @@ const TemplateCard = ({
     onPress(templateState);
   };
 
+  const _sentences = useMemo(() => {
+    const words = sentences.flatMap(sentence => sentence.words);
+    const maxWord = templateState.maxWords < 4 ? templateState.maxWords : 4;
+    return transformWordsToSentences(words, [], maxWord);
+  }, [sentences, templateState.maxWords]);
+
   return (
     <Pressable
       onPress={handlePress}
@@ -67,9 +76,11 @@ const TemplateCard = ({
           width: width - PADDING * 2,
         }}>
         <Template
+          scale={0}
+          rotation={0}
           customFontMgr={customFontMgr}
           currentTime={currentTime}
-          sentences={sentences}
+          sentences={_sentences}
           paragraphLayoutWidth={paragraphLayoutWidth}
           x={x}
           y={derivedY}

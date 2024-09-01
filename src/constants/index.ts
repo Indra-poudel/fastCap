@@ -5,11 +5,14 @@ export const DEFAULT_MAX_WORDS = 5;
 
 export const TEMPLATE_SENTENCE = [
   {
-    text: "Hi guys, it's me, Indra.",
+    uuid: '1',
+    text: "Hi guys, it's me, FastCap.",
     start: 720,
     end: 3366,
     words: [
       {
+        uuid: 'word1',
+        sentenceUuid: '1',
         start: 720,
         end: 1000,
         text: 'Hi',
@@ -17,6 +20,8 @@ export const TEMPLATE_SENTENCE = [
         speaker: null,
       },
       {
+        uuid: 'word2',
+        sentenceUuid: '1',
         start: 1030,
         end: 1574,
         text: 'guys,',
@@ -24,6 +29,8 @@ export const TEMPLATE_SENTENCE = [
         speaker: null,
       },
       {
+        uuid: 'word3',
+        sentenceUuid: '1',
         start: 1702,
         end: 2142,
         text: "it's",
@@ -31,6 +38,8 @@ export const TEMPLATE_SENTENCE = [
         speaker: null,
       },
       {
+        uuid: 'word4',
+        sentenceUuid: '1',
         start: 2206,
         end: 2550,
         text: 'me,',
@@ -38,9 +47,11 @@ export const TEMPLATE_SENTENCE = [
         speaker: null,
       },
       {
+        uuid: 'word5',
+        sentenceUuid: '1',
         start: 2630,
         end: 3366,
-        text: 'Indra.',
+        text: 'FastCap.',
         confidence: 0.79877,
         speaker: null,
       },

@@ -1,4 +1,5 @@
 import {
+  Color,
   FontWeight,
   SkTextShadow,
   TextAlign,
@@ -66,6 +67,13 @@ export type Template = {
   fillColor?: string;
 
   maxWords: number;
+
+  gradient?: {
+    colors: Color[];
+    positions?: number[];
+  };
+
+  letterSpacing?: number;
 };
 
 export interface TemplatesSliceState {

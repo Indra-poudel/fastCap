@@ -13,6 +13,7 @@ import {
   Shadow,
   PaintStyle,
   SkTypefaceFontProvider,
+  Color,
 } from '@shopify/react-native-skia';
 import {
   SharedValue,
@@ -24,6 +25,7 @@ import {GeneratedSentence} from 'utils/sentencesBuilder';
 import KaraokeEffect from 'components/Effects/KaraokeEffect';
 import ClipEffect from 'components/Effects/ClipEffect';
 import {useOption} from 'hooks/useOption';
+import Gradient from 'components/Effects/Gradient';
 
 const defaultColor = 'transparent';
 const defaultShadow: SkTextShadow = {
@@ -118,6 +120,13 @@ type BaseParagraphProps = {
   scale: SharedValue<number> | number;
 
   rotation: SharedValue<number> | number;
+
+  gradient?: {
+    colors: Color[];
+    positions?: number[];
+  };
+
+  letterSpacing?: number;
 };
 
 // Use the utility type to enforce essential dependencies only
@@ -204,6 +213,8 @@ const Template = ({
 
   scale: _scale,
   rotation: _rotation,
+  gradient,
+  letterSpacing = 0,
 }: CustomParagraphProps) => {
   // Default logic implementation
   const activeColorValue = activeColor || color;
@@ -246,6 +257,72 @@ const Template = ({
   const currentTime = useOption(_currentTime);
 
   const scale = useOption(_scale || 1);
+
+  const outlineParagraph = useDerivedValue(() => {
+    // Are the font loaded already?
+    if (!customFontMgr) {
+      return null;
+    }
+    const paragraphStyle: SkParagraphStyle = {
+      textAlign: alignment,
+      textDirection: textDirection,
+    };
+
+    const paragraphBuilder = Skia.ParagraphBuilder.Make(
+      paragraphStyle,
+      customFontMgr,
+    );
+
+    const foregroundPaint = Skia.Paint();
+    foregroundPaint.setStyle(PaintStyle.Stroke);
+    foregroundPaint.setColor(Skia.Color(strokeColor || defaultColor));
+    foregroundPaint.setStrokeWidth(strokeWidth);
+
+    currentSentence.value.words.forEach((word, _index) => {
+      const isActiveWord =
+        currentTime.value >= word.start && currentTime.value <= word.end;
+      const isBeforeWord = currentTime.value >= word.start;
+
+      paragraphBuilder.pushStyle(
+        {
+          fontFamilies: [fontFamily],
+          fontSize: isActiveWord
+            ? activeFontSizeValue
+            : isBeforeWord
+            ? fontSizeBeforeValue
+            : fontSizeAfterValue,
+
+          fontStyle: {
+            weight: isActiveWord
+              ? activeFontWeightValue
+              : isBeforeWord
+              ? fontWeightBeforeValue
+              : fontWeightAfterValue,
+          },
+
+          shadows: isActiveWord
+            ? activeShadowValue
+            : isBeforeWord
+            ? shadowBeforeValue
+            : shadowAfterValue,
+          letterSpacing: letterSpacing,
+        },
+        foregroundPaint,
+      );
+
+      paragraphBuilder.addText(word.text + ' '); // Add space after each word
+      paragraphBuilder.pop();
+    });
+
+    const paragraph = paragraphBuilder.build();
+    paragraph.layout(paragraphLayoutWidth.value);
+
+    return paragraph;
+  }, [customFontMgr, currentSentence, id]);
+
+  const paragraphHeight = useDerivedValue(() => {
+    return outlineParagraph.value?.getHeight() || 0;
+  }, [outlineParagraph]);
 
   const paragraph = useDerivedValue(() => {
     // Are the font loaded already?
@@ -297,68 +374,9 @@ const Template = ({
           : isBeforeWord
           ? shadowBeforeValue
           : shadowAfterValue,
+
+        letterSpacing: letterSpacing,
       });
-
-      paragraphBuilder.addText(word.text + ' '); // Add space after each word
-      paragraphBuilder.pop();
-    });
-
-    const paragraph = paragraphBuilder.build();
-    paragraph.layout(paragraphLayoutWidth.value);
-
-    return paragraph;
-  }, [customFontMgr, currentSentence, id]);
-
-  const outlineParagraph = useDerivedValue(() => {
-    // Are the font loaded already?
-    if (!customFontMgr) {
-      return null;
-    }
-    const paragraphStyle: SkParagraphStyle = {
-      textAlign: alignment,
-      textDirection: textDirection,
-    };
-
-    const paragraphBuilder = Skia.ParagraphBuilder.Make(
-      paragraphStyle,
-      customFontMgr,
-    );
-
-    const foregroundPaint = Skia.Paint();
-    foregroundPaint.setStyle(PaintStyle.Stroke);
-    foregroundPaint.setColor(Skia.Color(strokeColor || defaultColor));
-    foregroundPaint.setStrokeWidth(5);
-
-    currentSentence.value.words.forEach((word, _index) => {
-      const isActiveWord =
-        currentTime.value >= word.start && currentTime.value <= word.end;
-      const isBeforeWord = currentTime.value >= word.start;
-
-      paragraphBuilder.pushStyle(
-        {
-          fontFamilies: [fontFamily],
-          fontSize: isActiveWord
-            ? activeFontSizeValue
-            : isBeforeWord
-            ? fontSizeBeforeValue
-            : fontSizeAfterValue,
-
-          fontStyle: {
-            weight: isActiveWord
-              ? activeFontWeightValue
-              : isBeforeWord
-              ? fontWeightBeforeValue
-              : fontWeightAfterValue,
-          },
-
-          shadows: isActiveWord
-            ? activeShadowValue
-            : isBeforeWord
-            ? shadowBeforeValue
-            : shadowAfterValue,
-        },
-        foregroundPaint,
-      );
 
       paragraphBuilder.addText(word.text + ' '); // Add space after each word
       paragraphBuilder.pop();
@@ -388,10 +406,6 @@ const Template = ({
     },
     [currentTime, sentences],
   );
-
-  const paragraphHeight = useDerivedValue(() => {
-    return outlineParagraph.value?.getHeight() || 0;
-  }, [paragraph]);
 
   const paragraphWidth = useDerivedValue(() => {
     const maxWidthOutBreak =
@@ -651,10 +665,6 @@ const Template = ({
           r={sentenceBackgroundRadius}
           color={sentenceBackgroundColor}
           opacity={sentenceBackgroundOpacity}
-          origin={{
-            x: 0,
-            y: 0,
-          }}
         />
       )}
 
@@ -671,22 +681,56 @@ const Template = ({
             )}
           </Paint>
         }>
-        {strokeWidth !== 0 && (
-          <Paragraph
-            paragraph={outlineParagraph}
-            x={minX}
-            y={minY}
-            width={paragraphLayoutWidth}
-            style={'stroke'}
-            strokeWidth={strokeWidth}
-          />
+        {gradient ? (
+          <Gradient
+            currentTime={currentTime}
+            x={backgroundX}
+            y={backgroundY}
+            width={backgroundWidth}
+            height={paragraphHeight}
+            currentSentence={currentSentence}
+            colors={gradient.colors}
+            strokeWidth={strokeWidth}>
+            <>
+              {strokeWidth !== 0 && (
+                <Paragraph
+                  paragraph={outlineParagraph}
+                  x={minX}
+                  y={minY}
+                  width={paragraphLayoutWidth}
+                  style={'stroke'}
+                  strokeWidth={strokeWidth}
+                />
+              )}
+
+              <Paragraph
+                paragraph={paragraph}
+                x={minX}
+                y={minY}
+                width={paragraphLayoutWidth}
+              />
+            </>
+          </Gradient>
+        ) : (
+          <>
+            {strokeWidth !== 0 && (
+              <Paragraph
+                paragraph={outlineParagraph}
+                x={minX}
+                y={minY}
+                width={paragraphLayoutWidth}
+                style={'stroke'}
+                strokeWidth={strokeWidth}
+              />
+            )}
+            <Paragraph
+              paragraph={paragraph}
+              x={minX}
+              y={minY}
+              width={paragraphLayoutWidth}
+            />
+          </>
         )}
-        <Paragraph
-          paragraph={paragraph}
-          x={minX}
-          y={minY}
-          width={paragraphLayoutWidth}
-        />
       </Group>
     </Group>
   );

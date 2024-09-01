@@ -2,19 +2,22 @@ import BottomSheet from 'components/BottomSheet';
 import TemplateCard from 'containers/TemplateSelector/TemplateCard';
 import React from 'react';
 import {StyleSheet, View} from 'react-native';
-import {useFrameCallback, useSharedValue} from 'react-native-reanimated';
+import Animated, {
+  useFrameCallback,
+  useSharedValue,
+} from 'react-native-reanimated';
 import {TEMPLATE_SENTENCE as SENTENCE} from 'constants/index';
 import {useAppSelector} from 'hooks/useStore';
 import {selectAllTemplates} from 'store/templates/selector';
 import {Template} from 'store/templates/type';
 import {SkTypefaceFontProvider} from '@shopify/react-native-skia';
-import { verticalScale} from 'react-native-size-matters/extend';
+import {verticalScale} from 'react-native-size-matters/extend';
 
 type TemplateSelectorType = {
   onClose: () => void;
   selectedTemplateId: string;
   onSelect: (template: Template) => void;
-  customFontMgr: SkTypefaceFontProvider | null;
+  customFontMgr: SkTypefaceFontProvider;
 };
 
 const TemplateSelector = ({
@@ -43,7 +46,9 @@ const TemplateSelector = ({
 
   return (
     <BottomSheet label="Style Your Subs 🎨" onClose={onClose}>
-      <View style={[styles.templateCardsWrapper]}>
+      <Animated.ScrollView
+        alwaysBounceVertical
+        contentContainerStyle={styles.templateCardsWrapper}>
         {templates.map(template => {
           return (
             <TemplateCard
@@ -57,7 +62,7 @@ const TemplateSelector = ({
             />
           );
         })}
-      </View>
+      </Animated.ScrollView>
     </BottomSheet>
   );
 };
