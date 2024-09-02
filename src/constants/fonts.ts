@@ -20,6 +20,7 @@ export const FONT_FAMILY = {
   ExcelsiorOutline: 'ExcelsiorOutline',
   LuckiestGuy: 'LuckiestGuy',
   CherryBombOne: 'CherryBombOne',
+  DOTCIRFUL: 'DOTCIRFUL',
 };
 
 export const fontSource = {
@@ -284,4 +285,11 @@ export const fontSource = {
   ],
 
   [FONT_FAMILY.LuckiestGuy]: [require('@assets/fonts/LuckiestGuy-Regular.ttf')],
+
+  [FONT_FAMILY.DOTCIRFUL]: [
+    require('../assets/fonts/DOTCIRFUL-Bold.otf'),
+    require('../assets/fonts/DOTCIRFUL-BoldItalic.otf'),
+    require('../assets/fonts/DOTCIRFUL-Regular.otf'),
+    require('../assets/fonts/DOTCIRFUL-RegularItalic.otf'),
+  ],
 };

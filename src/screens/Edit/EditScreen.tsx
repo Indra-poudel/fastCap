@@ -759,6 +759,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   }, [duration]);
 
   const toggleTemplateSelector = () => {
+    paused.value = true;
     setTemplateSelector(prev => !prev);
   };
 
@@ -1024,7 +1025,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         />
       )}
 
-      {isTemplateSelectorOpen && selectedVideo && (
+      {isTemplateSelectorOpen && selectedVideo && customFontMgr && (
         <TemplateSelector
           customFontMgr={customFontMgr}
           onSelect={handleSelectTemplate}

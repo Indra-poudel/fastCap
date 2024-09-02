@@ -1,7 +1,7 @@
 import BottomSheet from 'components/BottomSheet';
 import TemplateCard from 'containers/TemplateSelector/TemplateCard';
-import React from 'react';
-import {StyleSheet, View} from 'react-native';
+import React, {useCallback} from 'react';
+import {StyleSheet} from 'react-native';
 import Animated, {
   useFrameCallback,
   useSharedValue,
@@ -12,6 +12,7 @@ import {selectAllTemplates} from 'store/templates/selector';
 import {Template} from 'store/templates/type';
 import {SkTypefaceFontProvider} from '@shopify/react-native-skia';
 import {verticalScale} from 'react-native-size-matters/extend';
+import {transformWordsToSentences} from 'utils/sentencesBuilder';
 
 type TemplateSelectorType = {
   onClose: () => void;
@@ -26,11 +27,11 @@ const TemplateSelector = ({
   onSelect,
   customFontMgr,
 }: TemplateSelectorType) => {
-  const currentTime = useSharedValue(SENTENCE[0].start);
+  const currentTime = useSharedValue(720);
 
   const templates = useAppSelector(selectAllTemplates);
 
-  const sentenceEndTime = SENTENCE[0].end;
+  const sentenceEndTime = 3366;
 
   // Update the currentTime based on the clock
   useFrameCallback(frameInfo => {
@@ -40,8 +41,17 @@ const TemplateSelector = ({
         currentTime.value += timeSincePreviousFrame;
       }
     } else {
-      currentTime.value = SENTENCE[0].start;
+      currentTime.value = 720;
     }
+  }, []);
+
+  const getSentences = useCallback((maxWords: number) => {
+    const words = SENTENCE.flatMap(sentence => sentence.words);
+    const _maxWords = maxWords < 4 ? maxWords : 4;
+
+    const finalSentences = transformWordsToSentences(words, [], _maxWords);
+
+    return finalSentences;
   }, []);
 
   return (
@@ -71,6 +81,7 @@ const styles = StyleSheet.create({
   templateCardsWrapper: {
     paddingVertical: verticalScale(16),
     gap: verticalScale(12),
+    flexGrow: 1,
   },
 });
 

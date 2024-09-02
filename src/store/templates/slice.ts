@@ -126,8 +126,68 @@ const initialTemplatesState: TemplatesSliceState = {
       weight: FontWeight.Normal,
       maxWords: 1,
     },
+
+    ['7']: {
+      id: '7',
+      name: 'led',
+      alignment: TextAlign.Center,
+      color: '#ffffff',
+      fontSize: 36,
+      fontFamily: FONT_FAMILY.DOTCIRFUL,
+      weight: FontWeight.Bold,
+      maxWords: 4,
+      shadow: [
+        {
+          color: SkiaApi.Color('#782a9f'),
+          offset: {
+            y: 2,
+            x: 2,
+          },
+          blurRadius: 10,
+        },
+        {
+          color: SkiaApi.Color('#782a9f'),
+          offset: {
+            y: -2,
+            x: -2,
+          },
+          blurRadius: 10,
+        },
+      ],
+
+      activeShadow: [
+        {
+          color: SkiaApi.Color('#dc5050'),
+          offset: {
+            y: 2,
+            x: 2,
+          },
+          blurRadius: 10,
+        },
+        {
+          color: SkiaApi.Color('#dc5050'),
+          offset: {
+            y: -2,
+            x: -2,
+          },
+          blurRadius: 10,
+        },
+      ],
+      strokeColor: '#bb46cc',
+      activeStrokeColor: '#dc5050',
+      sentenceBackgroundColor: 'black',
+      sentenceBackgroundPadding: 4,
+      sentenceBackgroundOpacity: 0.3,
+      strokeWidth: 2,
+      sentenceShadow: {
+        dx: 4,
+        dy: 4,
+        blur: 10,
+        color: '#b547c6',
+      },
+    },
   },
-  allIds: ['1', '2', '3', '4', '5', '6'],
+  allIds: ['1', '2', '3', '4', '5', '6', '7'],
 };
 
 const templatesSlice = createSlice({

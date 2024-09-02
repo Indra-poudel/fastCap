@@ -283,6 +283,8 @@ const Template = ({
         currentTime.value >= word.start && currentTime.value <= word.end;
       const isBeforeWord = currentTime.value >= word.start;
 
+      console.log('Current', currentSentence.value, 'template id', id);
+
       paragraphBuilder.pushStyle(
         {
           fontFamilies: [fontFamily],
@@ -291,6 +293,12 @@ const Template = ({
             : isBeforeWord
             ? fontSizeBeforeValue
             : fontSizeAfterValue,
+
+          color: isActiveWord
+            ? Skia.Color(activeStrokeColorValue)
+            : isBeforeWord
+            ? Skia.Color(strokeColorBeforeValue)
+            : Skia.Color(strokeColorAfterValue),
 
           fontStyle: {
             weight: isActiveWord
