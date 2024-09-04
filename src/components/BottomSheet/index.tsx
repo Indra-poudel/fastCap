@@ -209,7 +209,6 @@ const styles = StyleSheet.create({
     marginVertical: verticalScale(10),
   },
   content: {
-    flex: 1,
     alignItems: 'center',
   },
 
