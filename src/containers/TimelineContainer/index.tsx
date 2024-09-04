@@ -56,4 +56,4 @@ const TimelineContainer = (props: TimelineContainerProps) => {
   );
 };
 
-export default TimelineContainer;
+export default React.memo(TimelineContainer);

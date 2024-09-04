@@ -138,7 +138,7 @@ const initialTemplatesState: TemplatesSliceState = {
       maxWords: 4,
       shadow: [
         {
-          color: SkiaApi.Color('#782a9f'),
+          color: '#782a9f',
           offset: {
             y: 2,
             x: 2,
@@ -146,7 +146,7 @@ const initialTemplatesState: TemplatesSliceState = {
           blurRadius: 10,
         },
         {
-          color: SkiaApi.Color('#782a9f'),
+          color: '#782a9f',
           offset: {
             y: -2,
             x: -2,
@@ -157,7 +157,7 @@ const initialTemplatesState: TemplatesSliceState = {
 
       activeShadow: [
         {
-          color: SkiaApi.Color('#dc5050'),
+          color: '#dc5050',
           offset: {
             y: 2,
             x: 2,
@@ -165,7 +165,7 @@ const initialTemplatesState: TemplatesSliceState = {
           blurRadius: 10,
         },
         {
-          color: SkiaApi.Color('#dc5050'),
+          color: '#dc5050',
           offset: {
             y: -2,
             x: -2,

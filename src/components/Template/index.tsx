@@ -14,6 +14,7 @@ import {
   PaintStyle,
   SkTypefaceFontProvider,
   Color,
+  SkPoint,
 } from '@shopify/react-native-skia';
 import {
   SharedValue,
@@ -87,10 +88,26 @@ type BaseParagraphProps = {
   sentenceBackgroundOpacity?: number;
   sentenceBackgroundRadius?: number;
 
-  shadow?: SkTextShadow[];
-  shadowBefore?: SkTextShadow[];
-  shadowAfter?: SkTextShadow[];
-  activeShadow?: SkTextShadow[];
+  shadow?: {
+    color: string;
+    offset?: SkPoint;
+    blurRadius?: number;
+  }[];
+  shadowBefore?: {
+    color: string;
+    offset?: SkPoint;
+    blurRadius?: number;
+  }[];
+  shadowAfter?: {
+    color: string;
+    offset?: SkPoint;
+    blurRadius?: number;
+  }[];
+  activeShadow?: {
+    color: string;
+    offset?: SkPoint;
+    blurRadius?: number;
+  }[];
 
   sentenceShadow?: {
     dx: number;
@@ -190,10 +207,10 @@ const Template = ({
   sentenceBackgroundOpacity = 1,
   sentenceBackgroundRadius = 0,
 
-  shadow,
-  shadowBefore,
-  shadowAfter,
-  activeShadow,
+  shadow: _shadow,
+  shadowBefore: _shadowBefore,
+  shadowAfter: _shadowAfter,
+  activeShadow: _activeShadow,
 
   strokeWidth = 0,
 
@@ -242,6 +259,26 @@ const Template = ({
     strokeColorBefore || strokeColor || defaultColor;
   const strokeColorAfterValue = strokeColorAfter || strokeColor || defaultColor;
 
+  const activeShadow = _activeShadow?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+  }));
+
+  const shadowBefore = _shadowBefore?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+  }));
+
+  const shadowAfter = _shadowAfter?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+  }));
+
+  const shadow = _shadow?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+  }));
+
   const activeShadowValue = activeShadow || shadow || [defaultShadow];
   const shadowBeforeValue = shadowBefore || shadow || [defaultShadow];
   const shadowAfterValue = shadowAfter || shadow || [defaultShadow];
@@ -250,13 +287,13 @@ const Template = ({
 
   const x = useOption(_x);
 
-  const rotation = useOption(_rotation || 0);
+  const rotation = useOption(_rotation);
 
   const y = useOption(_y);
 
   const currentTime = useOption(_currentTime);
 
-  const scale = useOption(_scale || 1);
+  const scale = useOption(_scale);
 
   const outlineParagraph = useDerivedValue(() => {
     // Are the font loaded already?
@@ -282,8 +319,6 @@ const Template = ({
       const isActiveWord =
         currentTime.value >= word.start && currentTime.value <= word.end;
       const isBeforeWord = currentTime.value >= word.start;
-
-      console.log('Current', currentSentence.value, 'template id', id);
 
       paragraphBuilder.pushStyle(
         {

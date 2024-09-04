@@ -1,7 +1,7 @@
 import {
   Color,
   FontWeight,
-  SkTextShadow,
+  SkPoint,
   TextAlign,
   TextDirection,
 } from '@shopify/react-native-skia';
@@ -41,10 +41,26 @@ export type Template = {
   sentenceBackgroundOpacity?: number;
   sentenceBackgroundRadius?: number;
 
-  shadow?: SkTextShadow[];
-  shadowBefore?: SkTextShadow[];
-  shadowAfter?: SkTextShadow[];
-  activeShadow?: SkTextShadow[];
+  shadow?: {
+    color: string;
+    offset?: SkPoint;
+    blurRadius?: number;
+  }[];
+  shadowBefore?: {
+    color: string;
+    offset?: SkPoint;
+    blurRadius?: number;
+  }[];
+  shadowAfter?: {
+    color: string;
+    offset?: SkPoint;
+    blurRadius?: number;
+  }[];
+  activeShadow?: {
+    color: string;
+    offset?: SkPoint;
+    blurRadius?: number;
+  }[];
 
   sentenceShadow?: {
     dx: number;
