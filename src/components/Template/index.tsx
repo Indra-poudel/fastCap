@@ -44,7 +44,7 @@ type RequireIf<T, K extends keyof T, U extends keyof T> = T &
 
 type BaseParagraphProps = {
   currentTime: SharedValue<number> | number;
-  sentences: GeneratedSentence[];
+  sentences: GeneratedSentence[] | SharedValue<GeneratedSentence[]>;
 
   paragraphLayoutWidth: SharedValue<number>;
   x: SharedValue<number> | number;
@@ -163,7 +163,7 @@ const EMPTY_SENTENCE = {
 
 const Template = ({
   currentTime: _currentTime,
-  sentences,
+  sentences: _sentences,
 
   paragraphLayoutWidth,
   x: _x,
@@ -284,6 +284,8 @@ const Template = ({
   const shadowAfterValue = shadowAfter || shadow || [defaultShadow];
 
   const currentSentence = useSharedValue<GeneratedSentence>(EMPTY_SENTENCE);
+
+  const sentences = useOption(_sentences);
 
   const x = useOption(_x);
 
@@ -434,7 +436,7 @@ const Template = ({
   useAnimatedReaction(
     () => currentTime.value,
     _currentTime => {
-      const activeSentence = sentences.find(
+      const activeSentence = sentences.value.find(
         sentence =>
           _currentTime >= sentence.start && _currentTime <= sentence.end,
       );

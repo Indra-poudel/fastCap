@@ -1,6 +1,6 @@
 import {Canvas, SkTypefaceFontProvider} from '@shopify/react-native-skia';
 import Template from 'components/Template';
-import React from 'react';
+import React, {useMemo} from 'react';
 import {Pressable, StyleSheet, useWindowDimensions} from 'react-native';
 import {
   SharedValue,
@@ -9,7 +9,10 @@ import {
 } from 'react-native-reanimated';
 import {Template as TemplateState} from 'store/templates/type';
 import {useTheme} from 'theme/ThemeContext';
-import {GeneratedSentence} from 'utils/sentencesBuilder';
+import {
+  GeneratedSentence,
+  transformWordsToSentences,
+} from 'utils/sentencesBuilder';
 import {scale, verticalScale} from 'react-native-size-matters/extend';
 
 const PADDING = scale(16);
@@ -36,6 +39,15 @@ const TemplateCard = ({
   const x = useSharedValue(width / 2 - PADDING);
   const paragraphLayoutWidth = useSharedValue(width - PADDING * 4);
   const paragraphHeight = useSharedValue(0);
+
+  const _sentences = useMemo(() => {
+    const words = sentences.flatMap(sentence => sentence.words);
+    const _maxWords = templateState.maxWords < 4 ? templateState.maxWords : 4;
+
+    const finalSentences = transformWordsToSentences(words, [], _maxWords);
+
+    return finalSentences as unknown as GeneratedSentence[];
+  }, [sentences, templateState.maxWords]);
 
   const derivedY = useDerivedValue(() => {
     return HEIGHT / 2 - paragraphHeight.value / 2;
@@ -67,11 +79,11 @@ const TemplateCard = ({
           width: width - PADDING * 2,
         }}>
         <Template
-          scale={0}
+          scale={1}
           rotation={0}
           customFontMgr={customFontMgr}
           currentTime={currentTime}
-          sentences={sentences}
+          sentences={_sentences}
           paragraphLayoutWidth={paragraphLayoutWidth}
           x={x}
           y={derivedY}
