@@ -135,3 +135,20 @@ function isSentenceEnding(text: string): boolean {
   const sentenceEndings = ['.', '?', '!', '。', '？', '！', ':', ';', '؟', '।'];
   return sentenceEndings.some(ending => text.endsWith(ending));
 }
+
+export const transformWordsToSentencesAsync = (
+  words: SentenceWord[],
+  highlightedWords: AutoHighlightResult[],
+  maxWords: number,
+): Promise<GeneratedSentence[]> => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const sentences = transformWordsToSentences(
+        words,
+        highlightedWords,
+        maxWords,
+      );
+      resolve(sentences);
+    }, 0);
+  });
+};

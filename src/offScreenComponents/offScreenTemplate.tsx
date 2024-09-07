@@ -81,10 +81,10 @@ export const renderOffScreenTemplate = (
     sentenceBackgroundOpacity = 1,
     sentenceBackgroundRadius = 0,
 
-    shadow,
-    shadowBefore,
-    shadowAfter,
-    activeShadow,
+    shadow: _shadow,
+    shadowBefore: _shadowBefore,
+    shadowAfter: _shadowAfter,
+    activeShadow: _activeShadow,
 
     strokeWidth = 0,
 
@@ -134,6 +134,26 @@ export const renderOffScreenTemplate = (
   const strokeColorBeforeValue =
     strokeColorBefore || strokeColor || defaultColor;
   const strokeColorAfterValue = strokeColorAfter || strokeColor || defaultColor;
+
+  const activeShadow = _activeShadow?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+  }));
+
+  const shadowBefore = _shadowBefore?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+  }));
+
+  const shadowAfter = _shadowAfter?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+  }));
+
+  const shadow = _shadow?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+  }));
 
   const activeShadowValue = activeShadow || shadow || [defaultShadow];
   const shadowBeforeValue = shadowBefore || shadow || [defaultShadow];

@@ -42,9 +42,12 @@ const TemplateCard = ({
 
   const _sentences = useMemo(() => {
     const words = sentences.flatMap(sentence => sentence.words);
-    const _maxWords = templateState.maxWords < 4 ? templateState.maxWords : 4;
 
-    const finalSentences = transformWordsToSentences(words, [], _maxWords);
+    const finalSentences = transformWordsToSentences(
+      words,
+      [],
+      templateState.maxWords,
+    );
 
     return finalSentences as unknown as GeneratedSentence[];
   }, [sentences, templateState.maxWords]);

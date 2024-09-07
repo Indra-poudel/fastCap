@@ -39,7 +39,7 @@ import {useTheme} from 'theme/ThemeContext';
 import {generateThumbnail} from 'utils/video';
 import {
   GeneratedSentence,
-  transformWordsToSentences,
+  transformWordsToSentencesAsync,
 } from 'utils/sentencesBuilder';
 import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {updateVideo} from 'store/videos/slice';
@@ -310,19 +310,26 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const handleSelectTemplate = (template: TemplateState) => {
     if (selectedVideo) {
       const allWords = selectedVideo.sentences.flatMap(value => value.words);
-      const newGeneratedSentences = transformWordsToSentences(
-        allWords,
-        [],
-        template.maxWords,
-      );
 
       const videoObjectWithNewTemplateId: Video = {
         ...selectedVideo,
         templateId: template.id,
-        sentences: newGeneratedSentences,
+        sentences: [],
       };
 
       dispatch(updateVideo(videoObjectWithNewTemplateId));
+
+      transformWordsToSentencesAsync(allWords, [], template.maxWords).then(
+        newGeneratedSentences => {
+          const _videoObjectWithNewTemplateId: Video = {
+            ...selectedVideo,
+            templateId: template.id,
+            sentences: newGeneratedSentences,
+          };
+
+          dispatch(updateVideo(_videoObjectWithNewTemplateId));
+        },
+      );
     }
   };
 
