@@ -114,6 +114,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   const animatedStyle = useAnimatedStyle(() => {
     return {
       top: top.value,
+      height: SCREEN_HEIGHT - top.value,
     };
   });
 
@@ -175,7 +176,10 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
           </View>
         </GestureDetector>
 
-        <View style={[styles.content, contentWrapperStyle]}>{children}</View>
+        <Animated.ScrollView
+          contentContainerStyle={[styles.content, contentWrapperStyle]}>
+          {children}
+        </Animated.ScrollView>
       </Animated.View>
     </>
   );
@@ -210,6 +214,7 @@ const styles = StyleSheet.create({
   },
   content: {
     alignItems: 'center',
+    flexGrow: 1,
   },
 
   header: {

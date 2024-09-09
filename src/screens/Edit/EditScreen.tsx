@@ -19,6 +19,7 @@ import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
 import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
+  InteractionManager,
   Pressable,
   StyleSheet,
   Text,
@@ -58,6 +59,7 @@ import {fontSource} from 'constants/fonts';
 
 import {scale, verticalScale} from 'react-native-size-matters/extend';
 import TimelineContainer from 'containers/TimelineContainer';
+import usePrevious from 'hooks/usePrevious';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -147,6 +149,10 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const [renderTimeLine, setRenderTimeline] = useState(false);
 
   const [isTemplateSelectorOpen, setTemplateSelector] = useState(false);
+
+  const previousSelectedTemplateId = usePrevious(selectedTemplate?.id);
+
+  const [isTemplateSelecting, setTemplateSelecting] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -307,29 +313,40 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     }
   };
 
+  useEffect(() => {
+    if (
+      previousSelectedTemplateId !== selectedTemplate?.id &&
+      selectedVideo &&
+      selectedTemplate
+    ) {
+      const allWords = selectedVideo.sentences.flatMap(value => value.words);
+      InteractionManager.runAfterInteractions(() => {
+        transformWordsToSentencesAsync(
+          allWords,
+          [],
+          selectedTemplate.maxWords,
+        ).then(newGeneratedSentences => {
+          const _videoObjectWithNewTemplateId: Video = {
+            ...selectedVideo,
+            sentences: newGeneratedSentences,
+          };
+          dispatch(updateVideo(_videoObjectWithNewTemplateId));
+          setTemplateSelecting(false);
+        });
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTemplate, previousSelectedTemplateId]);
+
   const handleSelectTemplate = (template: TemplateState) => {
     if (selectedVideo) {
-      const allWords = selectedVideo.sentences.flatMap(value => value.words);
-
+      setTemplateSelecting(template.id !== previousSelectedTemplateId);
       const videoObjectWithNewTemplateId: Video = {
         ...selectedVideo,
         templateId: template.id,
-        sentences: [],
       };
 
       dispatch(updateVideo(videoObjectWithNewTemplateId));
-
-      transformWordsToSentencesAsync(allWords, [], template.maxWords).then(
-        newGeneratedSentences => {
-          const _videoObjectWithNewTemplateId: Video = {
-            ...selectedVideo,
-            templateId: template.id,
-            sentences: newGeneratedSentences,
-          };
-
-          dispatch(updateVideo(_videoObjectWithNewTemplateId));
-        },
-      );
     }
   };
 
@@ -1076,6 +1093,33 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           />
         </View>
       )}
+
+      {isTemplateSelecting && (
+        <View style={[Styles.flexCenter]}>
+          <View
+            style={[
+              Styles.loadingContainer,
+              {
+                backgroundColor: theme.colors.black1,
+              },
+            ]}>
+            <ActivityIndicator
+              shouldRasterizeIOS
+              color={theme.colors.primary}
+              size={'large'}
+            />
+            <Text
+              style={[
+                theme.typography.subheader.small,
+                {
+                  color: theme.colors.primary,
+                },
+              ]}>
+              Applying template style...
+            </Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -1173,6 +1217,11 @@ const Styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     gap: verticalScale(24),
+  },
+
+  loadingContainer: {
+    paddingVertical: verticalScale(12),
+    paddingHorizontal: scale(12),
   },
 });
 
