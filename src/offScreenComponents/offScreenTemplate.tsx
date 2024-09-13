@@ -1,4 +1,4 @@
-/* eslint-disable react/react-in-jsx-scope */
+import React from 'react';
 import {
   SkTextShadow,
   TextDirection,
@@ -8,8 +8,6 @@ import {
   TextAlign,
   PaintStyle,
   SkParagraph,
-  StrokeCap,
-  StrokeJoin,
   Group,
   drawAsImage,
   Paragraph,
@@ -27,6 +25,7 @@ const EMPTY_SENTENCE = {
   words: [],
   start: 0,
   end: 0,
+  uuid: '1',
 };
 const defaultColor = 'transparent';
 const defaultShadow: SkTextShadow = {
@@ -41,6 +40,8 @@ const defaultShadow: SkTextShadow = {
 export const renderOffScreenTemplate = (
   width: number,
   height: number,
+  scaleFactorX: number,
+  scaleFactorY: number,
   {
     currentTime: _currentTime,
     sentences,
@@ -80,10 +81,10 @@ export const renderOffScreenTemplate = (
     sentenceBackgroundOpacity = 1,
     sentenceBackgroundRadius = 0,
 
-    shadow,
-    shadowBefore,
-    shadowAfter,
-    activeShadow,
+    shadow: _shadow,
+    shadowBefore: _shadowBefore,
+    shadowAfter: _shadowAfter,
+    activeShadow: _activeShadow,
 
     strokeWidth = 0,
 
@@ -98,6 +99,8 @@ export const renderOffScreenTemplate = (
     fillColor,
 
     customFontMgr,
+    scale: _scale,
+    rotation: _rotation,
   }: CustomParagraphProps,
 ): {
   image: SkImage;
@@ -132,6 +135,50 @@ export const renderOffScreenTemplate = (
     strokeColorBefore || strokeColor || defaultColor;
   const strokeColorAfterValue = strokeColorAfter || strokeColor || defaultColor;
 
+  const activeShadow = _activeShadow?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+    offset: value?.offset
+      ? {
+          x: value?.offset?.x + scaleFactorX,
+          y: value?.offset?.y + scaleFactorY,
+        }
+      : undefined,
+  }));
+
+  const shadowBefore = _shadowBefore?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+    offset: value?.offset
+      ? {
+          x: value?.offset?.x * scaleFactorX,
+          y: value?.offset?.y * scaleFactorY,
+        }
+      : undefined,
+  }));
+
+  const shadowAfter = _shadowAfter?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+    offset: value?.offset
+      ? {
+          x: value?.offset?.x * scaleFactorX,
+          y: value?.offset?.y * scaleFactorY,
+        }
+      : undefined,
+  }));
+
+  const shadow = _shadow?.map(value => ({
+    ...value,
+    color: Skia.Color(value.color),
+    offset: value?.offset
+      ? {
+          x: value?.offset?.x * scaleFactorX,
+          y: value?.offset?.y * scaleFactorY,
+        }
+      : undefined,
+  }));
+
   const activeShadowValue = activeShadow || shadow || [defaultShadow];
   const shadowBeforeValue = shadowBefore || shadow || [defaultShadow];
   const shadowAfterValue = shadowAfter || shadow || [defaultShadow];
@@ -140,6 +187,18 @@ export const renderOffScreenTemplate = (
     ? _x
     : {
         value: _x,
+      };
+
+  const scale = isSharedValue(_scale)
+    ? _scale
+    : {
+        value: _scale,
+      };
+
+  const rotation = isSharedValue(_rotation)
+    ? _rotation
+    : {
+        value: _rotation,
       };
 
   const y = isSharedValue(_y)
@@ -187,13 +246,9 @@ export const renderOffScreenTemplate = (
     );
 
     const foregroundPaint = Skia.Paint();
-    foregroundPaint.setAntiAlias(true);
-    foregroundPaint.setDither(true);
-    foregroundPaint.setStrokeCap(StrokeCap.Round); // Ensures smooth stroke ends
-    foregroundPaint.setStrokeJoin(StrokeJoin.Round);
-    foregroundPaint.setColor(Skia.Color(strokeColor || defaultColor));
-    foregroundPaint.setStrokeWidth(5);
     foregroundPaint.setStyle(PaintStyle.Stroke);
+    foregroundPaint.setColor(Skia.Color(strokeColor || defaultColor));
+    foregroundPaint.setStrokeWidth(strokeWidth * scaleFactorX);
 
     currentSentence.words.forEach((word, _index) => {
       const isActiveWord =
@@ -364,10 +419,25 @@ export const renderOffScreenTemplate = (
     get backgroundHeight() {
       return this.paragraphHeight + sentenceBackgroundPadding * 2;
     },
+
+    get derivedTransform() {
+      const centerX = layoutData.backgroundX + layoutData.backgroundWidth / 2;
+      const centerY = layoutData.backgroundY + layoutData.backgroundHeight / 2;
+      const rotateInRadians = rotation.value;
+
+      return [
+        {translateX: centerX},
+        {translateY: centerY},
+        {scale: scale.value},
+        {rotateZ: rotateInRadians}, // Skia expects rotation in radians
+        {translateX: -centerX},
+        {translateY: -centerY},
+      ];
+    },
   };
 
   const image = drawAsImage(
-    <>
+    <Group transform={layoutData.derivedTransform}>
       {sentenceBackgroundColor && (
         <RoundedRect
           antiAlias={true}
@@ -393,8 +463,8 @@ export const renderOffScreenTemplate = (
             {sentenceShadow && (
               <Shadow
                 blur={sentenceShadow.blur}
-                dx={sentenceShadow.dx}
-                dy={sentenceShadow.dy}
+                dx={sentenceShadow.dx * scaleFactorX}
+                dy={sentenceShadow.dy * scaleFactorY}
                 color={Skia.Color(sentenceShadow.color)}
               />
             )}
@@ -407,9 +477,7 @@ export const renderOffScreenTemplate = (
             y={layoutData.minY}
             width={paragraphLayoutWidth.value}
             style={'stroke'}
-            strokeWidth={strokeWidth}
-            antiAlias={true}
-            dither={true}
+            strokeWidth={strokeWidth * scaleFactorX}
           />
         )}
         <Paragraph
@@ -421,7 +489,7 @@ export const renderOffScreenTemplate = (
           dither={true}
         />
       </Group>
-    </>,
+    </Group>,
     {
       width: width,
       height: height,

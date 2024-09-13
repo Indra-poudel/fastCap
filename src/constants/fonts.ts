@@ -17,9 +17,17 @@ export const FONT_FAMILY = {
   Merriweather: 'Merriweather',
   Raleway: 'Raleway',
   SourceSansPro: 'SourceSansPro',
+  ExcelsiorOutline: 'ExcelsiorOutline',
+  LuckiestGuy: 'LuckiestGuy',
+  CherryBombOne: 'CherryBombOne',
+  DOTCIRFUL: 'DOTCIRFUL',
 };
 
 export const fontSource = {
+  [FONT_FAMILY.CherryBombOne]: [
+    require('../assets/fonts/CherryBombOne-Regular.ttf'),
+  ],
+
   [FONT_FAMILY.Inter]: [
     require('../assets/fonts/Inter-Medium.ttf'),
     require('../assets/fonts/Inter-Black.ttf'),
@@ -270,5 +278,18 @@ export const fontSource = {
     require('@assets/fonts/SourceSansPro-Bold.otf'),
     require('@assets/fonts/SourceSansPro-BlackIt.otf'),
     require('@assets/fonts/SourceSansPro-Black.otf'),
+  ],
+
+  [FONT_FAMILY.ExcelsiorOutline]: [
+    require('@assets/fonts/ExcelsiorOutline.ttf'),
+  ],
+
+  [FONT_FAMILY.LuckiestGuy]: [require('@assets/fonts/LuckiestGuy-Regular.ttf')],
+
+  [FONT_FAMILY.DOTCIRFUL]: [
+    require('../assets/fonts/DOTCIRFUL-Bold.otf'),
+    require('../assets/fonts/DOTCIRFUL-BoldItalic.otf'),
+    require('../assets/fonts/DOTCIRFUL-Regular.otf'),
+    require('../assets/fonts/DOTCIRFUL-RegularItalic.otf'),
   ],
 };

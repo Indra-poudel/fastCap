@@ -19,6 +19,7 @@ import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
 import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
+  InteractionManager,
   Pressable,
   StyleSheet,
   Text,
@@ -39,7 +40,7 @@ import {useTheme} from 'theme/ThemeContext';
 import {generateThumbnail} from 'utils/video';
 import {
   GeneratedSentence,
-  transformWordsToSentences,
+  transformWordsToSentencesAsync,
 } from 'utils/sentencesBuilder';
 import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {updateVideo} from 'store/videos/slice';
@@ -58,6 +59,7 @@ import {fontSource} from 'constants/fonts';
 
 import {scale, verticalScale} from 'react-native-size-matters/extend';
 import TimelineContainer from 'containers/TimelineContainer';
+import usePrevious from 'hooks/usePrevious';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -119,6 +121,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const templateCurrentHeight = useSharedValue(0);
   const templateCurrentWidth = useSharedValue(0);
 
+  const templateScale = useSharedValue(1);
+  const savedScale = useSharedValue(1);
+  const rotation = useSharedValue(0);
+  const savedRotation = useSharedValue(0);
+
   const dispatch = useAppDispatch();
 
   const {currentFrame, currentTime, framerate, duration} = useVideo(videoURL, {
@@ -142,6 +149,10 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const [renderTimeLine, setRenderTimeline] = useState(false);
 
   const [isTemplateSelectorOpen, setTemplateSelector] = useState(false);
+
+  const previousSelectedTemplateId = usePrevious(selectedTemplate?.id);
+
+  const [isTemplateSelecting, setTemplateSelecting] = useState(false);
 
   useEffect(() => {
     return () => {
@@ -302,19 +313,37 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     }
   };
 
+  useEffect(() => {
+    if (
+      previousSelectedTemplateId !== selectedTemplate?.id &&
+      selectedVideo &&
+      selectedTemplate
+    ) {
+      const allWords = selectedVideo.sentences.flatMap(value => value.words);
+      InteractionManager.runAfterInteractions(() => {
+        transformWordsToSentencesAsync(
+          allWords,
+          [],
+          selectedTemplate.maxWords,
+        ).then(newGeneratedSentences => {
+          const _videoObjectWithNewTemplateId: Video = {
+            ...selectedVideo,
+            sentences: newGeneratedSentences,
+          };
+          dispatch(updateVideo(_videoObjectWithNewTemplateId));
+          setTemplateSelecting(false);
+        });
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTemplate, previousSelectedTemplateId]);
+
   const handleSelectTemplate = (template: TemplateState) => {
     if (selectedVideo) {
-      const allWords = selectedVideo.sentences.flatMap(value => value.words);
-      const newGeneratedSentences = transformWordsToSentences(
-        allWords,
-        [],
-        template.maxWords,
-      );
-
+      setTemplateSelecting(template.id !== previousSelectedTemplateId);
       const videoObjectWithNewTemplateId: Video = {
         ...selectedVideo,
         templateId: template.id,
-        sentences: newGeneratedSentences,
       };
 
       dispatch(updateVideo(videoObjectWithNewTemplateId));
@@ -434,6 +463,12 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       borderWidth: templateCurrentWidth.value ? 2 : 0,
       borderColor: isDragTrigger.value ? theme.colors.primary : 'transparent',
       position: 'absolute',
+      transform: [
+        {
+          scale: templateScale.value,
+        },
+        {rotateZ: `${rotation.value}rad`},
+      ],
     };
   });
 
@@ -717,7 +752,28 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       isDragTrigger.value = false;
     });
 
-  const composed = Gesture.Simultaneous(dragGesture, tapGesture);
+  const pinchGesture = Gesture.Pinch()
+    .onUpdate(e => {
+      templateScale.value = savedScale.value * e.scale;
+    })
+    .onEnd(() => {
+      savedScale.value = templateScale.value;
+    });
+
+  const rotationGesture = Gesture.Rotation()
+    .onUpdate(e => {
+      rotation.value = savedRotation.value + e.rotation;
+    })
+    .onEnd(() => {
+      savedRotation.value = rotation.value;
+    });
+
+  const composed = Gesture.Simultaneous(
+    dragGesture,
+    tapGesture,
+    pinchGesture,
+    rotationGesture,
+  );
 
   useEffect(() => {
     if (duration !== 0 && renderTimeLine === false) {
@@ -727,6 +783,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   }, [duration]);
 
   const toggleTemplateSelector = () => {
+    paused.value = true;
     setTemplateSelector(prev => !prev);
   };
 
@@ -785,6 +842,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
           {selectedTemplate && customFontMgr && (
             <Template
+              rotation={rotation}
+              scale={templateScale}
               currentTime={currentTime}
               sentences={selectedVideo?.sentences || []}
               paragraphLayoutWidth={paragraphLayoutWidth}
@@ -990,7 +1049,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         />
       )}
 
-      {isTemplateSelectorOpen && selectedVideo && (
+      {isTemplateSelectorOpen && selectedVideo && customFontMgr && (
         <TemplateSelector
           customFontMgr={customFontMgr}
           onSelect={handleSelectTemplate}
@@ -1004,6 +1063,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         selectedVideo?.audioUrl &&
         customFontMgr && (
           <ExportVideo
+            rotation={rotation}
+            scale={templateScale}
             duration={duration}
             frameRate={framerate}
             onCancel={handleCancelVideoExport}
@@ -1030,6 +1091,33 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
             color={theme.colors.primary}
             size={'large'}
           />
+        </View>
+      )}
+
+      {isTemplateSelecting && (
+        <View style={[Styles.flexCenter]}>
+          <View
+            style={[
+              Styles.loadingContainer,
+              {
+                backgroundColor: theme.colors.black1,
+              },
+            ]}>
+            <ActivityIndicator
+              shouldRasterizeIOS
+              color={theme.colors.primary}
+              size={'large'}
+            />
+            <Text
+              style={[
+                theme.typography.subheader.small,
+                {
+                  color: theme.colors.primary,
+                },
+              ]}>
+              Applying template style...
+            </Text>
+          </View>
         </View>
       )}
     </SafeAreaView>
@@ -1129,6 +1217,11 @@ const Styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
     gap: verticalScale(24),
+  },
+
+  loadingContainer: {
+    paddingVertical: verticalScale(12),
+    paddingHorizontal: scale(12),
   },
 });
 

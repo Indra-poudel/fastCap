@@ -25,7 +25,12 @@ function AppNavigator() {
   const Stack = createNativeStackNavigator<RootStackParamList>();
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        contentStyle: {
+          backgroundColor: '#020202',
+        },
+      }}>
       <Stack.Screen
         name={SCREENS.HOME}
         component={HomeTab}
