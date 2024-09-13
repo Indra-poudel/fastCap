@@ -21,6 +21,9 @@ import Edit from 'screens/Home/components/Edit';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {scale, verticalScale} from 'react-native-size-matters/extend';
 import {deleteVideoDirectory} from 'utils/directory';
+import ReactNativeHapticFeedback, {
+  HapticFeedbackTypes,
+} from 'react-native-haptic-feedback';
 
 type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
   setFabVisible: (visible: boolean) => void;
@@ -51,6 +54,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
         .then(() => {
           handleVisibleBottomTab();
           selectedVideo && dispatch(removeVideo(selectedVideo.id));
+          ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.impactMedium, {
+            enableVibrateFallback: true,
+            ignoreAndroidSystemSettings: false,
+          });
         })
         .catch(() => {
           console.error('error while deleting');
@@ -94,6 +101,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     dispatch(setSelectedVideo(video.id));
     handleHideBottomTab();
     setCardAction(true);
+
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.longPress, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
   };
 
   const handleCardActionClose = (hideBottomBar?: boolean) => {

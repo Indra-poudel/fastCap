@@ -8,8 +8,8 @@ import {
   Skia,
   rect,
 } from '@shopify/react-native-skia';
-import {useState, useRef, useEffect} from 'react';
-import {InteractionManager} from 'react-native';
+import {useState, useRef, useEffect, useMemo} from 'react';
+import {InteractionManager, useWindowDimensions} from 'react-native';
 import {generateVideoFromFrames, saveFrame} from 'utils/video';
 import {Template as TemplateState} from 'store/templates/type';
 import {renderOffScreenTemplate} from 'offScreenComponents/offScreenTemplate';
@@ -61,7 +61,6 @@ export const useExportService = ({
   dragPercentageY,
   customFontManager,
   scaleFactor,
-  quality,
   frameRate,
   duration,
   videoURL,
@@ -85,6 +84,8 @@ export const useExportService = ({
       isMounted.current = false;
     };
   }, []);
+
+  const {height, width} = useWindowDimensions();
 
   const startExportProcess = async () => {
     const seekInterval = 1000 / frameRate;
@@ -161,8 +162,16 @@ export const useExportService = ({
     }
   };
 
+  const scaleX = useMemo(() => {
+    return _width / width;
+  }, [_width, width]);
+
+  const scaleY = useMemo(() => {
+    return _height / height;
+  }, [_height, height]);
+
   const drawOffScreen = async (index: number, seekValue: number) => {
-    const {image} = renderOffScreenTemplate(_width, _height, {
+    const {image} = renderOffScreenTemplate(_width, _height, scaleX, scaleY, {
       currentTime: seekValue,
       sentences: sentences,
       paragraphLayoutWidth: _paragraphLayoutWidth,
@@ -170,7 +179,7 @@ export const useExportService = ({
       y: _height * (dragPercentageY / 100),
       customFontMgr: customFontManager,
       ...template,
-      fontSize: (template.fontSize * _width) / (_width * scaleFactor.value),
+      fontSize: template.fontSize * scaleX,
       scale: scale,
       rotation: rotation,
     });

@@ -8,8 +8,6 @@ import {
   TextAlign,
   PaintStyle,
   SkParagraph,
-  StrokeCap,
-  StrokeJoin,
   Group,
   drawAsImage,
   Paragraph,
@@ -42,6 +40,8 @@ const defaultShadow: SkTextShadow = {
 export const renderOffScreenTemplate = (
   width: number,
   height: number,
+  scaleFactorX: number,
+  scaleFactorY: number,
   {
     currentTime: _currentTime,
     sentences,
@@ -138,21 +138,45 @@ export const renderOffScreenTemplate = (
   const activeShadow = _activeShadow?.map(value => ({
     ...value,
     color: Skia.Color(value.color),
+    offset: value?.offset
+      ? {
+          x: value?.offset?.x + scaleFactorX,
+          y: value?.offset?.y + scaleFactorY,
+        }
+      : undefined,
   }));
 
   const shadowBefore = _shadowBefore?.map(value => ({
     ...value,
     color: Skia.Color(value.color),
+    offset: value?.offset
+      ? {
+          x: value?.offset?.x * scaleFactorX,
+          y: value?.offset?.y * scaleFactorY,
+        }
+      : undefined,
   }));
 
   const shadowAfter = _shadowAfter?.map(value => ({
     ...value,
     color: Skia.Color(value.color),
+    offset: value?.offset
+      ? {
+          x: value?.offset?.x * scaleFactorX,
+          y: value?.offset?.y * scaleFactorY,
+        }
+      : undefined,
   }));
 
   const shadow = _shadow?.map(value => ({
     ...value,
     color: Skia.Color(value.color),
+    offset: value?.offset
+      ? {
+          x: value?.offset?.x * scaleFactorX,
+          y: value?.offset?.y * scaleFactorY,
+        }
+      : undefined,
   }));
 
   const activeShadowValue = activeShadow || shadow || [defaultShadow];
@@ -222,13 +246,9 @@ export const renderOffScreenTemplate = (
     );
 
     const foregroundPaint = Skia.Paint();
-    foregroundPaint.setAntiAlias(true);
-    foregroundPaint.setDither(true);
-    foregroundPaint.setStrokeCap(StrokeCap.Round); // Ensures smooth stroke ends
-    foregroundPaint.setStrokeJoin(StrokeJoin.Round);
-    foregroundPaint.setColor(Skia.Color(strokeColor || defaultColor));
-    foregroundPaint.setStrokeWidth(5);
     foregroundPaint.setStyle(PaintStyle.Stroke);
+    foregroundPaint.setColor(Skia.Color(strokeColor || defaultColor));
+    foregroundPaint.setStrokeWidth(strokeWidth * scaleFactorX);
 
     currentSentence.words.forEach((word, _index) => {
       const isActiveWord =
@@ -443,8 +463,8 @@ export const renderOffScreenTemplate = (
             {sentenceShadow && (
               <Shadow
                 blur={sentenceShadow.blur}
-                dx={sentenceShadow.dx}
-                dy={sentenceShadow.dy}
+                dx={sentenceShadow.dx * scaleFactorX}
+                dy={sentenceShadow.dy * scaleFactorY}
                 color={Skia.Color(sentenceShadow.color)}
               />
             )}
@@ -457,9 +477,7 @@ export const renderOffScreenTemplate = (
             y={layoutData.minY}
             width={paragraphLayoutWidth.value}
             style={'stroke'}
-            strokeWidth={strokeWidth}
-            antiAlias={true}
-            dither={true}
+            strokeWidth={strokeWidth * scaleFactorX}
           />
         )}
         <Paragraph
