@@ -1945,6 +1945,11 @@
     redux-thunk "^3.1.0"
     reselect "^5.1.0"
 
+"@revenuecat/purchases-typescript-internal@13.2.0":
+  version "13.2.0"
+  resolved "https://registry.yarnpkg.com/@revenuecat/purchases-typescript-internal/-/purchases-typescript-internal-13.2.0.tgz#5fcbd28919c5138efa882a4446e7a699489220ca"
+  integrity sha512-GTevFT13QFeV4z/qfqxfniTyc8egPikRnwA0xn7HGx/feUKfJDWbrNIWt/m6u5mV/BWT19HTFsaAgEYxGN55HA==
+
 "@rnx-kit/chromium-edge-launcher@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@rnx-kit/chromium-edge-launcher/-/chromium-edge-launcher-1.0.0.tgz#c0df8ea00a902c7a417cd9655aab06de398b939c"
@@ -6338,6 +6343,21 @@ react-native-progress@^5.0.1:
   integrity sha512-TYfJ4auAe5vubDma2yfFvt7ktSI+UCfysqJnkdHEcLXqAitRFOozgF/cLgN5VNi/iLdaf3ga1ETi2RF4jVZ/+g==
   dependencies:
     prop-types "^15.7.2"
+
+react-native-purchases-ui@^8.2.0:
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/react-native-purchases-ui/-/react-native-purchases-ui-8.2.0.tgz#d0a91beea1fd34269f55302cf7777ddd3e90d7a1"
+  integrity sha512-PoKN8n1SRW0lVowjoWwkCKiMFMKIbg2OFmkS3boZc7T9gkiTYltx70r1R6hlLYtpOAMRT89jjAHxLHt8J26iLA==
+  dependencies:
+    "@revenuecat/purchases-typescript-internal" "13.2.0"
+    react-native-purchases "8.2.0"
+
+react-native-purchases@8.2.0, react-native-purchases@^8.2.0:
+  version "8.2.0"
+  resolved "https://registry.yarnpkg.com/react-native-purchases/-/react-native-purchases-8.2.0.tgz#f527afaa95ca69befa8312d62f2226ad51de350b"
+  integrity sha512-+VzXAaQNYvq9cfgtk5Axe/T7+wmF15U46ZALdV8eN50H+REZPD0f3ZRCoQyAowhICuVhL8DVEsnk7bcyyTikLg==
+  dependencies:
+    "@revenuecat/purchases-typescript-internal" "13.2.0"
 
 react-native-reanimated@^3.14.0:
   version "3.15.0"

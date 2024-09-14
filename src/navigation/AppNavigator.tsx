@@ -1,7 +1,10 @@
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import React from 'react';
+import React, {useEffect} from 'react';
 import EditScreen from '@screens/Edit/EditScreen';
-import HomeTab from './HomeTabs';
+import HomeScreen from 'screens/Home/HomeScreen';
+import Purchases, {LOG_LEVEL} from 'react-native-purchases';
+import {Platform} from 'react-native';
+import {RC_APP_KEY} from 'constants/keys';
 
 export enum SCREENS {
   HOME = 'home',
@@ -24,6 +27,20 @@ export type RootStackParamList = {
 function AppNavigator() {
   const Stack = createNativeStackNavigator<RootStackParamList>();
 
+  useEffect(() => {
+    Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+
+    if (Platform.OS === 'ios') {
+      Purchases.configure({apiKey: RC_APP_KEY});
+
+      Purchases.getOfferings()
+        .then(() => {})
+        .catch(reason => {
+          console.log('err', reason);
+        });
+    }
+  }, []);
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -33,9 +50,14 @@ function AppNavigator() {
       }}>
       <Stack.Screen
         name={SCREENS.HOME}
-        component={HomeTab}
+        component={HomeScreen}
         options={{headerShown: false}}
       />
+      {/* <Stack.Screen
+        name={SCREENS.HOME}
+        component={HomeTab}
+        options={{headerShown: false}}
+      /> */}
       <Stack.Screen
         name={SCREENS.EDIT}
         component={EditScreen}

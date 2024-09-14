@@ -40,8 +40,8 @@ const FloatingActionButtonView = ({
   const {width, height} = useWindowDimensions();
 
   const rotation = useSharedValue(0);
-  const fabBorder = useSharedValue(10);
-  const fabSize = useSharedValue(90);
+  const fabBorder = useSharedValue(0);
+  const fabSize = useSharedValue(80);
 
   const iconAnimatedStyle = useAnimatedStyle(() => {
     return {

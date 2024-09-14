@@ -14,6 +14,11 @@ PODS:
   - MMKV (1.3.9):
     - MMKVCore (~> 1.3.9)
   - MMKVCore (1.3.9)
+  - PurchasesHybridCommon (13.2.0):
+    - RevenueCat (= 5.3.1)
+  - PurchasesHybridCommonUI (13.2.0):
+    - PurchasesHybridCommon (= 13.2.0)
+    - RevenueCatUI (= 5.3.1)
   - RCT-Folly (2024.01.01.00):
     - boost
     - DoubleConversion
@@ -1286,6 +1291,9 @@ PODS:
     - React-logger (= 0.74.3)
     - React-perflogger (= 0.74.3)
     - React-utils (= 0.74.3)
+  - RevenueCat (5.3.1)
+  - RevenueCatUI (5.3.1):
+    - RevenueCat (= 5.3.1)
   - rn-fetch-blob (0.12.0):
     - React-Core
   - RNFlashList (1.7.1):
@@ -1330,7 +1338,13 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNPaywalls (8.2.0):
+    - PurchasesHybridCommonUI (= 13.2.0)
+    - React-Core
   - RNPermissions (4.1.5):
+    - React-Core
+  - RNPurchases (8.2.0):
+    - PurchasesHybridCommon (= 13.2.0)
     - React-Core
   - RNReactNativeHapticFeedback (2.3.1):
     - DoubleConversion
@@ -1513,7 +1527,9 @@ DEPENDENCIES:
   - rn-fetch-blob (from `../node_modules/rn-fetch-blob`)
   - "RNFlashList (from `../node_modules/@shopify/flash-list`)"
   - RNGestureHandler (from `../node_modules/react-native-gesture-handler`)
+  - RNPaywalls (from `../node_modules/react-native-purchases-ui`)
   - RNPermissions (from `../node_modules/react-native-permissions`)
+  - RNPurchases (from `../node_modules/react-native-purchases`)
   - RNReactNativeHapticFeedback (from `../node_modules/react-native-haptic-feedback`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -1525,6 +1541,10 @@ SPEC REPOS:
     - ffmpeg-kit-ios-full-gpl
     - MMKV
     - MMKVCore
+    - PurchasesHybridCommon
+    - PurchasesHybridCommonUI
+    - RevenueCat
+    - RevenueCatUI
     - SocketRocket
     - SSZipArchive
 
@@ -1658,8 +1678,12 @@ EXTERNAL SOURCES:
     :path: "../node_modules/@shopify/flash-list"
   RNGestureHandler:
     :path: "../node_modules/react-native-gesture-handler"
+  RNPaywalls:
+    :path: "../node_modules/react-native-purchases-ui"
   RNPermissions:
     :path: "../node_modules/react-native-permissions"
+  RNPurchases:
+    :path: "../node_modules/react-native-purchases"
   RNReactNativeHapticFeedback:
     :path: "../node_modules/react-native-haptic-feedback"
   RNReanimated:
@@ -1682,6 +1706,8 @@ SPEC CHECKSUMS:
   hermes-engine: 1f547997900dd0752dc0cc0ae6dd16173c49e09b
   MMKV: 817ba1eea17421547e01e087285606eb270a8dcb
   MMKVCore: af055b00e27d88cd92fad301c5fecd1ff9b26dd9
+  PurchasesHybridCommon: 20acf98303a9593f5d56b449459dcf16ea581a99
+  PurchasesHybridCommonUI: fc8fa6ad78cfcdb6d82a8a865a8ae8b78724df53
   RCT-Folly: 02617c592a293bd6d418e0a88ff4ee1f88329b47
   RCTDeprecation: 9db9faca3e832ec057b106c5c74f95cd2535e510
   RCTRequired: d530a0f489699c8500e944fde963102c42dcd0c2
@@ -1736,10 +1762,14 @@ SPEC CHECKSUMS:
   React-runtimescheduler: 0c80752bceb80924cb8a4babc2a8e3ed70d41e87
   React-utils: a06061b3887c702235d2dac92dacbd93e1ea079e
   ReactCommon: f00e436b3925a7ae44dfa294b43ef360fbd8ccc4
+  RevenueCat: b2d2555cbb1f4116d341af4c5f82269c8e4e499a
+  RevenueCatUI: 59b63f64505eac217af31f596e1ce3583734bba6
   rn-fetch-blob: f065bb7ab7fb48dd002629f8bdcb0336602d3cba
   RNFlashList: e9c5b8fe1b84f9c198cb550eb4cc0c45569fbf42
   RNGestureHandler: efed690b8493a00b99654043daeb1335276ac4a2
+  RNPaywalls: b1217a2d9d07d5aa689cb7cd93b1fbf041bbf319
   RNPermissions: 13186aab70330f78ab2b26c4b96f68099c5a3768
+  RNPurchases: 277c724906082c16065d90c04124a0b2a9d4a05c
   RNReactNativeHapticFeedback: 6d6363faa31a6cb23e467e02304b585ec59f0930
   RNReanimated: 45553a3ae29a75a76269595f8554d07d4090e392
   RNScreens: aa943ad421c3ced3ef5a47ede02b0cbfc43a012e

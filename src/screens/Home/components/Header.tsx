@@ -5,12 +5,16 @@ import ProChip from 'screens/Home/components/ProChip';
 import {scale, verticalScale} from 'react-native-size-matters/extend';
 import {useTheme} from 'theme/ThemeContext';
 
-const Header = () => {
+type HeaderProps = {
+  onClickTryPro: () => void;
+};
+
+const Header = ({onClickTryPro}: HeaderProps) => {
   const {theme} = useTheme();
   return (
     <View style={[styles.wrapper, {backgroundColor: theme.colors.black1}]}>
       <AppTitle />
-      <ProChip />
+      <ProChip onClick={onClickTryPro} />
     </View>
   );
 };

@@ -23,6 +23,7 @@
 		8ECF271BDFD946DCAEAFE659 /* Inter-Light.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 024743D594E94107A2436145 /* Inter-Light.ttf */; };
 		A6CEB9599B774EA8899B21FC /* Inter-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E00C71A9841A44418F736406 /* Inter-Regular.ttf */; };
 		B68CC29ED0F6414CB34E1E53 /* Inter-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B5CFF784084B440A91646BD5 /* Inter-Medium.ttf */; };
+		BFBCB3462C94421E0085B339 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BFBCB3452C94421E0085B339 /* StoreKit.framework */; };
 		BFF2C0652C3E60390049D53B /* AntDesign.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BFF2C0512C3E60390049D53B /* AntDesign.ttf */; };
 		BFF2C0662C3E60390049D53B /* Entypo.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BFF2C0522C3E60390049D53B /* Entypo.ttf */; };
 		BFF2C0672C3E60390049D53B /* EvilIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BFF2C0532C3E60390049D53B /* EvilIcons.ttf */; };
@@ -81,6 +82,8 @@
 		950661F8C401431B8E44C2E6 /* Inter-ExtraLight.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-ExtraLight.ttf"; path = "../src/assets/fonts/Inter-ExtraLight.ttf"; sourceTree = "<group>"; };
 		A5926F6C846941BFB1053FC0 /* Inter-ExtraBold.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-ExtraBold.ttf"; path = "../src/assets/fonts/Inter-ExtraBold.ttf"; sourceTree = "<group>"; };
 		B5CFF784084B440A91646BD5 /* Inter-Medium.ttf */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 9; includeInIndex = 0; lastKnownFileType = unknown; name = "Inter-Medium.ttf"; path = "../src/assets/fonts/Inter-Medium.ttf"; sourceTree = "<group>"; };
+		BFBCB3452C94421E0085B339 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		BFBCB3472C9442670085B339 /* fastCap.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = fastCap.entitlements; path = fastCap/fastCap.entitlements; sourceTree = "<group>"; };
 		BFF2C0512C3E60390049D53B /* AntDesign.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = AntDesign.ttf; sourceTree = "<group>"; };
 		BFF2C0522C3E60390049D53B /* Entypo.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Entypo.ttf; sourceTree = "<group>"; };
 		BFF2C0532C3E60390049D53B /* EvilIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = EvilIcons.ttf; sourceTree = "<group>"; };
@@ -119,6 +122,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0C80B921A6F3F58F76C31292 /* libPods-fastCap.a in Frameworks */,
+				BFBCB3462C94421E0085B339 /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,6 +149,7 @@
 		13B07FAE1A68108700A75B9A /* fastCap */ = {
 			isa = PBXGroup;
 			children = (
+				BFBCB3472C9442670085B339 /* fastCap.entitlements */,
 				BFF2C0642C3E60390049D53B /* Fonts */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.mm */,
@@ -161,6 +166,7 @@
 		2D16E6871FA4F8E400B85C8A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BFBCB3452C94421E0085B339 /* StoreKit.framework */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
 				5DCACB8F33CDC322A6C60F78 /* libPods-fastCap.a */,
 				19F6CBCC0A4E27FBF8BF4A61 /* libPods-fastCap-fastCapTests.a */,
@@ -600,6 +606,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = fastCap/fastCap.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -617,6 +624,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.indrapoudel.fastcap.ai;
 				PRODUCT_NAME = fastCap;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -631,6 +639,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = fastCap/fastCap.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -647,6 +656,7 @@
 					"-lc++",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.indrapoudel.fastcap.ai;
 				PRODUCT_NAME = fastCap;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
