@@ -4,10 +4,14 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {useTheme} from 'theme/ThemeContext';
 import {scale, verticalScale} from 'react-native-size-matters/extend';
 
-const ProChip = () => {
+type ProChipProps = {
+  onClick: () => void;
+};
+
+const ProChip = ({onClick}: ProChipProps) => {
   const {theme} = useTheme();
   return (
-    <Pressable style={[styles.wrapper]} onPress={() => {}}>
+    <Pressable style={[styles.wrapper]} onPress={onClick}>
       <Icon name={'diamond'} size={16} color={theme.colors.black1} />
       <Text style={[theme.typography.subheader.small]}>Try Pro</Text>
     </Pressable>

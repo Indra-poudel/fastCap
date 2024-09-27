@@ -152,6 +152,7 @@ const FloatingActionButton = () => {
   };
 
   const handleRecordVideo = () => {
+    setSelecting(true);
     launchCamera({
       mediaType: 'video',
       videoQuality: 'high',
@@ -159,7 +160,6 @@ const FloatingActionButton = () => {
     })
       .then(response => {
         handleAddVideoObjectToStore(response);
-        console.log('Response', response);
 
         setOpen(prev => !prev);
 
@@ -175,6 +175,9 @@ const FloatingActionButton = () => {
       })
       .catch(error => {
         console.log('error', error);
+      })
+      .finally(() => {
+        setSelecting(false);
       });
   };
 

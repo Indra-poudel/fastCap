@@ -8,6 +8,7 @@ import reducer from './reducer';
 const persistConfig = {
   key: 'root',
   storage: mmkvStorage,
+  blacklist: ['subscription'],
 };
 
 const persistedReducer = persistReducer(persistConfig, reducer);

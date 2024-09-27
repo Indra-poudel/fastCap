@@ -10,12 +10,13 @@ import {FlashList, ListRenderItem} from '@shopify/flash-list';
 import {Skottie} from 'react-native-skottie';
 import VideoRecordingAnimation from 'assets/lotties/VideoPlayer.json';
 import {useNavigation} from '@react-navigation/native';
-import {RootStackParamList} from 'navigation/AppNavigator';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import {RootStackParamList, SCREENS} from 'navigation/AppNavigator';
+import {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import {removeVideo, setSelectedVideo, updateVideo} from 'store/videos/slice';
 import CardAction from 'screens/Home/components/CardAction';
-import {BottomTabScreenProps} from '@react-navigation/bottom-tabs';
-import {TABS, TabParamList} from 'navigation/HomeTabs';
 import Dialog from 'components/Dialog';
 import Edit from 'screens/Home/components/Edit';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -24,17 +25,21 @@ import {deleteVideoDirectory} from 'utils/directory';
 import ReactNativeHapticFeedback, {
   HapticFeedbackTypes,
 } from 'react-native-haptic-feedback';
+import FloatingActionButton from 'containers/FloatingActionButtonContainer';
+import RevenueCatUI, {PAYWALL_RESULT} from 'react-native-purchases-ui';
+import {useSelector} from 'react-redux';
+import {selectSubscriptionState} from 'store/subscription/selector';
+import {setSubscribed} from 'store/subscription/slice';
 
-type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
-  setFabVisible: (visible: boolean) => void;
-};
+// type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
+//   setFabVisible: (visible: boolean) => void;
+// };
+
+type HomeScreenProps = NativeStackScreenProps<RootStackParamList, SCREENS.HOME>;
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const HomeScreen: React.FC<HomeScreenProps> = ({
-  navigation: routeNavigation,
-  setFabVisible,
-}) => {
+const HomeScreen: React.FC<HomeScreenProps> = () => {
   const dispatch = useAppDispatch();
   const videos = useAppSelector(selectAllVideos);
   const selectedVideo = useAppSelector(selectSelectedVideo);
@@ -48,11 +53,13 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const navigation = useNavigation<NavigationProp>();
 
+  const {isSubscribed} = useSelector(selectSubscriptionState);
+
   useEffect(() => {
     if (isDeleting && selectedVideo?.id) {
       deleteVideoDirectory(selectedVideo?.id)
         .then(() => {
-          handleVisibleBottomTab();
+          // handleVisibleBottomTab();
           selectedVideo && dispatch(removeVideo(selectedVideo.id));
           ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.impactMedium, {
             enableVibrateFallback: true,
@@ -69,23 +76,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDeleting, selectedVideo]);
 
-  const handleHideBottomTab = () => {
-    setFabVisible(false);
-    routeNavigation.setOptions({
-      tabBarStyle: {
-        display: 'none',
-      },
-    });
-  };
+  // const handleHideBottomTab = () => {
+  //   setFabVisible(false);
+  //   routeNavigation.setOptions({
+  //     tabBarStyle: {
+  //       display: 'none',
+  //     },
+  //   });
+  // };
 
-  const handleVisibleBottomTab = () => {
-    setFabVisible(true);
-    routeNavigation.setOptions({
-      tabBarStyle: {
-        display: 'flex',
-      },
-    });
-  };
+  // const handleVisibleBottomTab = () => {
+  //   setFabVisible(true);
+  //   routeNavigation.setOptions({
+  //     tabBarStyle: {
+  //       display: 'flex',
+  //     },
+  //   });
+  // };
 
   const handleClickVideoCard = (video: Video) => {
     dispatch(setSelectedVideo(video.id));
@@ -99,7 +106,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
 
   const onLongPress = (video: Video) => {
     dispatch(setSelectedVideo(video.id));
-    handleHideBottomTab();
+    // handleHideBottomTab();
     setCardAction(true);
 
     ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.longPress, {
@@ -108,9 +115,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     });
   };
 
-  const handleCardActionClose = (hideBottomBar?: boolean) => {
+  const handleCardActionClose = (_hideBottomBar?: boolean) => {
     // dispatch(setSelectedVideo(undefined));
-    !hideBottomBar && handleVisibleBottomTab();
+    // !_hideBottomBar && handleVisibleBottomTab();
     setCardAction(false);
   };
 
@@ -133,7 +140,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   const handleCardEditAction = () => {
-    handleHideBottomTab();
+    // handleHideBottomTab();
     setEditDialog(true);
   };
 
@@ -142,12 +149,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   const handleCloseEditDialog = () => {
-    handleVisibleBottomTab();
+    // handleVisibleBottomTab();
     setEditDialog(false);
   };
 
   const handleCloseDeleteDialog = () => {
-    handleVisibleBottomTab();
+    // handleVisibleBottomTab();
     setDeleteDialog(false);
   };
 
@@ -157,7 +164,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
   };
 
   const handleRename = (newTitle: string) => {
-    handleVisibleBottomTab();
+    // handleVisibleBottomTab();
 
     if (selectedVideo) {
       const updatedVideo: Video = {
@@ -170,6 +177,32 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
     }
   };
 
+  const getIsSubscription = (paywall: PAYWALL_RESULT) => {
+    switch (paywall) {
+      case PAYWALL_RESULT.NOT_PRESENTED:
+        return true;
+      case PAYWALL_RESULT.ERROR:
+      case PAYWALL_RESULT.CANCELLED:
+        return false;
+      case PAYWALL_RESULT.PURCHASED:
+      case PAYWALL_RESULT.RESTORED:
+        return true;
+      default:
+        return false;
+    }
+  };
+
+  const handleOnClickTryPro = () => {
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.impactMedium, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
+    RevenueCatUI.presentPaywall().then(paywall => {
+      const _isSubscribed = getIsSubscription(paywall);
+      dispatch(setSubscribed(_isSubscribed));
+    });
+  };
+
   return (
     <SafeAreaView
       style={[
@@ -178,7 +211,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           backgroundColor: theme.colors.black1,
         },
       ]}>
-      <Header />
+      <Header onClickTryPro={handleOnClickTryPro} isSubscribed={isSubscribed} />
 
       {/* TODO: POST MVP */}
       {videos.length > 0 && (
@@ -243,6 +276,8 @@ const HomeScreen: React.FC<HomeScreenProps> = ({
           </View>
         </View>
       )}
+
+      <FloatingActionButton />
 
       {isCardActionEnable && (
         <CardAction
