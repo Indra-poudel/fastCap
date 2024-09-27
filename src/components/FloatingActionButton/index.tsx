@@ -18,6 +18,9 @@ import {useTheme} from '@theme/ThemeContext';
 import Button from 'components/Button/Button';
 import {FLOATING_ACTION} from 'containers/FloatingActionButtonContainer';
 import {scale, verticalScale} from 'react-native-size-matters/extend';
+import ReactNativeHapticFeedback, {
+  HapticFeedbackTypes,
+} from 'react-native-haptic-feedback';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -60,22 +63,31 @@ const FloatingActionButtonView = ({
   }, [width]);
 
   useEffect(() => {
-    if (!open && rotation.value === 45) {
-      rotation.value = withTiming(0);
-    }
+    rotation.value = withTiming(open ? 45 : 0);
   }, [open, rotation]);
 
   const handlePress = () => {
-    const newValue = rotation.value === 0 ? 45 : 0;
-    rotation.value = withTiming(newValue);
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.effectClick, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
+
     setOpen(prev => !prev);
   };
 
   const handlePressChooseVideo = () => {
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.effectHeavyClick, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
     onAction(FLOATING_ACTION.GALLERY);
   };
 
   const handlePressRecord = () => {
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.effectHeavyClick, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
     onAction(FLOATING_ACTION.RECORD);
   };
 

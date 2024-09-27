@@ -3,11 +3,11 @@ import {
   Canvas,
   Fill,
   ImageShader,
+  SkTypefaceFontProvider,
   Skia,
   fitbox,
   rect,
   useCanvasRef,
-  useFonts,
   useVideo,
 } from '@shopify/react-native-skia';
 import BottomSheet from 'components/BottomSheet';
@@ -28,6 +28,7 @@ import {
 } from 'react-native';
 import Animated, {
   clamp,
+  runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
@@ -55,15 +56,23 @@ import {selectTemplateForSelectedVideo} from 'store/templates/selector';
 import {Template as TemplateState} from 'store/templates/type';
 import {DEFAULT_MAX_WORDS} from 'constants/index';
 import ExportVideo from 'components/ExportVideo';
-import {fontSource} from 'constants/fonts';
 
 import {scale, verticalScale} from 'react-native-size-matters/extend';
 import TimelineContainer from 'containers/TimelineContainer';
 import usePrevious from 'hooks/usePrevious';
+import RevenueCatUI, {PAYWALL_RESULT} from 'react-native-purchases-ui';
+import ReactNativeHapticFeedback, {
+  HapticFeedbackTypes,
+} from 'react-native-haptic-feedback';
+import {selectSubscriptionState} from 'store/subscription/selector';
+import {setSubscribed} from 'store/subscription/slice';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-type EditScreenProps = NativeStackScreenProps<RootStackParamList, SCREENS.EDIT>;
+type EditScreenProps = NativeStackScreenProps<
+  RootStackParamList,
+  SCREENS.EDIT
+> & {customFontMgr: SkTypefaceFontProvider | null};
 
 const TEMPLATE_PADDING = scale(16);
 // scale is used in implmentaion
@@ -75,10 +84,8 @@ const CANVAS_BUTTONS_FULL_OPACITY = 0.8;
 const TIMELINE_HEIGHT = verticalScale(120);
 const WITHOUT_TIMELINE_HEIGHT = verticalScale(85);
 
-const EditScreen = ({route, navigation}: EditScreenProps) => {
+const EditScreen = ({route, navigation, customFontMgr}: EditScreenProps) => {
   const {theme} = useTheme();
-
-  const customFontMgr = useFonts(fontSource);
 
   const {width, height} = useWindowDimensions();
 
@@ -88,6 +95,8 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const canvasSize = useSharedValue({width: 0, height: 0});
 
   const [isThumbnailGenerating, setThumbnailGenerate] = useState(true);
+
+  const {isSubscribed} = useSelector(selectSubscriptionState);
 
   // Video
   const videoURL = route.params.videoURL;
@@ -137,11 +146,11 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
 
   const frameDurationMs = 1000 / framerate;
 
-  const isTopSnapLineActive = useSharedValue(false);
-  const isBottomSnapLineActive = useSharedValue(false);
-  const isLeftSnapLineActive = useSharedValue(false);
-  const isRightSnapLineActive = useSharedValue(false);
-  const isCenterSnapLineActive = useSharedValue(false);
+  // const isTopSnapLineActive = useSharedValue(false);
+  // const isBottomSnapLineActive = useSharedValue(false);
+  // const isLeftSnapLineActive = useSharedValue(false);
+  // const isRightSnapLineActive = useSharedValue(false);
+  // const isCenterSnapLineActive = useSharedValue(false);
 
   // drag
   const isDragTrigger = useSharedValue(false);
@@ -248,16 +257,27 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     dispatch(updateVideo(_video));
   };
 
-  const handlePlayPause = () => {
-    'worklet';
+  const handlePlay = () => {
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.impactMedium, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
+
+    ('worklet');
     if (!isAlreadyPlayedAfterScreenMount.value) {
       seek.value = 0;
     }
-    paused.value = !paused.value;
+    paused.value = false;
     isAlreadyPlayedAfterScreenMount.value = true;
   };
 
   const handlePauseVideo = () => {
+    if (!paused.value) {
+      ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.impactMedium, {
+        enableVibrateFallback: true,
+        ignoreAndroidSystemSettings: false,
+      });
+    }
     paused.value = true;
   };
 
@@ -270,6 +290,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   const playButtonsAnimatedStyle = useAnimatedStyle(() => {
     return {
       opacity: playButtonOpacity.value,
+      pointerEvents: playButtonOpacity.value === 0 ? 'none' : 'auto',
     };
   }, []);
 
@@ -351,6 +372,10 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   };
 
   const handleBack = () => {
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.impactMedium, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
     paused.value = true;
     navigation.goBack();
   };
@@ -480,9 +505,9 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       top: SNAP.v + offsetY.value,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
-      opacity: isTopSnapLineActive.value ? 1 : 0,
+      opacity: isDragTrigger.value ? 1 : 0,
     };
-  }, [isTopSnapLineActive]);
+  }, []);
 
   const snapLeftVerticalLine = useAnimatedStyle(() => {
     return {
@@ -491,9 +516,9 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       left: SNAP.h + offsetX.value,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
-      opacity: isLeftSnapLineActive.value ? 1 : 0,
+      opacity: isDragTrigger.value ? 1 : 0,
     };
-  }, [isLeftSnapLineActive, offsetX, imageShaderHeight]);
+  }, []);
 
   const snapRightVerticalLine = useAnimatedStyle(() => {
     return {
@@ -502,9 +527,9 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       right: SNAP.h + offsetX.value,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
-      opacity: isRightSnapLineActive.value ? 1 : 0,
+      opacity: isDragTrigger.value ? 1 : 0,
     };
-  }, [isRightSnapLineActive, offsetX, imageShaderHeight]);
+  }, []);
 
   const snapBottomHorizontalLine = useAnimatedStyle(() => {
     return {
@@ -514,9 +539,9 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       top: imageShaderHeight.value + offsetY.value - SNAP.v,
       backgroundColor: theme.colors.secondary,
       position: 'absolute',
-      opacity: isBottomSnapLineActive.value ? 1 : 0,
+      opacity: isDragTrigger.value ? 1 : 0,
     };
-  }, [isBottomSnapLineActive, imageShaderHeight]);
+  }, []);
 
   const snapCentralVerticalLine = useAnimatedStyle(() => {
     return {
@@ -525,12 +550,22 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       left: width / 2,
       backgroundColor: theme.colors.primary,
       position: 'absolute',
-      opacity: isCenterSnapLineActive.value ? 1 : 0,
+      opacity: isDragTrigger.value ? 1 : 0,
     };
-  }, [isCenterSnapLineActive, offsetX, imageShaderHeight]);
+  }, []);
+
+  const triggerHapticFeedback = () => {
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.selection, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
+  };
 
   const dragGesture = Gesture.Pan()
     .onStart(() => {
+      if (!isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
       isDragTrigger.value = true;
       paused.value = true;
     })
@@ -548,200 +583,206 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
         imageOccupiedHeightRange.value[1] - templateCurrentHeight.value,
       );
 
-      // Top snap
-      if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) <= 30) {
-        isTopSnapLineActive.value = true;
-      }
+      // // Top snap
+      // if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) <= 30) {
+      //   isTopSnapLineActive.value = true;
+      // }
 
-      if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) <= 5) {
-        // dragDistanceY.value = withTiming(SNAP, {
-        //   duration: 10,
-        // });
-      }
-      if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) >= 30) {
-        isTopSnapLineActive.value = false;
-      }
-      // end of top snap
+      // if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) <= 5) {
+      //   // dragDistanceY.value = withTiming(SNAP, {
+      //   //   duration: 10,
+      //   // });
+      // }
+      // if (Math.abs(dragDistanceY.value + e.changeY - SNAP.v) >= 30) {
+      //   isTopSnapLineActive.value = false;
+      // }
+      // // end of top snap
 
-      // left snap
-      if (
-        Math.abs(
-          dragDistanceX.value -
-            templateCurrentWidth.value / 2 +
-            e.changeX -
-            SNAP.h,
-        ) <= 30
-      ) {
-        isLeftSnapLineActive.value = true;
-      }
+      // // left snap
+      // if (
+      //   Math.abs(
+      //     dragDistanceX.value -
+      //       templateCurrentWidth.value / 2 +
+      //       e.changeX -
+      //       SNAP.h,
+      //   ) <= 30
+      // ) {
+      //   isLeftSnapLineActive.value = true;
+      // }
 
-      if (
-        Math.abs(
-          dragDistanceX.value -
-            templateCurrentWidth.value / 2 +
-            e.changeX -
-            SNAP.h,
-        ) <= 5
-      ) {
-        dragDistanceX.value = withTiming(
-          templateCurrentWidth.value / 2 + SNAP.h,
-          {
-            duration: 10,
-          },
-        );
-      }
-      if (
-        Math.abs(
-          dragDistanceX.value -
-            templateCurrentWidth.value / 2 +
-            e.changeX -
-            SNAP.h,
-        ) >= 30
-      ) {
-        isLeftSnapLineActive.value = false;
-      }
-      // end of top snap
+      // if (
+      //   Math.abs(
+      //     dragDistanceX.value -
+      //       templateCurrentWidth.value / 2 +
+      //       e.changeX -
+      //       SNAP.h,
+      //   ) <= 5
+      // ) {
+      //   dragDistanceX.value = withTiming(
+      //     templateCurrentWidth.value / 2 + SNAP.h,
+      //     {
+      //       duration: 10,
+      //     },
+      //   );
+      // }
+      // if (
+      //   Math.abs(
+      //     dragDistanceX.value -
+      //       templateCurrentWidth.value / 2 +
+      //       e.changeX -
+      //       SNAP.h,
+      //   ) >= 30
+      // ) {
+      //   isLeftSnapLineActive.value = false;
+      // }
+      // // end of top snap
 
-      // left snap
-      if (
-        Math.abs(
-          dragDistanceX.value -
-            templateCurrentWidth.value / 2 +
-            e.changeX -
-            SNAP.h,
-        ) <= 30
-      ) {
-        isLeftSnapLineActive.value = true;
-      }
+      // // left snap
+      // if (
+      //   Math.abs(
+      //     dragDistanceX.value -
+      //       templateCurrentWidth.value / 2 +
+      //       e.changeX -
+      //       SNAP.h,
+      //   ) <= 30
+      // ) {
+      //   isLeftSnapLineActive.value = true;
+      // }
 
-      if (
-        Math.abs(
-          dragDistanceX.value -
-            templateCurrentWidth.value / 2 +
-            e.changeX -
-            SNAP.h,
-        ) <= 5
-      ) {
-        dragDistanceX.value = withTiming(
-          templateCurrentWidth.value / 2 + SNAP.h,
-          {
-            duration: 10,
-          },
-        );
-      }
-      if (
-        Math.abs(
-          dragDistanceX.value -
-            templateCurrentWidth.value / 2 +
-            e.changeX -
-            SNAP.h,
-        ) >= 30
-      ) {
-        isLeftSnapLineActive.value = false;
-      }
-      // end of left snap
+      // if (
+      //   Math.abs(
+      //     dragDistanceX.value -
+      //       templateCurrentWidth.value / 2 +
+      //       e.changeX -
+      //       SNAP.h,
+      //   ) <= 5
+      // ) {
+      //   dragDistanceX.value = withTiming(
+      //     templateCurrentWidth.value / 2 + SNAP.h,
+      //     {
+      //       duration: 10,
+      //     },
+      //   );
+      // }
+      // if (
+      //   Math.abs(
+      //     dragDistanceX.value -
+      //       templateCurrentWidth.value / 2 +
+      //       e.changeX -
+      //       SNAP.h,
+      //   ) >= 30
+      // ) {
+      //   isLeftSnapLineActive.value = false;
+      // }
+      // // end of left snap
 
-      // right snap
-      if (
-        Math.abs(
-          width -
-            offsetX.value -
-            SNAP.h -
-            (dragDistanceX.value + templateCurrentWidth.value / 2 + e.changeX),
-        ) <= 30
-      ) {
-        isRightSnapLineActive.value = true;
-      }
+      // // right snap
+      // if (
+      //   Math.abs(
+      //     width -
+      //       offsetX.value -
+      //       SNAP.h -
+      //       (dragDistanceX.value + templateCurrentWidth.value / 2 + e.changeX),
+      //   ) <= 30
+      // ) {
+      //   isRightSnapLineActive.value = true;
+      // }
 
-      if (
-        Math.abs(
-          width -
-            offsetX.value -
-            SNAP.h -
-            (dragDistanceX.value + templateCurrentWidth.value / 2 + e.changeX),
-        ) <= 5
-      ) {
-        dragDistanceX.value = withTiming(
-          width - offsetX.value - SNAP.h - templateCurrentWidth.value / 2,
-          {
-            duration: 10,
-          },
-        );
-      }
-      if (
-        Math.abs(
-          dragDistanceX.value +
-            templateCurrentWidth.value / 2 +
-            e.changeX +
-            SNAP.h,
-        ) <=
-        width - offsetX.value - 30
-      ) {
-        isRightSnapLineActive.value = false;
-      }
-      // end of right snap
+      // if (
+      //   Math.abs(
+      //     width -
+      //       offsetX.value -
+      //       SNAP.h -
+      //       (dragDistanceX.value + templateCurrentWidth.value / 2 + e.changeX),
+      //   ) <= 5
+      // ) {
+      //   dragDistanceX.value = withTiming(
+      //     width - offsetX.value - SNAP.h - templateCurrentWidth.value / 2,
+      //     {
+      //       duration: 10,
+      //     },
+      //   );
+      // }
+      // if (
+      //   Math.abs(
+      //     dragDistanceX.value +
+      //       templateCurrentWidth.value / 2 +
+      //       e.changeX +
+      //       SNAP.h,
+      //   ) <=
+      //   width - offsetX.value - 30
+      // ) {
+      //   isRightSnapLineActive.value = false;
+      // }
+      // // end of right snap
 
-      // bottom snap
-      if (
-        Math.abs(
-          imageShaderHeight.value -
-            SNAP.v -
-            (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
-        ) <= 30
-      ) {
-        isBottomSnapLineActive.value = true;
-      }
+      // // bottom snap
+      // if (
+      //   Math.abs(
+      //     imageShaderHeight.value -
+      //       SNAP.v -
+      //       (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
+      //   ) <= 30
+      // ) {
+      //   isBottomSnapLineActive.value = true;
+      // }
 
-      if (
-        Math.abs(
-          imageShaderHeight.value -
-            SNAP.v -
-            (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
-        ) <= 5
-      ) {
-        dragDistanceY.value = withTiming(
-          imageShaderHeight.value - SNAP.v - templateCurrentHeight.value,
-          {
-            duration: 10,
-          },
-        );
-      }
-      if (
-        Math.abs(
-          imageShaderHeight.value -
-            SNAP.v -
-            (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
-        ) >= 30
-      ) {
-        isBottomSnapLineActive.value = false;
-      }
-      // end of bottom snap
+      // if (
+      //   Math.abs(
+      //     imageShaderHeight.value -
+      //       SNAP.v -
+      //       (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
+      //   ) <= 5
+      // ) {
+      //   dragDistanceY.value = withTiming(
+      //     imageShaderHeight.value - SNAP.v - templateCurrentHeight.value,
+      //     {
+      //       duration: 10,
+      //     },
+      //   );
+      // }
+      // if (
+      //   Math.abs(
+      //     imageShaderHeight.value -
+      //       SNAP.v -
+      //       (dragDistanceY.value + templateCurrentHeight.value + e.changeX),
+      //   ) >= 30
+      // ) {
+      //   isBottomSnapLineActive.value = false;
+      // }
+      // // end of bottom snap
 
-      // central snap
-      if (Math.abs(dragDistanceX.value + e.changeX - width / 2) <= 5) {
-        isCenterSnapLineActive.value = true;
-      }
+      // // central snap
+      // if (Math.abs(dragDistanceX.value + e.changeX - width / 2) <= 5) {
+      //   isCenterSnapLineActive.value = true;
+      // }
 
-      if (Math.abs(dragDistanceX.value + e.changeX - width / 2) <= 5) {
-        // no snap in center
-      }
-      if (Math.abs(dragDistanceX.value + e.changeX - width / 2) >= 5) {
-        isCenterSnapLineActive.value = false;
-      }
+      // if (Math.abs(dragDistanceX.value + e.changeX - width / 2) <= 5) {
+      //   // no snap in center
+      // }
+      // if (Math.abs(dragDistanceX.value + e.changeX - width / 2) >= 5) {
+      //   isCenterSnapLineActive.value = false;
+      // }
       // end of central snap
     })
     .onEnd(() => {
+      if (isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
       isDragTrigger.value = false;
-      isTopSnapLineActive.value = false;
-      isLeftSnapLineActive.value = false;
-      isRightSnapLineActive.value = false;
-      isBottomSnapLineActive.value = false;
-      isCenterSnapLineActive.value = false;
+      // isTopSnapLineActive.value = false;
+      // isLeftSnapLineActive.value = false;
+      // isRightSnapLineActive.value = false;
+      // isBottomSnapLineActive.value = false;
+      // isCenterSnapLineActive.value = false;
     });
 
   const tapGesture = Gesture.LongPress()
     .minDuration(200)
     .onStart(() => {
+      if (!isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
       isDragTrigger.value = true;
       paused.value = true;
     })
@@ -749,30 +790,98 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
       isDragTrigger.value = false;
     })
     .onFinalize(() => {
+      if (isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
       isDragTrigger.value = false;
     });
 
   const pinchGesture = Gesture.Pinch()
+    .onStart(() => {
+      if (!isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
+      isDragTrigger.value = true;
+      paused.value = true;
+    })
     .onUpdate(e => {
       templateScale.value = savedScale.value * e.scale;
     })
     .onEnd(() => {
+      if (isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
       savedScale.value = templateScale.value;
+      isDragTrigger.value = false;
     });
 
   const rotationGesture = Gesture.Rotation()
+    .onStart(() => {
+      if (!isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
+      isDragTrigger.value = true;
+      paused.value = true;
+    })
     .onUpdate(e => {
       rotation.value = savedRotation.value + e.rotation;
     })
     .onEnd(() => {
+      if (isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
       savedRotation.value = rotation.value;
+      isDragTrigger.value = false;
+    });
+
+  const canvasPinchGesture = Gesture.Pinch()
+    .onStart(() => {
+      if (!isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
+      isDragTrigger.value = true;
+      paused.value = true;
+    })
+    .onUpdate(e => {
+      templateScale.value = savedScale.value * e.scale;
+    })
+    .onEnd(() => {
+      if (isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
+      savedScale.value = templateScale.value;
+      isDragTrigger.value = false;
+    });
+
+  const canvasRotationGesture = Gesture.Rotation()
+    .onStart(() => {
+      if (!isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
+      isDragTrigger.value = true;
+      paused.value = true;
+    })
+    .onUpdate(e => {
+      rotation.value = savedRotation.value + e.rotation;
+    })
+    .onEnd(() => {
+      if (isDragTrigger.value) {
+        runOnJS(triggerHapticFeedback)();
+      }
+      savedRotation.value = rotation.value;
+      isDragTrigger.value = false;
     });
 
   const composed = Gesture.Simultaneous(
+    rotationGesture,
+    pinchGesture,
     dragGesture,
     tapGesture,
-    pinchGesture,
-    rotationGesture,
+  );
+
+  const canvasComposed = Gesture.Simultaneous(
+    canvasPinchGesture,
+    canvasRotationGesture,
   );
 
   useEffect(() => {
@@ -783,6 +892,10 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
   }, [duration]);
 
   const toggleTemplateSelector = () => {
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.impactMedium, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
     paused.value = true;
     setTemplateSelector(prev => !prev);
   };
@@ -791,9 +904,36 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
     setTemplateSelector(false);
   };
 
+  const getIsSubscription = (paywall: PAYWALL_RESULT) => {
+    switch (paywall) {
+      case PAYWALL_RESULT.NOT_PRESENTED:
+        return true;
+      case PAYWALL_RESULT.ERROR:
+      case PAYWALL_RESULT.CANCELLED:
+        return false;
+      case PAYWALL_RESULT.PURCHASED:
+      case PAYWALL_RESULT.RESTORED:
+        return true;
+      default:
+        return false;
+    }
+  };
+
   const onClickExport = async () => {
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.effectClick, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
     paused.value = true;
-    setExporting(true);
+
+    if (isSubscribed) {
+      setExporting(true);
+    } else {
+      RevenueCatUI.presentPaywall().then(paywall => {
+        const _isSubscribed = getIsSubscription(paywall);
+        dispatch(setSubscribed(_isSubscribed));
+      });
+    }
   };
 
   const handleCancelVideoExport = () => {
@@ -828,36 +968,38 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           backgroundColor: theme.colors.black2,
         },
       ]}>
-      <Pressable onPress={handlePlayPause} style={[Styles.playerWrapper]}>
-        <Canvas style={[Styles.canvas]} ref={ref} onSize={canvasSize}>
-          <Fill>
-            <ImageShader
-              image={currentFrame}
-              transform={transform}
-              // transform={imageShaderTransform}
-              height={route.params.height}
-              width={route.params.width}
-            />
-          </Fill>
+      <Pressable onPress={handlePauseVideo} style={[Styles.playerWrapper]}>
+        <GestureDetector gesture={canvasComposed}>
+          <Canvas style={[Styles.canvas]} ref={ref} onSize={canvasSize}>
+            <Fill>
+              <ImageShader
+                image={currentFrame}
+                transform={transform}
+                // transform={imageShaderTransform}
+                height={route.params.height}
+                width={route.params.width}
+              />
+            </Fill>
 
-          {selectedTemplate && customFontMgr && (
-            <Template
-              rotation={rotation}
-              scale={templateScale}
-              currentTime={currentTime}
-              sentences={selectedVideo?.sentences || []}
-              paragraphLayoutWidth={paragraphLayoutWidth}
-              x={dragDistanceX}
-              y={dragDistanceY}
-              setTemplateHeight={templateCurrentHeight}
-              setTemplateWidth={templateCurrentWidth}
-              setX={templateXpos}
-              setY={templateYpos}
-              customFontMgr={customFontMgr}
-              {...selectedTemplate}
-            />
-          )}
-        </Canvas>
+            {selectedTemplate && customFontMgr && (
+              <Template
+                rotation={rotation}
+                scale={templateScale}
+                currentTime={currentTime}
+                sentences={selectedVideo?.sentences || []}
+                paragraphLayoutWidth={paragraphLayoutWidth}
+                x={dragDistanceX}
+                y={dragDistanceY}
+                setTemplateHeight={templateCurrentHeight}
+                setTemplateWidth={templateCurrentWidth}
+                setX={templateXpos}
+                setY={templateYpos}
+                customFontMgr={customFontMgr}
+                {...selectedTemplate}
+              />
+            )}
+          </Canvas>
+        </GestureDetector>
 
         <Animated.View style={[snapTopHorizontalLine]} />
         <Animated.View style={[snapLeftVerticalLine]} />
@@ -926,26 +1068,26 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           )}
         </View>
 
-        {!isThumbnailGenerating && (
-          <AnimatedPressable
-            onPress={handlePlayPause}
-            style={[
-              Styles.playButton,
-              playButtonsAnimatedStyle,
-              {
-                backgroundColor: theme.colors.black4,
-                left: width / 2 - scale(40),
-                top: height / 2 - verticalScale(40),
-              },
-            ]}>
-            <Icon name={'play'} size={scale(52)} color={theme.colors.primary} />
-          </AnimatedPressable>
-        )}
-
         <GestureDetector gesture={composed}>
           <Animated.View style={[draggableStyle]} />
         </GestureDetector>
       </Pressable>
+
+      {!isThumbnailGenerating && (
+        <AnimatedPressable
+          onPress={handlePlay}
+          style={[
+            Styles.playButton,
+            playButtonsAnimatedStyle,
+            {
+              backgroundColor: theme.colors.black4,
+              left: width / 2 - scale(40),
+              top: height / 2 - verticalScale(40),
+            },
+          ]}>
+          <Icon name={'play'} size={scale(52)} color={theme.colors.primary} />
+        </AnimatedPressable>
+      )}
 
       {/* later optimized sentence to shared value and use display none or something like that */}
       {!!selectedVideo?.sentences.length && renderTimeLine && (
@@ -975,6 +1117,7 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           }
         />
       )}
+
       {isAddCaptionBottomSheetOpen && (
         <BottomSheet
           onClose={handleBottomSheet}
@@ -1120,6 +1263,22 @@ const EditScreen = ({route, navigation}: EditScreenProps) => {
           </View>
         </View>
       )}
+
+      {!customFontMgr && (
+        <View
+          style={[
+            Styles.backDrop,
+            {
+              height: height,
+            },
+          ]}>
+          <ActivityIndicator
+            shouldRasterizeIOS
+            color={theme.colors.primary}
+            size={'large'}
+          />
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -1133,6 +1292,16 @@ const Styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     height: '100%',
+  },
+  backDrop: {
+    flex: 1,
+    position: 'absolute',
+    padding: verticalScale(48),
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
   },
   container: {
     flex: 1,

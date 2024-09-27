@@ -10,6 +10,9 @@ import {
 } from 'react-native';
 import {useTheme} from '@theme/ThemeContext';
 import {scale, verticalScale} from 'react-native-size-matters/extend';
+import ReactNativeHapticFeedback, {
+  HapticFeedbackTypes,
+} from 'react-native-haptic-feedback';
 
 type ButtonProps = {
   icon?: React.ReactNode;
@@ -40,9 +43,16 @@ const Button = ({
   color,
 }: ButtonProps) => {
   const {theme} = useTheme();
+  const handleOnPress = (event: GestureResponderEvent) => {
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.impactMedium, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
+    onPress && onPress(event);
+  };
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handleOnPress}
       style={({pressed}) => [
         style,
         Style.buttonContainer,

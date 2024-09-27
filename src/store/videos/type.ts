@@ -8,6 +8,11 @@ export type VideosSliceState = {
   selectedVideoId: VideoId | undefined;
 };
 
+export type SubscriptionSliceState = {
+  isSubscribed: boolean;
+  isLoading: boolean;
+};
+
 export type VideoId = string;
 
 export enum ExportQuality {

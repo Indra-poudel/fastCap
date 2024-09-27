@@ -7,14 +7,15 @@ import {useTheme} from 'theme/ThemeContext';
 
 type HeaderProps = {
   onClickTryPro: () => void;
+  isSubscribed: boolean;
 };
 
-const Header = ({onClickTryPro}: HeaderProps) => {
+const Header = ({onClickTryPro, isSubscribed}: HeaderProps) => {
   const {theme} = useTheme();
   return (
     <View style={[styles.wrapper, {backgroundColor: theme.colors.black1}]}>
       <AppTitle />
-      <ProChip onClick={onClickTryPro} />
+      {!isSubscribed && <ProChip onClick={onClickTryPro} />}
     </View>
   );
 };

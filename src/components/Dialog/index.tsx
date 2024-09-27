@@ -1,6 +1,8 @@
 import React from 'react';
 import {
   GestureResponderEvent,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -39,15 +41,16 @@ const Dialog = ({
   };
 
   return (
-    <Pressable
-      onPress={onClose}
+    <KeyboardAvoidingView
       style={[
         styles.backDrop,
         {
           height,
           width,
         },
-      ]}>
+      ]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}>
       <View
         onStartShouldSetResponder={() => true} // Ensure the child View handles touch events
         onTouchEnd={handleChildPress} // Stop propagation when touched
@@ -122,7 +125,7 @@ const Dialog = ({
           </Pressable>
         </View>
       </View>
-    </Pressable>
+    </KeyboardAvoidingView>
   );
 };
 

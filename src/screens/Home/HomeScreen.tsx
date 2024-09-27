@@ -26,7 +26,10 @@ import ReactNativeHapticFeedback, {
   HapticFeedbackTypes,
 } from 'react-native-haptic-feedback';
 import FloatingActionButton from 'containers/FloatingActionButtonContainer';
-import RevenueCatUI from 'react-native-purchases-ui';
+import RevenueCatUI, {PAYWALL_RESULT} from 'react-native-purchases-ui';
+import {useSelector} from 'react-redux';
+import {selectSubscriptionState} from 'store/subscription/selector';
+import {setSubscribed} from 'store/subscription/slice';
 
 // type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
 //   setFabVisible: (visible: boolean) => void;
@@ -49,6 +52,8 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
   const [isDeleting, setDeleting] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
+
+  const {isSubscribed} = useSelector(selectSubscriptionState);
 
   useEffect(() => {
     if (isDeleting && selectedVideo?.id) {
@@ -172,8 +177,30 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
     }
   };
 
+  const getIsSubscription = (paywall: PAYWALL_RESULT) => {
+    switch (paywall) {
+      case PAYWALL_RESULT.NOT_PRESENTED:
+        return true;
+      case PAYWALL_RESULT.ERROR:
+      case PAYWALL_RESULT.CANCELLED:
+        return false;
+      case PAYWALL_RESULT.PURCHASED:
+      case PAYWALL_RESULT.RESTORED:
+        return true;
+      default:
+        return false;
+    }
+  };
+
   const handleOnClickTryPro = () => {
-    RevenueCatUI.presentPaywall();
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.impactMedium, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
+    RevenueCatUI.presentPaywall().then(paywall => {
+      const _isSubscribed = getIsSubscription(paywall);
+      dispatch(setSubscribed(_isSubscribed));
+    });
   };
 
   return (
@@ -184,7 +211,7 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
           backgroundColor: theme.colors.black1,
         },
       ]}>
-      <Header onClickTryPro={handleOnClickTryPro} />
+      <Header onClickTryPro={handleOnClickTryPro} isSubscribed={isSubscribed} />
 
       {/* TODO: POST MVP */}
       {videos.length > 0 && (
