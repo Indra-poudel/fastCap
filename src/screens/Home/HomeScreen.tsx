@@ -16,7 +16,7 @@ import {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import {removeVideo, setSelectedVideo, updateVideo} from 'store/videos/slice';
-import CardAction from 'screens/Home/components/CardAction';
+import CardAction from 'components/CardAction';
 import Dialog from 'components/Dialog';
 import Edit from 'screens/Home/components/Edit';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -50,6 +50,7 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
   const [isEditDialogEnable, setEditDialog] = useState(false);
   const [isDeleteDialogEnable, setDeleteDialog] = useState(false);
   const [isDeleting, setDeleting] = useState(false);
+  const [isInfoOpen, setInfoOpen] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
 
@@ -121,6 +122,10 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
     setCardAction(false);
   };
 
+  const handleInfoClose = () => {
+    setInfoOpen(false);
+  };
+
   const renderItem: ListRenderItem<Video> = ({item}) => {
     return (
       <Card
@@ -142,10 +147,12 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
   const handleCardEditAction = () => {
     // handleHideBottomTab();
     setEditDialog(true);
+    handleCardActionClose();
   };
 
   const handleCardDeleteAction = () => {
     setDeleteDialog(true);
+    handleCardActionClose();
   };
 
   const handleCloseEditDialog = () => {
@@ -203,6 +210,10 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
     });
   };
 
+  const handleClickInfo = () => {
+    setInfoOpen(true);
+  };
+
   return (
     <SafeAreaView
       style={[
@@ -211,7 +222,11 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
           backgroundColor: theme.colors.black1,
         },
       ]}>
-      <Header onClickTryPro={handleOnClickTryPro} isSubscribed={isSubscribed} />
+      <Header
+        onClickTryPro={handleOnClickTryPro}
+        isSubscribed={isSubscribed}
+        onClickInfo={handleClickInfo}
+      />
 
       {/* TODO: POST MVP */}
       {videos.length > 0 && (
@@ -284,6 +299,24 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
           onClose={handleCardActionClose}
           onEdit={handleCardEditAction}
           onDelete={handleCardDeleteAction}
+          title={'Manage video'}
+          primaryLabel={'Rename'}
+        />
+      )}
+
+      {/* TODO: Change CardAction to take onPrimaryAction and onSecondaryAction instead of hard coded onEdit and onDelete */}
+      {isInfoOpen && (
+        <CardAction
+          onClose={handleInfoClose}
+          // on click privacy policy
+          onEdit={() => {}}
+          // on click term and condition policy
+          onDelete={handleCardDeleteAction}
+          title={'Information'}
+          secondaryLabel={'Privacy policy'}
+          secondaryIcon="shield-lock"
+          primaryIcon={'note-multiple-outline'}
+          primaryLabel="Terms and conditions"
         />
       )}
 

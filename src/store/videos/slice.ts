@@ -53,6 +53,27 @@ const videosSlice = createSlice({
         }
       }
     },
+
+    deleteWord: (state, action: PayloadAction<{wordUuid: string}>) => {
+      const {wordUuid} = action.payload;
+
+      const selectedVideoId = state.selectedVideoId;
+
+      if (selectedVideoId) {
+        const video = state.byId[selectedVideoId];
+        if (video) {
+          for (const sentence of video.sentences) {
+            const wordIndex = sentence.words.findIndex(
+              w => w.uuid === wordUuid,
+            );
+            if (wordIndex !== -1) {
+              sentence.words.splice(wordIndex, 1); // Remove the word
+              break; // Exit after deleting the word
+            }
+          }
+        }
+      }
+    },
   },
 });
 
@@ -63,5 +84,6 @@ export const {
   reorderVideos,
   setSelectedVideo,
   updateWord,
+  deleteWord,
 } = videosSlice.actions;
 export default videosSlice.reducer;
