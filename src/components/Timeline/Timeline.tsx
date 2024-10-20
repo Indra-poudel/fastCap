@@ -5,6 +5,7 @@ import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
   SharedValue,
   SlideInRight,
+  runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
@@ -15,6 +16,9 @@ import SubInterval from 'components/Timeline/SubInterval';
 import {GeneratedSentence, SentenceWord} from 'utils/sentencesBuilder';
 import WordChip from 'components/Timeline/WordChip';
 import {verticalScale} from 'react-native-size-matters';
+import ReactNativeHapticFeedback, {
+  HapticFeedbackTypes,
+} from 'react-native-haptic-feedback';
 
 type TimelineProps = {
   currentTime: SharedValue<number>;
@@ -51,6 +55,13 @@ const Timeline = ({
   const intervalDurationMs = frameDurationMs * framesPerInterval;
   const widthPerInterval = intervalDurationMs * widthPerMs;
   const widthPerFrame = widthPerInterval / framesPerInterval;
+
+  const triggerHapticFeedback = () => {
+    ReactNativeHapticFeedback.trigger(HapticFeedbackTypes.selection, {
+      enableVibrateFallback: true,
+      ignoreAndroidSystemSettings: false,
+    });
+  };
 
   const allWords = useMemo(() => {
     return sentences.flatMap(value => value.words);
@@ -101,6 +112,9 @@ const Timeline = ({
   );
 
   const gesture = Gesture.Pan()
+    .onStart(() => {
+      runOnJS(triggerHapticFeedback)();
+    })
     .onChange(e => {
       x.value += e.changeX;
 
@@ -119,6 +133,7 @@ const Timeline = ({
     })
     .onEnd(() => {
       direction.value = 0;
+      runOnJS(triggerHapticFeedback)();
     });
 
   const animatedStyles = useAnimatedStyle(() => ({

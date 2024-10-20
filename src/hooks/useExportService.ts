@@ -17,6 +17,7 @@ import {GeneratedSentence} from 'utils/sentencesBuilder';
 import {SharedValue} from 'react-native-reanimated';
 import {ExportQuality} from 'store/videos/type';
 import {deleteVideoFramesDirectory} from 'utils/directory';
+import {getTransformedBoundingBox} from 'utils/transform';
 
 export enum EXPORT_STEPS {
   RENDER_FRAMES = '🖼️ Rendering Frames',
@@ -171,37 +172,51 @@ export const useExportService = ({
   }, [_height, height]);
 
   const drawOffScreen = async (index: number, seekValue: number) => {
-    const {image} = renderOffScreenTemplate(_width, _height, scaleX, scaleY, {
-      currentTime: seekValue,
-      sentences: sentences,
-      paragraphLayoutWidth: _paragraphLayoutWidth,
-      x: _width * (dragPercentageX / 100),
-      y: _height * (dragPercentageY / 100),
-      customFontMgr: customFontManager,
-      ...template,
-      fontSize: template.fontSize * scaleX,
-      scale: scale,
-      rotation: rotation,
-    });
+    const {image, x, y, height} = renderOffScreenTemplate(
+      _width,
+      _height,
+      scaleX,
+      scaleY,
+      {
+        currentTime: seekValue,
+        sentences: sentences,
+        paragraphLayoutWidth: _paragraphLayoutWidth,
+        x: _width * (dragPercentageX / 100),
+        y: _height * (dragPercentageY / 100),
+        customFontMgr: customFontManager,
+        ...template,
+        fontSize: template.fontSize * scaleX,
+        scale: scale,
+        rotation: rotation,
+      },
+    );
+
+    const {newY, newHeight, newWidth} = getTransformedBoundingBox(
+      x,
+      y,
+      _width,
+      height,
+      scale.value,
+      rotation.value,
+    );
 
     const imagePaint = Skia.Paint();
     imagePaint.setAntiAlias(true);
     imagePaint.setDither(true);
     imagePaint.setBlendMode(BlendMode.SrcOut);
 
-    const offScreen = Skia.Surface.MakeOffscreen(_width, _height);
+    const offScreen = Skia.Surface.MakeOffscreen(newWidth, newHeight);
 
     if (!offScreen) {
       return;
     }
 
     const canvas = offScreen.getCanvas();
-
-    const src = rect(0, 0, _width, _height);
-    const dst = rect(0, 0, _width, _height);
+    const src = rect(0, newY, _width, newHeight);
+    const dst = rect(0, 0, _width, newHeight);
 
     if (image) {
-      canvas.drawImageRect(image, src, dst, imagePaint, false);
+      canvas.drawImageRect(image, src, dst, imagePaint);
 
       offScreen.flush();
 
@@ -213,7 +228,7 @@ export const useExportService = ({
       image.dispose();
     }
 
-    return {x: 0, y: 0};
+    return {x: 0, y: newY};
   };
 
   return {

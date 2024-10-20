@@ -4,41 +4,63 @@ import React from 'react';
 import {StyleSheet, View} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useTheme} from 'theme/ThemeContext';
-import { verticalScale} from 'react-native-size-matters/extend';
+import {verticalScale} from 'react-native-size-matters/extend';
 
 type CardActionProps = {
+  title: string;
   onClose: (hideTabBar?: boolean) => void;
   onEdit: () => void;
   onDelete: () => void;
+  primaryLabel: string;
+  secondaryLabel?: string;
+  primaryIcon?: string;
+  secondaryIcon?: string;
 };
 
-const CardAction = ({onClose, onDelete, onEdit}: CardActionProps) => {
+const CardAction = ({
+  title,
+  onClose,
+  onDelete,
+  onEdit,
+  primaryLabel,
+  secondaryLabel,
+  primaryIcon,
+  secondaryIcon,
+}: CardActionProps) => {
   const {theme} = useTheme();
 
   const handleEdit = () => {
     onEdit();
-    onClose(true);
   };
 
   const handleDelete = () => {
     onDelete();
-    onClose(true);
   };
 
   return (
-    <BottomSheet label="Manage Video" onClose={onClose}>
+    <BottomSheet label={title} onClose={onClose}>
       <View style={style.wrapper}>
         <Button
-          label={'Rename'}
+          label={primaryLabel}
           icon={
-            <Icon name={'rename-box'} size={24} color={theme.colors.white} />
+            <Icon
+              name={primaryIcon || 'rename-box'}
+              size={24}
+              color={theme.colors.white}
+            />
           }
           buttonType={'primary'}
           onPress={handleEdit}
         />
         <Button
-          icon={<Icon name={'delete'} size={24} color={theme.colors.error} />}
-          label={'Delete'}
+          icon={
+            <Icon
+              name={secondaryIcon || 'delete'}
+              size={24}
+              color={theme.colors.error}
+            />
+          }
+          label={secondaryLabel || 'Delete'}
           buttonType={'secondary'}
           color={theme.colors.error}
           onPress={handleDelete}
