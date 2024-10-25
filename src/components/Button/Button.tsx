@@ -54,7 +54,6 @@ const Button = ({
     <Pressable
       onPress={handleOnPress}
       style={({pressed}) => [
-        style,
         Style.buttonContainer,
         {
           justifyContent,
@@ -68,6 +67,7 @@ const Button = ({
           borderColor: color || theme.colors.primary,
           opacity: pressed ? 0.7 : 1,
         },
+        style,
       ]}>
       <View style={[Style.iconLabelContainer]}>
         {icon && <View>{icon}</View>}

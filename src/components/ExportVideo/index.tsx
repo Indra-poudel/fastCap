@@ -1,10 +1,16 @@
 import BottomSheet from 'components/BottomSheet';
 import React, {useEffect} from 'react';
-import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
+import {StyleSheet, Text, View, useWindowDimensions, Alert} from 'react-native';
 import {useTheme} from 'theme/ThemeContext';
 import * as Progress from 'react-native-progress';
-import {ExportServiceProps, useExportService} from 'hooks/useExportService';
+import {
+  EXPORT_STEPS,
+  ExportServiceProps,
+  useExportService,
+} from 'hooks/useExportService';
 import Button from 'components/Button/Button';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {Share, Linking, Platform} from 'react-native';
 
 import {verticalScale, scale} from 'react-native-size-matters/extend';
 
@@ -17,15 +23,10 @@ const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
 
   const {width} = useWindowDimensions();
 
-  const {
-    currentStep,
-    stepProgress,
-    overallStatus,
-    generatedVideoInfo,
-    startExportProcess,
-  } = useExportService({
-    ...exportServiceProps,
-  });
+  const {currentStep, stepProgress, generatedVideoInfo, startExportProcess} =
+    useExportService({
+      ...exportServiceProps,
+    });
 
   useEffect(() => {
     setTimeout(() => {
@@ -34,10 +35,27 @@ const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
     }, 200);
   }, []);
 
+  const handleShare = async () => {
+    if (!generatedVideoInfo) {
+      Alert.alert('Error', 'No video found to share.');
+      return;
+    }
+
+    try {
+      const {uri} = generatedVideoInfo.node.image;
+      await Share.share({
+        url: uri,
+        title: 'Check out this video!',
+      });
+    } catch (error) {
+      console.error('Error sharing video:', error);
+    }
+  };
+
   return (
     <BottomSheet
       label="Let's Make It Viral!🚀🔥"
-      initialHeightPercentage={scale(45)}>
+      initialHeightPercentage={verticalScale(45)}>
       <Progress.Bar
         animated
         progress={stepProgress / 100}
@@ -83,11 +101,33 @@ const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
                 },
                 Style.textCenter,
               ]}>
-              ⚡ Almost there! Don't close the app or lock your screen! 🎬✨
+              {currentStep === EXPORT_STEPS.COMPLETE
+                ? 'Export complete! Time to go viral! 🚀🔥'
+                : " ⚡ Almost there! Don't close the app or lock your screen! 🎬✨"}
             </Text>
           </View>
         </View>
-        <Button label={'Cancel'} buttonType={'tertiary'} onPress={onCancel} />
+        {currentStep !== EXPORT_STEPS.COMPLETE && (
+          <Button label={'Cancel'} buttonType={'tertiary'} onPress={onCancel} />
+        )}
+
+        {currentStep === EXPORT_STEPS.COMPLETE && (
+          <View style={Style.buttonWrapper}>
+            <Button
+              style={Style.smallButton}
+              icon={
+                <Icon
+                  name={'share'}
+                  size={scale(24)}
+                  color={theme.colors.white}
+                />
+              }
+              label={'Share'}
+              buttonType={'tertiary'}
+              onPress={handleShare}
+            />
+          </View>
+        )}
       </View>
     </BottomSheet>
   );
@@ -115,6 +155,20 @@ const Style = StyleSheet.create({
 
   textCenter: {
     textAlign: 'center',
+  },
+
+  buttonWrapper: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    width: '100%',
+    paddingHorizontal: scale(40),
+    marginTop: verticalScale(10),
+  },
+
+  smallButton: {
+    width: scale(150),
+    paddingVertical: verticalScale(10),
   },
 });
 
