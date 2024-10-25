@@ -57,3 +57,19 @@ export const deleteVideoFramesDirectory = async (
     console.error('Error deleting video directory:', error);
   }
 };
+
+export const deleteGeneratedVideo = async (videoId: string): Promise<void> => {
+  const videoDirectory = `${RNFetchBlob.fs.dirs.DocumentDir}/videos/${videoId}/output_${videoId}.mp4`;
+
+  try {
+    const exists = await RNFetchBlob.fs.exists(videoDirectory);
+    if (exists) {
+      await RNFetchBlob.fs.unlink(videoDirectory);
+      console.log('Video directory deleted:', videoDirectory);
+    } else {
+      console.log('Video directory does not exist.');
+    }
+  } catch (error) {
+    console.error('Error deleting video directory:', error);
+  }
+};

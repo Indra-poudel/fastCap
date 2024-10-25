@@ -177,7 +177,7 @@ export const generateVideoFromFrames = async (
 
       // Define the input path pattern and output video path
       const inputPattern = `${RNFetchBlob.fs.dirs.DocumentDir}/videos/${videoId}/frames/frame_%06d.png`;
-      const outputVideoPath = `${RNFetchBlob.fs.dirs.DocumentDir}/videos/${videoId}/frames/output_${videoId}.mp4`;
+      const outputVideoPath = `${RNFetchBlob.fs.dirs.DocumentDir}/videos/${videoId}/output_${videoId}.mp4`;
 
       const ffmpegCommand = [
         '-y', // Overwrite existing files

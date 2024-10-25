@@ -1,31 +1,37 @@
 import BottomSheet from 'components/BottomSheet';
 import React, {useEffect} from 'react';
-import {StyleSheet, Text, View, useWindowDimensions} from 'react-native';
+import {StyleSheet, Text, View, useWindowDimensions, Alert} from 'react-native';
 import {useTheme} from 'theme/ThemeContext';
 import * as Progress from 'react-native-progress';
-import {ExportServiceProps, useExportService} from 'hooks/useExportService';
+import {
+  EXPORT_STEPS,
+  ExportServiceProps,
+  useExportService,
+} from 'hooks/useExportService';
 import Button from 'components/Button/Button';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Share from 'react-native-share';
 
 import {verticalScale, scale} from 'react-native-size-matters/extend';
 
 type ExportVideoProps = {
   onCancel: () => void;
+  navigateToHome: () => void;
 } & ExportServiceProps;
 
-const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
+const ExportVideo = ({
+  onCancel,
+  navigateToHome,
+  ...exportServiceProps
+}: ExportVideoProps) => {
   const {theme} = useTheme();
 
   const {width} = useWindowDimensions();
 
-  const {
-    currentStep,
-    stepProgress,
-    overallStatus,
-    generatedVideoInfo,
-    startExportProcess,
-  } = useExportService({
-    ...exportServiceProps,
-  });
+  const {currentStep, stepProgress, generatedVideoPath, startExportProcess} =
+    useExportService({
+      ...exportServiceProps,
+    });
 
   useEffect(() => {
     setTimeout(() => {
@@ -34,10 +40,35 @@ const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
     }, 200);
   }, []);
 
+  const handleShare = async () => {
+    if (!generatedVideoPath) {
+      Alert.alert('Error', 'No video found to share.');
+      return;
+    }
+
+    try {
+      await Share.open({
+        url: generatedVideoPath,
+        title: 'Check out this video!',
+        type: 'video/mp4',
+      });
+
+      console.log('Shared');
+    } catch (error) {
+      console.log('Error sharing video:', error);
+    }
+  };
+
+  const handleCancel = () => {
+    navigateToHome();
+  };
+
   return (
     <BottomSheet
+      onClose={handleCancel}
+      showCloseIcon={true}
       label="Let's Make It Viral!🚀🔥"
-      initialHeightPercentage={scale(45)}>
+      initialHeightPercentage={verticalScale(45)}>
       <Progress.Bar
         animated
         progress={stepProgress / 100}
@@ -83,11 +114,33 @@ const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
                 },
                 Style.textCenter,
               ]}>
-              ⚡ Almost there! Don't close the app or lock your screen! 🎬✨
+              {currentStep === EXPORT_STEPS.COMPLETE
+                ? 'Export complete! Time to go viral! 🚀🔥'
+                : " ⚡ Almost there! Don't close the app or lock your screen! 🎬✨"}
             </Text>
           </View>
         </View>
-        <Button label={'Cancel'} buttonType={'tertiary'} onPress={onCancel} />
+        {currentStep !== EXPORT_STEPS.COMPLETE && (
+          <Button label={'Cancel'} buttonType={'tertiary'} onPress={onCancel} />
+        )}
+
+        {currentStep === EXPORT_STEPS.COMPLETE && (
+          <View style={Style.buttonWrapper}>
+            <Button
+              style={Style.smallButton}
+              icon={
+                <Icon
+                  name={'share'}
+                  size={scale(24)}
+                  color={theme.colors.white}
+                />
+              }
+              label={'Share'}
+              buttonType={'tertiary'}
+              onPress={handleShare}
+            />
+          </View>
+        )}
       </View>
     </BottomSheet>
   );
@@ -115,6 +168,20 @@ const Style = StyleSheet.create({
 
   textCenter: {
     textAlign: 'center',
+  },
+
+  buttonWrapper: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    width: '100%',
+    paddingHorizontal: scale(40),
+    marginTop: verticalScale(10),
+  },
+
+  smallButton: {
+    width: scale(150),
+    paddingVertical: verticalScale(10),
   },
 });
 

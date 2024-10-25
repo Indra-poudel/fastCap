@@ -1,7 +1,4 @@
-import {
-  CameraRoll,
-  PhotoIdentifier,
-} from '@react-native-camera-roll/camera-roll';
+import {CameraRoll} from '@react-native-camera-roll/camera-roll';
 import {
   BlendMode,
   SkTypefaceFontProvider,
@@ -61,7 +58,6 @@ export const useExportService = ({
   dragPercentageX,
   dragPercentageY,
   customFontManager,
-  scaleFactor,
   frameRate,
   duration,
   videoURL,
@@ -74,8 +70,8 @@ export const useExportService = ({
     OVER_ALL_PROCESS.PROCESSING,
   );
   const [stepProgress, setStepProgress] = useState(0);
-  const [generatedVideoInfo, setGeneratedVideoInfo] = useState<
-    PhotoIdentifier | undefined
+  const [generatedVideoPath, setGeneratedVideoPath] = useState<
+    string | undefined
   >(undefined);
 
   const isMounted = useRef(true);
@@ -91,7 +87,7 @@ export const useExportService = ({
   const startExportProcess = async () => {
     const seekInterval = 1000 / frameRate;
     const totalFrames = Math.floor(duration / seekInterval);
-    const bulkSize = 5; // Number of frames processed concurrently, you can adjust this value
+    const bulkSize = 5;
 
     let position = {
       x: 0,
@@ -152,9 +148,9 @@ export const useExportService = ({
       CameraRoll.saveAsset(videoPath, {
         type: 'video',
         album: 'FastCap',
-      }).then(async photoIdentifier => {
+      }).then(async () => {
         await deleteVideoFramesDirectory(videoId);
-        setGeneratedVideoInfo(photoIdentifier);
+        setGeneratedVideoPath(videoPath);
         setCurrentStep(EXPORT_STEPS.COMPLETE);
         setOverallStatus(OVER_ALL_PROCESS.COMPLETED);
       });
@@ -235,7 +231,7 @@ export const useExportService = ({
     currentStep,
     stepProgress,
     overallStatus,
-    generatedVideoInfo,
+    generatedVideoPath,
     startExportProcess,
   };
 };
