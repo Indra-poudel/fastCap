@@ -146,6 +146,10 @@ const EditScreen = ({route, navigation, customFontMgr}: EditScreenProps) => {
 
   const frameDurationMs = 1000 / framerate;
 
+  const handleNavigateToHome = () => {
+    navigation.navigate('home');
+  };
+
   // const isTopSnapLineActive = useSharedValue(false);
   // const isBottomSnapLineActive = useSharedValue(false);
   // const isLeftSnapLineActive = useSharedValue(false);
@@ -926,14 +930,14 @@ const EditScreen = ({route, navigation, customFontMgr}: EditScreenProps) => {
     });
     paused.value = true;
 
-    // if (isSubscribed) {
-    setExporting(true);
-    // } else {
-    // RevenueCatUI.presentPaywall().then(paywall => {
-    //   const _isSubscribed = getIsSubscription(paywall);
-    //   dispatch(setSubscribed(_isSubscribed));
-    // });
-    // }
+    if (isSubscribed) {
+      setExporting(true);
+    } else {
+      RevenueCatUI.presentPaywall().then(paywall => {
+        const _isSubscribed = getIsSubscription(paywall);
+        dispatch(setSubscribed(_isSubscribed));
+      });
+    }
   };
 
   const handleCancelVideoExport = () => {
@@ -1224,6 +1228,7 @@ const EditScreen = ({route, navigation, customFontMgr}: EditScreenProps) => {
             quality={selectedVideo.exportQuality}
             videoURL={route.params.videoURL}
             videoId={selectedVideo.id}
+            navigateToHome={handleNavigateToHome}
           />
         )}
 

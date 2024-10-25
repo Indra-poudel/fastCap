@@ -33,6 +33,7 @@ interface BottomSheetProps {
   contentWrapperStyle?: StyleProp<ViewStyle>;
   isFullSize?: boolean;
   onTouch?: () => void;
+  showCloseIcon?: boolean;
 }
 
 const BottomSheet: React.FC<BottomSheetProps> = ({
@@ -44,6 +45,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   contentWrapperStyle,
   isFullSize,
   onTouch,
+  showCloseIcon,
 }) => {
   const {theme} = useTheme();
   const MAX_TOP = SCREEN_HEIGHT * 0.1; // Maximum top position (20% of screen height)
@@ -172,6 +174,16 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
                 ]}>
                 {label}
               </Text>
+
+              {showCloseIcon && (
+                <Pressable style={[styles.closeIcon]} onPress={handleClose}>
+                  <Icon
+                    name={'close-circle'}
+                    size={28}
+                    color={theme.colors.white}
+                  />
+                </Pressable>
+              )}
             </View>
           </View>
         </GestureDetector>
@@ -232,6 +244,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: scale(10),
     bottom: verticalScale(10),
+    display: 'flex',
+    justifyContent: 'center',
+    alignContent: 'center',
+  },
+
+  closeIcon: {
+    alignSelf: 'flex-end',
+    position: 'absolute',
+    right: scale(10),
+    bottom: verticalScale(20),
     display: 'flex',
     justifyContent: 'center',
     alignContent: 'center',

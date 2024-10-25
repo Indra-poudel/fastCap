@@ -10,20 +10,25 @@ import {
 } from 'hooks/useExportService';
 import Button from 'components/Button/Button';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Share, Linking, Platform} from 'react-native';
+import Share from 'react-native-share';
 
 import {verticalScale, scale} from 'react-native-size-matters/extend';
 
 type ExportVideoProps = {
   onCancel: () => void;
+  navigateToHome: () => void;
 } & ExportServiceProps;
 
-const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
+const ExportVideo = ({
+  onCancel,
+  navigateToHome,
+  ...exportServiceProps
+}: ExportVideoProps) => {
   const {theme} = useTheme();
 
   const {width} = useWindowDimensions();
 
-  const {currentStep, stepProgress, generatedVideoInfo, startExportProcess} =
+  const {currentStep, stepProgress, generatedVideoPath, startExportProcess} =
     useExportService({
       ...exportServiceProps,
     });
@@ -36,24 +41,32 @@ const ExportVideo = ({onCancel, ...exportServiceProps}: ExportVideoProps) => {
   }, []);
 
   const handleShare = async () => {
-    if (!generatedVideoInfo) {
+    if (!generatedVideoPath) {
       Alert.alert('Error', 'No video found to share.');
       return;
     }
 
     try {
-      const {uri} = generatedVideoInfo.node.image;
-      await Share.share({
-        url: uri,
+      await Share.open({
+        url: generatedVideoPath,
         title: 'Check out this video!',
+        type: 'video/mp4',
       });
+
+      console.log('Shared');
     } catch (error) {
-      console.error('Error sharing video:', error);
+      console.log('Error sharing video:', error);
     }
+  };
+
+  const handleCancel = () => {
+    navigateToHome();
   };
 
   return (
     <BottomSheet
+      onClose={handleCancel}
+      showCloseIcon={true}
       label="Let's Make It Viral!🚀🔥"
       initialHeightPercentage={verticalScale(45)}>
       <Progress.Bar
