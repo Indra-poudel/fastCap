@@ -21,6 +21,7 @@ enum TranscriptionSteps {
   GENERATE_TRANSCRIPTION = '📝 Creating the Script',
   CHECK_TRANSCRIPTION_STATUS = '🔍 Confirming the Script',
   COMPLETE = '✅ All Done, Fam!',
+  ERROR = '❌ Something Went Wrong!',
 }
 
 export enum OverallProcessStatus {
@@ -178,11 +179,14 @@ export const useTranscriptionService = ({
             setCurrentStep(TranscriptionSteps.COMPLETE);
             setOverallStatus(OverallProcessStatus.COMPLETED);
           } else {
-            setError('Transcription failed');
+            setCurrentStep(TranscriptionSteps.ERROR);
+            setError('❌ Transcription failed');
+            setOverallStatus(OverallProcessStatus.ERROR);
           }
         } catch {
           if (isMounted.current) {
-            setError('Transcription process error');
+            setCurrentStep(TranscriptionSteps.ERROR);
+            setError('❌ Transcription process failed');
             setOverallStatus(OverallProcessStatus.ERROR);
           }
         }

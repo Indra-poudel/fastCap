@@ -14,6 +14,7 @@ import {useAppDispatch, useAppSelector} from 'hooks/useStore';
 import {selectSelectedVideo} from 'store/videos/selector';
 import {updateVideo} from 'store/videos/slice';
 import {scale, verticalScale} from 'react-native-size-matters/extend';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 type CaptionServiceStatusProps = {
   videoUrl: string;
@@ -79,37 +80,56 @@ const CaptionServiceStatus = ({
     }
   }, [onSuccess, overallStatus, sentences, onCancel]);
 
+  const handlePrimaryButtonClick = () => {
+    if (error) {
+      if (videoUrl && language && duration && selectedVideo?.id) {
+        startTranscriptionProcess(
+          videoUrl,
+          language,
+          duration,
+          selectedVideo.id,
+        );
+      }
+    } else {
+      onCancel();
+    }
+  };
+
   return (
     <BottomSheet label="Generating Captions" initialHeightPercentage={50}>
       <View style={[Style.wrapper]}>
-        <View
-          style={[
-            Style.ccWrapper,
-            {
-              backgroundColor: theme.colors.primary,
-            },
-          ]}>
-          <Text
+        {!error ? (
+          <View
             style={[
-              theme.typography.header.medium,
+              Style.ccWrapper,
               {
-                color: theme.colors.white,
+                backgroundColor: theme.colors.primary,
               },
             ]}>
-            CC
-          </Text>
-          <Progress.Bar
-            animated
-            progress={stepProgress / 100}
-            color={theme.colors.white}
-            unfilledColor="rgba(29, 29, 29, 0.30))"
-            height={verticalScale(6)}
-            borderRadius={scale(12)}
-            borderWidth={0}
-            width={scale(60)}
-            useNativeDriver={true}
-          />
-        </View>
+            <Text
+              style={[
+                theme.typography.header.medium,
+                {
+                  color: theme.colors.white,
+                },
+              ]}>
+              CC
+            </Text>
+            <Progress.Bar
+              animated
+              progress={stepProgress / 100}
+              color={theme.colors.white}
+              unfilledColor="rgba(29, 29, 29, 0.30))"
+              height={verticalScale(6)}
+              borderRadius={scale(12)}
+              borderWidth={0}
+              width={scale(60)}
+              useNativeDriver={true}
+            />
+          </View>
+        ) : (
+          <Icon name="error" size={scale(100)} color={theme.colors.error} />
+        )}
         <View style={[Style.textWrapper]}>
           <Text
             style={[
@@ -127,11 +147,16 @@ const CaptionServiceStatus = ({
                 color: theme.colors.grey3,
               },
             ]}>
-            ⏳ Hold up! We're dropping captions on your vid. Keep the app open
-            and the screen unlocked, fam! 📱💬
+            {error
+              ? error
+              : "⏳ Hold up! We're dropping captions on your vid. Keep the app open and the screen unlocked, fam! 📱💬"}
           </Text>
         </View>
-        <Button label={'Cancel'} buttonType={'primary'} onPress={onCancel} />
+        <Button
+          label={error ? 'Try Again' : 'Cancel'}
+          buttonType={'primary'}
+          onPress={handlePrimaryButtonClick}
+        />
       </View>
     </BottomSheet>
   );
