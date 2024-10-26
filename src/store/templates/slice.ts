@@ -186,8 +186,42 @@ const initialTemplatesState: TemplatesSliceState = {
         color: '#b547c6',
       },
     },
+
+    ['8']: {
+      id: '8',
+      name: 'Karaoke fill',
+      alignment: TextAlign.Center,
+      color: 'white',
+      fontSize: 32,
+      fontFamily: FONT_FAMILY.FranklinGothic,
+      weight: FontWeight.Bold,
+      sentenceBackgroundPadding: 8,
+      maxWords: 3,
+      effect: 'karaoke fill',
+      fillColor: '#cc2a00',
+      strokeColor: '#000000',
+      strokeWidth: 5,
+      sentenceShadow: {
+        dx: 3,
+        dy: 3,
+        blur: 0,
+        color: '#000000',
+      },
+    },
+    ['9']: {
+      id: '9',
+      name: 'bg',
+      alignment: TextAlign.Center,
+      color: 'white',
+      fontSize: 28,
+      fontFamily: FONT_FAMILY.EuclidCircularA,
+      weight: FontWeight.Bold,
+      sentenceBackgroundPadding: 8,
+      maxWords: 5,
+      activeBackgroundColor: '#3377FF',
+    },
   },
-  allIds: ['1', '2', '3', '4', '5', '6', '7'],
+  allIds: ['1', '2', '3', '4', '5', '6', '7', '8', '9'],
 };
 
 const templatesSlice = createSlice({
