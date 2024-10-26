@@ -16,9 +16,10 @@ import {
   RoundedRect,
   SkImage,
 } from '@shopify/react-native-skia';
-import {CustomParagraphProps} from 'components/Template';
-import {isSharedValue} from 'react-native-reanimated';
 import {GeneratedSentence} from 'utils/sentencesBuilder';
+import OffScreenClipEffect from 'components/Effects/OffScreenClipEffect';
+import {OffScreenProps} from 'types/types';
+import {getTransformedBoundingBox} from 'utils/transform';
 
 const EMPTY_SENTENCE = {
   text: '',
@@ -43,12 +44,12 @@ export const renderOffScreenTemplate = (
   scaleFactorX: number,
   scaleFactorY: number,
   {
-    currentTime: _currentTime,
+    currentTime,
     sentences,
 
     paragraphLayoutWidth,
-    x: _x,
-    y: _y,
+    x,
+    y,
 
     // THEME
     color,
@@ -99,9 +100,9 @@ export const renderOffScreenTemplate = (
     fillColor,
 
     customFontMgr,
-    scale: _scale,
-    rotation: _rotation,
-  }: CustomParagraphProps,
+    scale,
+    rotation,
+  }: OffScreenProps,
 ): {
   image: SkImage;
   x: number;
@@ -183,36 +184,6 @@ export const renderOffScreenTemplate = (
   const shadowBeforeValue = shadowBefore || shadow || [defaultShadow];
   const shadowAfterValue = shadowAfter || shadow || [defaultShadow];
 
-  const x = isSharedValue(_x)
-    ? _x
-    : {
-        value: _x,
-      };
-
-  const scale = isSharedValue(_scale)
-    ? _scale
-    : {
-        value: _scale,
-      };
-
-  const rotation = isSharedValue(_rotation)
-    ? _rotation
-    : {
-        value: _rotation,
-      };
-
-  const y = isSharedValue(_y)
-    ? _y
-    : {
-        value: _y,
-      };
-
-  const currentTime = isSharedValue(_currentTime)
-    ? _currentTime
-    : {
-        value: _currentTime,
-      };
-
   let currentSentence: GeneratedSentence = EMPTY_SENTENCE;
 
   let outlineParagraph: SkParagraph | null = null;
@@ -222,8 +193,7 @@ export const renderOffScreenTemplate = (
     : Skia.Color('transparent');
 
   const activeSentence = sentences.find(
-    sentence =>
-      currentTime.value >= sentence.start && currentTime.value <= sentence.end,
+    sentence => currentTime >= sentence.start && currentTime <= sentence.end,
   );
 
   if (activeSentence) {
@@ -251,9 +221,8 @@ export const renderOffScreenTemplate = (
     foregroundPaint.setStrokeWidth(strokeWidth * scaleFactorX);
 
     currentSentence.words.forEach((word, _index) => {
-      const isActiveWord =
-        currentTime.value >= word.start && currentTime.value <= word.end;
-      const isBeforeWord = currentTime.value >= word.start;
+      const isActiveWord = currentTime >= word.start && currentTime <= word.end;
+      const isBeforeWord = currentTime >= word.start;
 
       outlineParagraphBuilder.pushStyle(
         {
@@ -299,9 +268,8 @@ export const renderOffScreenTemplate = (
   );
 
   currentSentence.words.forEach((word, _index) => {
-    const isActiveWord =
-      currentTime.value >= word.start && currentTime.value <= word.end;
-    const isBeforeWord = currentTime.value >= word.start;
+    const isActiveWord = currentTime >= word.start && currentTime <= word.end;
+    const isBeforeWord = currentTime >= word.start;
 
     paragraphBuilder.pushStyle({
       color: isActiveWord
@@ -359,17 +327,17 @@ export const renderOffScreenTemplate = (
 
     get minX() {
       if (alignment === TextAlign.Left) {
-        return x.value - this.paragraphWidth / 2;
+        return x - this.paragraphWidth / 2;
       }
       if (alignment === TextAlign.Center) {
         return (
-          x.value -
+          x -
           this.paragraphWidth / 2 -
           (paragraphLayoutWidth.value - this.paragraphWidth) / 2
         );
       } else {
         return (
-          x.value -
+          x -
           this.paragraphWidth / 2 -
           (paragraphLayoutWidth.value - this.paragraphWidth)
         );
@@ -377,7 +345,7 @@ export const renderOffScreenTemplate = (
     },
 
     get minY() {
-      return y.value + sentenceBackgroundPadding;
+      return y + sentenceBackgroundPadding;
     },
 
     get backgroundX() {
@@ -399,7 +367,7 @@ export const renderOffScreenTemplate = (
     },
 
     get backgroundY() {
-      return y.value;
+      return y;
     },
 
     get backgroundWidth() {
@@ -434,62 +402,141 @@ export const renderOffScreenTemplate = (
         {translateY: -centerY},
       ];
     },
+
+    get newDimensionAfterScaleAndRotation() {
+      const {newY, newX, newHeight, newWidth} = getTransformedBoundingBox(
+        layoutData.backgroundX || 0,
+        layoutData.backgroundY || 0,
+        layoutData.backgroundWidth || 10,
+        layoutData.backgroundHeight || 10,
+        scale.value,
+        rotation.value,
+      );
+
+      return {newY, newX, newHeight, newWidth};
+    },
   };
 
   const image = drawAsImage(
-    <Group transform={layoutData.derivedTransform}>
-      {sentenceBackgroundColor && (
-        <RoundedRect
-          antiAlias={true}
-          dither={true}
-          x={layoutData.backgroundX}
-          y={layoutData.backgroundY}
-          width={layoutData.backgroundWidth}
-          height={layoutData.backgroundHeight}
-          r={sentenceBackgroundRadius}
-          color={sentenceBackgroundColor}
-          opacity={sentenceBackgroundOpacity}
-          origin={{
-            x: 0,
-            y: 0,
-          }}
-        />
-      )}
-
-      <Group
-        antiAlias={true}
-        layer={
-          <Paint antiAlias={true} dither={true}>
-            {sentenceShadow && (
-              <Shadow
-                blur={sentenceShadow.blur}
-                dx={sentenceShadow.dx * scaleFactorX}
-                dy={sentenceShadow.dy * scaleFactorY}
-                color={Skia.Color(sentenceShadow.color)}
+    effect === 'karaoke clip' ? (
+      <Group transform={layoutData.derivedTransform}>
+        <OffScreenClipEffect
+          currentTime={currentTime}
+          currentSentence={currentSentence}
+          x={layoutData.newDimensionAfterScaleAndRotation.newX}
+          y={layoutData.newDimensionAfterScaleAndRotation.newY}
+          width={layoutData.newDimensionAfterScaleAndRotation.newWidth}
+          height={layoutData.newDimensionAfterScaleAndRotation.newHeight}>
+          <>
+            {sentenceBackgroundColor && (
+              <RoundedRect
+                antiAlias={true}
+                dither={true}
+                x={layoutData.backgroundX}
+                y={layoutData.backgroundY}
+                width={layoutData.backgroundWidth}
+                height={layoutData.backgroundHeight}
+                r={sentenceBackgroundRadius}
+                color={sentenceBackgroundColor}
+                opacity={sentenceBackgroundOpacity}
+                origin={{
+                  x: 0,
+                  y: 0,
+                }}
               />
             )}
-          </Paint>
-        }>
-        {strokeWidth !== 0 && (
+
+            <Group
+              antiAlias={true}
+              layer={
+                <Paint antiAlias={true} dither={true}>
+                  {sentenceShadow && (
+                    <Shadow
+                      blur={sentenceShadow.blur}
+                      dx={sentenceShadow.dx * scaleFactorX}
+                      dy={sentenceShadow.dy * scaleFactorY}
+                      color={Skia.Color(sentenceShadow.color)}
+                    />
+                  )}
+                </Paint>
+              }>
+              {strokeWidth !== 0 && (
+                <Paragraph
+                  paragraph={outlineParagraph}
+                  x={layoutData.minX}
+                  y={layoutData.minY}
+                  width={paragraphLayoutWidth.value}
+                  style={'stroke'}
+                  strokeWidth={strokeWidth * scaleFactorX}
+                />
+              )}
+              <Paragraph
+                paragraph={paragraph}
+                x={layoutData.minX}
+                y={layoutData.minY}
+                width={paragraphLayoutWidth.value}
+                antiAlias={true}
+                dither={true}
+              />
+            </Group>
+          </>
+        </OffScreenClipEffect>
+      </Group>
+    ) : (
+      <Group transform={layoutData.derivedTransform}>
+        {sentenceBackgroundColor && (
+          <RoundedRect
+            antiAlias={true}
+            dither={true}
+            x={layoutData.backgroundX}
+            y={layoutData.backgroundY}
+            width={layoutData.backgroundWidth}
+            height={layoutData.backgroundHeight}
+            r={sentenceBackgroundRadius}
+            color={sentenceBackgroundColor}
+            opacity={sentenceBackgroundOpacity}
+            origin={{
+              x: 0,
+              y: 0,
+            }}
+          />
+        )}
+
+        <Group
+          antiAlias={true}
+          layer={
+            <Paint antiAlias={true} dither={true}>
+              {sentenceShadow && (
+                <Shadow
+                  blur={sentenceShadow.blur}
+                  dx={sentenceShadow.dx * scaleFactorX}
+                  dy={sentenceShadow.dy * scaleFactorY}
+                  color={Skia.Color(sentenceShadow.color)}
+                />
+              )}
+            </Paint>
+          }>
+          {strokeWidth !== 0 && (
+            <Paragraph
+              paragraph={outlineParagraph}
+              x={layoutData.minX}
+              y={layoutData.minY}
+              width={paragraphLayoutWidth.value}
+              style={'stroke'}
+              strokeWidth={strokeWidth * scaleFactorX}
+            />
+          )}
           <Paragraph
-            paragraph={outlineParagraph}
+            paragraph={paragraph}
             x={layoutData.minX}
             y={layoutData.minY}
             width={paragraphLayoutWidth.value}
-            style={'stroke'}
-            strokeWidth={strokeWidth * scaleFactorX}
+            antiAlias={true}
+            dither={true}
           />
-        )}
-        <Paragraph
-          paragraph={paragraph}
-          x={layoutData.minX}
-          y={layoutData.minY}
-          width={paragraphLayoutWidth.value}
-          antiAlias={true}
-          dither={true}
-        />
+        </Group>
       </Group>
-    </Group>,
+    ),
     {
       width: width,
       height: height,

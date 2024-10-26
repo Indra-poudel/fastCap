@@ -575,68 +575,70 @@ const Template = ({
 
   if (effect === 'karaoke clip') {
     return (
-      <ClipEffect
-        currentTime={currentTime}
-        currentSentence={currentSentence}
-        paused={paused}
-        x={backgroundX}
-        y={backgroundY}
-        width={backgroundWidth}
-        height={backgroundHeight}>
-        <>
-          {sentenceBackgroundColor && (
-            <RoundedRect
-              x={backgroundX}
-              y={backgroundY}
-              width={backgroundWidth}
-              height={backgroundHeight}
-              r={sentenceBackgroundRadius}
-              color={sentenceBackgroundColor}
-              opacity={sentenceBackgroundOpacity}
-              origin={{
-                x: 0,
-                y: 0,
-              }}
-            />
-          )}
-          <Group
-            layer={
-              <Paint>
-                {sentenceShadow && (
-                  <Shadow
-                    blur={sentenceShadow.blur}
-                    dx={sentenceShadow.dx}
-                    dy={sentenceShadow.dy}
-                    color={Skia.Color(sentenceShadow.color)}
-                  />
-                )}
-              </Paint>
-            }>
-            {strokeWidth !== 0 && (
+      <Group transform={derivedTransform}>
+        <ClipEffect
+          currentTime={currentTime}
+          currentSentence={currentSentence}
+          paused={paused}
+          x={backgroundX}
+          y={backgroundY}
+          width={backgroundWidth}
+          height={backgroundHeight}>
+          <>
+            {sentenceBackgroundColor && (
+              <RoundedRect
+                x={backgroundX}
+                y={backgroundY}
+                width={backgroundWidth}
+                height={backgroundHeight}
+                r={sentenceBackgroundRadius}
+                color={sentenceBackgroundColor}
+                opacity={sentenceBackgroundOpacity}
+                origin={{
+                  x: 0,
+                  y: 0,
+                }}
+              />
+            )}
+            <Group
+              layer={
+                <Paint>
+                  {sentenceShadow && (
+                    <Shadow
+                      blur={sentenceShadow.blur}
+                      dx={sentenceShadow.dx}
+                      dy={sentenceShadow.dy}
+                      color={Skia.Color(sentenceShadow.color)}
+                    />
+                  )}
+                </Paint>
+              }>
+              {strokeWidth !== 0 && (
+                <Paragraph
+                  paragraph={outlineParagraph}
+                  x={minX}
+                  y={minY}
+                  width={paragraphLayoutWidth}
+                  style={'stroke'}
+                  strokeWidth={strokeWidth}
+                />
+              )}
               <Paragraph
-                paragraph={outlineParagraph}
+                paragraph={paragraph}
                 x={minX}
                 y={minY}
                 width={paragraphLayoutWidth}
-                style={'stroke'}
-                strokeWidth={strokeWidth}
               />
-            )}
-            <Paragraph
-              paragraph={paragraph}
-              x={minX}
-              y={minY}
-              width={paragraphLayoutWidth}
-            />
-          </Group>
-        </>
-      </ClipEffect>
+            </Group>
+          </>
+        </ClipEffect>
+      </Group>
     );
   }
 
   if (effect === 'karaoke fill' && fillColor) {
     return (
-      <>
+      <Group transform={derivedTransform}>
         {sentenceBackgroundColor && (
           <RoundedRect
             x={backgroundX}
@@ -693,7 +695,7 @@ const Template = ({
             />
           </Group>
         </KaraokeEffect>
-      </>
+      </Group>
     );
   }
 
