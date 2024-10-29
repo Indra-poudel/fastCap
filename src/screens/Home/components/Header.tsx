@@ -22,8 +22,8 @@ const Header = ({onClickTryPro, isSubscribed, onClickInfo}: HeaderProps) => {
         <Pressable onPress={onClickInfo}>
           <Icon
             name={'information'}
-            size={scale(28)}
-            color={theme.colors.info}
+            size={scale(24)}
+            color={theme.colors.grey3}
           />
         </Pressable>
       </View>

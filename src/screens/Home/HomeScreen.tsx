@@ -30,6 +30,8 @@ import RevenueCatUI, {PAYWALL_RESULT} from 'react-native-purchases-ui';
 import {useSelector} from 'react-redux';
 import {selectSubscriptionState} from 'store/subscription/selector';
 import {setSubscribed} from 'store/subscription/slice';
+import FastCapWebView from 'components/WebView/WebView';
+import {APP_LINK} from 'constants/index';
 
 // type HomeScreenProps = BottomTabScreenProps<TabParamList, TABS.HOME> & {
 //   setFabVisible: (visible: boolean) => void;
@@ -51,6 +53,8 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
   const [isDeleteDialogEnable, setDeleteDialog] = useState(false);
   const [isDeleting, setDeleting] = useState(false);
   const [isInfoOpen, setInfoOpen] = useState(false);
+  const [isPrivacyPolicyOpen, setIsPrivacyPolicyOpen] = useState(false);
+  const [isTermsAndConditionOpen, setIsTermsAndConditionOpen] = useState(false);
 
   const navigation = useNavigation<NavigationProp>();
 
@@ -214,6 +218,22 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
     setInfoOpen(true);
   };
 
+  const handleTermsClick = () => {
+    setIsTermsAndConditionOpen(true);
+  };
+
+  const handleTermsClose = () => {
+    setIsTermsAndConditionOpen(false);
+  };
+
+  const handlePolicyClick = () => {
+    setIsPrivacyPolicyOpen(true);
+  };
+
+  const handlePolicyClose = () => {
+    setIsPrivacyPolicyOpen(false);
+  };
+
   return (
     <SafeAreaView
       style={[
@@ -308,10 +328,10 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
       {isInfoOpen && (
         <CardAction
           onClose={handleInfoClose}
+          // on click terms and condition
+          onEdit={handleTermsClick}
           // on click privacy policy
-          onEdit={() => {}}
-          // on click term and condition policy
-          onDelete={handleCardDeleteAction}
+          onDelete={handlePolicyClick}
           title={'Information'}
           secondaryLabel={'Privacy policy'}
           secondaryIcon="shield-lock"
@@ -351,6 +371,21 @@ const HomeScreen: React.FC<HomeScreenProps> = () => {
         <View style={style.flexCenter}>
           <ActivityIndicator size={'large'} color={theme.colors.primary} />
         </View>
+      )}
+
+      {isTermsAndConditionOpen && (
+        <FastCapWebView
+          label={'Terms and conditions'}
+          uri={APP_LINK.TERMS_AND_CONDITIONS}
+          onClose={handleTermsClose}
+        />
+      )}
+      {isPrivacyPolicyOpen && (
+        <FastCapWebView
+          label={'Privacy policy'}
+          uri={APP_LINK.PRIVACY_POLICY}
+          onClose={handlePolicyClose}
+        />
       )}
     </SafeAreaView>
   );
