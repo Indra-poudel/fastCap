@@ -60,3 +60,10 @@ export const TEMPLATE_SENTENCE: GeneratedSentence[] = [
     ],
   },
 ];
+
+export const APP_LINK = {
+  TERMS_AND_CONDITIONS:
+    'https://rift-wineberry-795.notion.site/FastCap-Terms-and-Conditions-12e5639036a6806b90bee406a770e57c',
+  PRIVACY_POLICY:
+    'https://rift-wineberry-795.notion.site/FastCap-Privacy-Policy-12e5639036a68088bc92f04f3e20694d',
+};

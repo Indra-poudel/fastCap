@@ -20,6 +20,7 @@ import {GeneratedSentence} from 'utils/sentencesBuilder';
 import OffScreenClipEffect from 'components/Effects/OffScreenClipEffect';
 import {OffScreenProps} from 'types/types';
 import {getTransformedBoundingBox} from 'utils/transform';
+import OffScreenKaraokeEffect from 'components/Effects/OffScreenKaraokeEffect';
 
 const EMPTY_SENTENCE = {
   text: '',
@@ -481,6 +482,64 @@ export const renderOffScreenTemplate = (
             </Group>
           </>
         </OffScreenClipEffect>
+      </Group>
+    ) : effect === 'karaoke fill' && fillColor ? (
+      <Group transform={layoutData.derivedTransform}>
+        {sentenceBackgroundColor && (
+          <RoundedRect
+            x={layoutData.backgroundX}
+            y={layoutData.backgroundY}
+            width={layoutData.backgroundWidth}
+            height={layoutData.backgroundHeight}
+            r={sentenceBackgroundRadius}
+            color={sentenceBackgroundColor}
+            opacity={sentenceBackgroundOpacity}
+            origin={{
+              x: 0,
+              y: 0,
+            }}
+          />
+        )}
+
+        <OffScreenKaraokeEffect
+          x={layoutData.backgroundX}
+          y={layoutData.backgroundY}
+          width={layoutData.backgroundWidth}
+          height={layoutData.backgroundHeight}
+          fillColor={Skia.Color(fillColor)}
+          currentTime={currentTime}
+          currentSentence={currentSentence}>
+          <Group
+            layer={
+              <Paint>
+                {sentenceShadow && (
+                  <Shadow
+                    blur={sentenceShadow.blur}
+                    dx={sentenceShadow.dx}
+                    dy={sentenceShadow.dy}
+                    color={Skia.Color(sentenceShadow.color)}
+                  />
+                )}
+              </Paint>
+            }>
+            {strokeWidth !== 0 && (
+              <Paragraph
+                paragraph={outlineParagraph}
+                x={layoutData.minX}
+                y={layoutData.minY}
+                width={paragraphLayoutWidth.value}
+                style={'stroke'}
+                strokeWidth={strokeWidth}
+              />
+            )}
+            <Paragraph
+              paragraph={paragraph}
+              x={layoutData.minX}
+              y={layoutData.minY}
+              width={paragraphLayoutWidth.value}
+            />
+          </Group>
+        </OffScreenKaraokeEffect>
       </Group>
     ) : (
       <Group transform={layoutData.derivedTransform}>

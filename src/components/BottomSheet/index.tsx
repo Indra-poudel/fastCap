@@ -179,7 +179,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
                 <Pressable style={[styles.closeIcon]} onPress={handleClose}>
                   <Icon
                     name={'close-circle'}
-                    size={28}
+                    size={24}
                     color={theme.colors.white}
                   />
                 </Pressable>
