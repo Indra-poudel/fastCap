@@ -2,12 +2,12 @@ import {
   NativeStackScreenProps,
   createNativeStackNavigator,
 } from '@react-navigation/native-stack';
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import EditScreen from '@screens/Edit/EditScreen';
 import HomeScreen from 'screens/Home/HomeScreen';
 import {useAppDispatch} from 'hooks/useStore';
 import {RC_APP_KEY} from 'constants/keys';
-import {Platform} from 'react-native';
+import {ActivityIndicator, Platform, StyleSheet} from 'react-native';
 import {setSubscribed} from 'store/subscription/slice';
 import Purchases, {LOG_LEVEL} from 'react-native-purchases';
 import BootSplash from 'react-native-bootsplash';
@@ -39,9 +39,15 @@ function AppNavigator() {
 
   const customFontMgr = useFonts(fontSource);
 
+  const [hideSpinner, setHideSpinner] = useState(false);
+
   const dispatch = useAppDispatch();
   useEffect(() => {
     Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+
+    BootSplash.hide({fade: true}).then(() => {
+      console.log('BootSplash has been hidden successfully');
+    });
 
     if (Platform.OS === 'ios') {
       Purchases.configure({apiKey: RC_APP_KEY});
@@ -55,36 +61,43 @@ function AppNavigator() {
           console.log('Error', error);
         })
         .finally(() => {
-          BootSplash.hide({fade: true}).then(() => {
-            console.log('BootSplash has been hidden successfully');
-          });
+          setHideSpinner(true);
         });
     }
   }, []);
 
   return (
-    <Stack.Navigator
-      screenOptions={{
-        contentStyle: {
-          backgroundColor: '#020202',
-        },
-      }}>
-      <Stack.Screen
-        name={SCREENS.HOME}
-        component={HomeScreen}
-        options={{headerShown: false}}
-      />
-      {/* <Stack.Screen
+    <>
+      <Stack.Navigator
+        screenOptions={{
+          contentStyle: {
+            backgroundColor: '#020202',
+          },
+        }}>
+        <Stack.Screen
+          name={SCREENS.HOME}
+          component={HomeScreen}
+          options={{headerShown: false}}
+        />
+        {/* <Stack.Screen
         name={SCREENS.HOME}
         component={HomeTab}
         options={{headerShown: false}}
       /> */}
-      <Stack.Screen name={SCREENS.EDIT} options={{headerShown: false}}>
-        {(props: EditScreenProps) => (
-          <EditScreen {...props} customFontMgr={customFontMgr} />
-        )}
-      </Stack.Screen>
-    </Stack.Navigator>
+        <Stack.Screen name={SCREENS.EDIT} options={{headerShown: false}}>
+          {(props: EditScreenProps) => (
+            <EditScreen {...props} customFontMgr={customFontMgr} />
+          )}
+        </Stack.Screen>
+      </Stack.Navigator>
+      {(!hideSpinner || !customFontMgr) && (
+        <ActivityIndicator
+          size={'large'}
+          color={'#3377FF'}
+          style={StyleSheet.absoluteFill}
+        />
+      )}
+    </>
   );
 }
 
