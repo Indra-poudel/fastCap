@@ -95,8 +95,16 @@ const CaptionServiceStatus = ({
     }
   };
 
+  const handleClose = () => {
+    onCancel();
+  };
+
   return (
-    <BottomSheet label="Generating Captions" initialHeightPercentage={50}>
+    <BottomSheet
+      onClose={handleClose}
+      label="Generating Captions"
+      initialHeightPercentage={50}
+      showCloseIcon>
       <View style={[Style.wrapper]}>
         {!error ? (
           <View
