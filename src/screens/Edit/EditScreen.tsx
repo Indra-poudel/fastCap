@@ -933,14 +933,14 @@ const EditScreen = ({route, navigation, customFontMgr}: EditScreenProps) => {
     });
     paused.value = true;
 
-    // if (isSubscribed) {
-    setExporting(true);
-    // } else {
-    //   RevenueCatUI.presentPaywall().then(paywall => {
-    //     const _isSubscribed = getIsSubscription(paywall);
-    //     dispatch(setSubscribed(_isSubscribed));
-    //   });
-    // }
+    if (isSubscribed) {
+      setExporting(true);
+    } else {
+      RevenueCatUI.presentPaywall().then(paywall => {
+        const _isSubscribed = getIsSubscription(paywall);
+        dispatch(setSubscribed(_isSubscribed));
+      });
+    }
   };
 
   const handleCancelVideoExport = () => {
