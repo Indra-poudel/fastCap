@@ -187,7 +187,7 @@ export const useExportService = ({
       },
     );
 
-    const {newY, newHeight, newWidth} = getTransformedBoundingBox(
+    const {newY, newHeight} = getTransformedBoundingBox(
       x,
       y,
       _width,
@@ -201,7 +201,7 @@ export const useExportService = ({
     imagePaint.setDither(true);
     imagePaint.setBlendMode(BlendMode.SrcOut);
 
-    const offScreen = Skia.Surface.MakeOffscreen(newWidth, newHeight);
+    const offScreen = Skia.Surface.MakeOffscreen(_width, newHeight);
 
     if (!offScreen) {
       return;
