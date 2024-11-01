@@ -21,6 +21,7 @@ import OffScreenClipEffect from 'components/Effects/OffScreenClipEffect';
 import {OffScreenProps} from 'types/types';
 import {getTransformedBoundingBox} from 'utils/transform';
 import OffScreenKaraokeEffect from 'components/Effects/OffScreenKaraokeEffect';
+import OffScreenGradient from 'components/Effects/OffScreenGradient';
 
 const EMPTY_SENTENCE = {
   text: '',
@@ -99,6 +100,8 @@ export const renderOffScreenTemplate = (
 
     effect,
     fillColor,
+
+    gradient,
 
     customFontMgr,
     scale,
@@ -575,24 +578,56 @@ export const renderOffScreenTemplate = (
               )}
             </Paint>
           }>
-          {strokeWidth !== 0 && (
-            <Paragraph
-              paragraph={outlineParagraph}
-              x={layoutData.minX}
-              y={layoutData.minY}
-              width={paragraphLayoutWidth.value}
-              style={'stroke'}
-              strokeWidth={strokeWidth * scaleFactorX}
-            />
+          {gradient ? (
+            <OffScreenGradient
+              currentTime={currentTime}
+              x={layoutData.backgroundX}
+              y={layoutData.backgroundY}
+              width={layoutData.backgroundWidth}
+              height={layoutData.paragraphHeight}
+              currentSentence={currentSentence}
+              colors={gradient.colors}
+              strokeWidth={strokeWidth}>
+              <>
+                {strokeWidth !== 0 && (
+                  <Paragraph
+                    paragraph={outlineParagraph}
+                    x={layoutData.minX}
+                    y={layoutData.minY}
+                    width={paragraphLayoutWidth.value}
+                    style={'stroke'}
+                    strokeWidth={strokeWidth}
+                  />
+                )}
+
+                <Paragraph
+                  paragraph={paragraph}
+                  x={layoutData.minX}
+                  y={layoutData.minY}
+                  width={paragraphLayoutWidth.value}
+                />
+              </>
+            </OffScreenGradient>
+          ) : (
+            <>
+              {strokeWidth !== 0 && (
+                <Paragraph
+                  paragraph={outlineParagraph}
+                  x={layoutData.minX}
+                  y={layoutData.minY}
+                  width={paragraphLayoutWidth.value}
+                  style={'stroke'}
+                  strokeWidth={strokeWidth}
+                />
+              )}
+              <Paragraph
+                paragraph={paragraph}
+                x={layoutData.minX}
+                y={layoutData.minY}
+                width={paragraphLayoutWidth.value}
+              />
+            </>
           )}
-          <Paragraph
-            paragraph={paragraph}
-            x={layoutData.minX}
-            y={layoutData.minY}
-            width={paragraphLayoutWidth.value}
-            antiAlias={true}
-            dither={true}
-          />
         </Group>
       </Group>
     ),
