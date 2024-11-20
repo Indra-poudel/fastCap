@@ -63,6 +63,8 @@ function AppNavigator() {
         .finally(() => {
           setHideSpinner(true);
         });
+    } else {
+      setHideSpinner(true);
     }
   }, []);
 
