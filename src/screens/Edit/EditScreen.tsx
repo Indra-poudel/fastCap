@@ -20,6 +20,7 @@ import React, {useEffect, useState} from 'react';
 import {
   ActivityIndicator,
   InteractionManager,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -932,14 +933,17 @@ const EditScreen = ({route, navigation, customFontMgr}: EditScreenProps) => {
       ignoreAndroidSystemSettings: false,
     });
     paused.value = true;
-
-    if (isSubscribed) {
-      setExporting(true);
+    if (Platform.OS === 'ios') {
+      if (isSubscribed) {
+        setExporting(true);
+      } else {
+        RevenueCatUI.presentPaywall().then(paywall => {
+          const _isSubscribed = getIsSubscription(paywall);
+          dispatch(setSubscribed(_isSubscribed));
+        });
+      }
     } else {
-      RevenueCatUI.presentPaywall().then(paywall => {
-        const _isSubscribed = getIsSubscription(paywall);
-        dispatch(setSubscribed(_isSubscribed));
-      });
+      setExporting(true);
     }
   };
 
