@@ -12,6 +12,7 @@ import {
 } from 'utils/sentencesBuilder';
 import mock from 'mocks/transcript.json';
 import uuid from 'react-native-uuid';
+import {AxiosError} from 'axios';
 
 const POLLING_INTERVAL = 2000; // 5 seconds
 
@@ -21,7 +22,7 @@ enum TranscriptionSteps {
   GENERATE_TRANSCRIPTION = '📝 Creating the Script',
   CHECK_TRANSCRIPTION_STATUS = '🔍 Confirming the Script',
   COMPLETE = '✅ All Done, Fam!',
-  ERROR = '❌ Something Went Wrong!',
+  ERROR = '❌ Transcription process failed!',
 }
 
 export enum OverallProcessStatus {
@@ -124,7 +125,7 @@ export const useTranscriptionService = ({
               audio_url: audioUrl,
               language_code: language.code,
               speech_model: language.model,
-              auto_highlights: true,
+              auto_highlights: false,
             },
             progress => {
               setStepProgress(progress);
@@ -183,10 +184,17 @@ export const useTranscriptionService = ({
             setError('❌ Transcription failed');
             setOverallStatus(OverallProcessStatus.ERROR);
           }
-        } catch {
+        } catch (err: unknown) {
           if (isMounted.current) {
+            let errorMessage = '❌ Something went wrong';
+
+            // Check if the error is an AxiosError and has the expected properties
+            if (err instanceof AxiosError && err.response?.data?.error) {
+              errorMessage = `❌ ${err.response.data.error}`;
+            }
+
             setCurrentStep(TranscriptionSteps.ERROR);
-            setError('❌ Transcription process failed');
+            setError(errorMessage);
             setOverallStatus(OverallProcessStatus.ERROR);
           }
         }

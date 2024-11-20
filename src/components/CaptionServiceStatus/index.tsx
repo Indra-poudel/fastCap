@@ -154,6 +154,7 @@ const CaptionServiceStatus = ({
               {
                 color: theme.colors.grey3,
               },
+              Style.textCenter,
             ]}>
             {error
               ? error
@@ -192,6 +193,10 @@ const Style = StyleSheet.create({
     borderRadius: scale(8),
     width: scale(84),
     height: verticalScale(68),
+  },
+
+  textCenter: {
+    textAlign: 'center',
   },
 });
 
