@@ -933,17 +933,13 @@ const EditScreen = ({route, navigation, customFontMgr}: EditScreenProps) => {
       ignoreAndroidSystemSettings: false,
     });
     paused.value = true;
-    if (Platform.OS === 'ios') {
-      if (isSubscribed) {
-        setExporting(true);
-      } else {
-        RevenueCatUI.presentPaywall().then(paywall => {
-          const _isSubscribed = getIsSubscription(paywall);
-          dispatch(setSubscribed(_isSubscribed));
-        });
-      }
-    } else {
+    if (isSubscribed) {
       setExporting(true);
+    } else {
+      RevenueCatUI.presentPaywall().then(paywall => {
+        const _isSubscribed = getIsSubscription(paywall);
+        dispatch(setSubscribed(_isSubscribed));
+      });
     }
   };
 

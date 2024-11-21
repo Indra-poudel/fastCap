@@ -6,7 +6,7 @@ import React, {useEffect, useState} from 'react';
 import EditScreen from '@screens/Edit/EditScreen';
 import HomeScreen from 'screens/Home/HomeScreen';
 import {useAppDispatch} from 'hooks/useStore';
-import {RC_APP_KEY} from 'constants/keys';
+import {RC_APP_KEY, RC_APP_KEY_ANDROID, RC_APP_KEY_IOS} from 'constants/keys';
 import {ActivityIndicator, Platform, StyleSheet} from 'react-native';
 import {setSubscribed} from 'store/subscription/slice';
 import Purchases, {LOG_LEVEL} from 'react-native-purchases';
@@ -49,23 +49,21 @@ function AppNavigator() {
       console.log('BootSplash has been hidden successfully');
     });
 
-    if (Platform.OS === 'ios') {
-      Purchases.configure({apiKey: RC_APP_KEY});
-      Purchases.getCustomerInfo()
-        .then(customerInfo => {
-          const _isSubscribed =
-            customerInfo.entitlements.active.pro !== undefined;
-          dispatch(setSubscribed(_isSubscribed));
-        })
-        .catch(error => {
-          console.log('Error', error);
-        })
-        .finally(() => {
-          setHideSpinner(true);
-        });
-    } else {
-      setHideSpinner(true);
-    }
+    Purchases.configure({
+      apiKey: Platform.OS === 'ios' ? RC_APP_KEY_IOS : RC_APP_KEY_ANDROID,
+    });
+    Purchases.getCustomerInfo()
+      .then(customerInfo => {
+        const _isSubscribed =
+          customerInfo.entitlements.active.pro !== undefined;
+        dispatch(setSubscribed(_isSubscribed));
+      })
+      .catch(error => {
+        console.log('Error', error);
+      })
+      .finally(() => {
+        setHideSpinner(true);
+      });
   }, []);
 
   return (
