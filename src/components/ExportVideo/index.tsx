@@ -1,6 +1,13 @@
 import BottomSheet from 'components/BottomSheet';
 import React, {useEffect} from 'react';
-import {StyleSheet, Text, View, useWindowDimensions, Alert} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  useWindowDimensions,
+  Alert,
+  Platform,
+} from 'react-native';
 import {useTheme} from 'theme/ThemeContext';
 import * as Progress from 'react-native-progress';
 import {
@@ -48,7 +55,10 @@ const ExportVideo = ({
 
     try {
       await Share.open({
-        url: generatedVideoPath,
+        url:
+          Platform.OS === 'android'
+            ? `file://${generatedVideoPath}`
+            : generatedVideoPath,
         title: 'Check out this video!',
         type: 'video/mp4',
       });
