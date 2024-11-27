@@ -13,7 +13,13 @@ const ProChip = ({onClick}: ProChipProps) => {
   return (
     <Pressable style={[styles.wrapper]} onPress={onClick}>
       <Icon name={'diamond'} size={16} color={theme.colors.black1} />
-      <Text style={[theme.typography.subheader.small]}>Try Pro</Text>
+      <Text
+        style={[
+          theme.typography.subheader.small,
+          {color: theme.colors.black1},
+        ]}>
+        Try Pro
+      </Text>
     </Pressable>
   );
 };

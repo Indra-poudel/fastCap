@@ -37,7 +37,7 @@ interface BottomSheetProps {
 }
 
 const BottomSheet: React.FC<BottomSheetProps> = ({
-  initialHeightPercentage = 40, // Default to 40% of the screen height
+  initialHeightPercentage = 45, // Default to 45% of the screen height
   isDraggable = true, // Default to draggable
   onClose, // Callback when the bottom sheet is closed
   children, // Allowing custom children to be passed
@@ -121,6 +121,14 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
   });
 
   const handleClose = () => {
+    if (onClose && !showCloseIcon) {
+      top.value = withTiming(SCREEN_HEIGHT, undefined, () => {
+        runOnJS(onClose)();
+      });
+    }
+  };
+
+  const handleCloseIcon = () => {
     if (onClose) {
       top.value = withTiming(SCREEN_HEIGHT, undefined, () => {
         runOnJS(onClose)();
@@ -176,7 +184,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({
               </Text>
 
               {showCloseIcon && (
-                <Pressable style={[styles.closeIcon]} onPress={handleClose}>
+                <Pressable style={[styles.closeIcon]} onPress={handleCloseIcon}>
                   <Icon
                     name={'close-circle'}
                     size={24}
